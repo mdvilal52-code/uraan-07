@@ -58,12 +58,12 @@ export default function ExplorePage() {
           <div className="card flex items-stretch gap-3 p-3">
             <div className="w-[40%] shrink-0">
               <ProductImage
+                src={gemstoneFeature.image}
                 surface="gold"
                 icon="gem"
                 ratio="square"
                 rounded="rounded-2xl"
                 label={gemstoneFeature.title}
-                shimmer
               />
             </div>
             <div className="flex flex-1 flex-col py-1">
@@ -92,6 +92,7 @@ export default function ExplorePage() {
           <div className="card flex items-stretch gap-3 p-3">
             <div className="relative w-[40%] shrink-0">
               <ProductImage
+                src={editorialFeature.image}
                 surface="dark"
                 icon="necklace"
                 ratio="square"

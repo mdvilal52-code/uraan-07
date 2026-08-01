@@ -1,10 +1,10 @@
 import { Eye } from "lucide-react";
-import { getOrders } from "@/lib/orders";
+import { listOrders } from "@/lib/db";
 import { StatusBadge } from "./StatusBadge";
 import { formatPrice } from "@/lib/currency";
 
 export function OrderTable({ limit }: { limit?: number }) {
-  const orders = getOrders().slice(0, limit ?? undefined);
+  const orders = listOrders(limit);
 
   return (
     <div className="card overflow-hidden">

@@ -1,13 +1,38 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
 import { LotusMark } from "@/components/icons/JewelIcons";
+import { useAuth } from "@/context/AuthContext";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
-  const [show, setShow] = useState(false);
+  const router = useRouter();
+  const { login, register } = useAuth();
   const isLogin = mode === "login";
+
+  const [show, setShow] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const res = isLogin
+      ? await login(email, password)
+      : await register(name, email, password);
+    setLoading(false);
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    router.push("/profile");
+  }
 
   return (
     <div className="px-5 py-6">
@@ -23,14 +48,25 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </p>
       </div>
 
-      <form
-        onSubmit={(e) => e.preventDefault()}
-        className="space-y-3"
-      >
+      <form onSubmit={submit} className="space-y-3">
         {!isLogin && (
-          <IconField icon={User} label="الاسم الكامل" placeholder="نورة القحطاني" />
+          <IconField
+            icon={User}
+            label="الاسم الكامل"
+            placeholder="نورة القحطاني"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         )}
-        <IconField icon={Mail} label="البريد الإلكتروني" type="email" placeholder="you@example.com" />
+        <IconField
+          icon={Mail}
+          label="البريد الإلكتروني"
+          type="email"
+          placeholder="you@example.com"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
         <div>
           <span className="mb-1 block text-xs font-semibold text-ink-soft">
             كلمة المرور
@@ -40,6 +76,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             <input
               type={show ? "text" : "password"}
               placeholder="••••••••"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-faint"
             />
             <button
@@ -64,7 +103,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           </div>
         )}
 
-        <button type="submit" className="btn-forest w-full">
+        {error && (
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-600">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-forest w-full disabled:opacity-60"
+        >
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
           {isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
         </button>
       </form>
@@ -75,7 +125,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <span className="hr-gold flex-1" />
       </div>
 
-      <button className="btn-outline w-full">المتابعة كضيف</button>
+      <Link href="/shop" className="btn-outline w-full">
+        المتابعة كضيف
+      </Link>
 
       <p className="mt-6 text-center text-sm text-ink-muted">
         {isLogin ? "ليس لديكِ حساب؟ " : "لديكِ حساب بالفعل؟ "}

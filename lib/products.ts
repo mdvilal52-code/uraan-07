@@ -1,38 +1,32 @@
-import { products, categories, categoryNameBySlug } from "@/data/jewelleryData";
+import { categories, categoryNameBySlug } from "@/data/jewelleryData";
+import { listProducts, getProduct } from "@/lib/db";
 import type { CategorySlug, Product } from "@/types";
 
+/* Thin read helpers over the runtime store (lib/db). */
+
 export function getAllProducts(): Product[] {
-  return products;
+  return listProducts();
 }
 
 export function getProductById(id: string): Product | undefined {
-  return products.find((p) => p.id === id);
+  return getProduct(id);
 }
 
 export function getProductsByCategory(category: CategorySlug): Product[] {
-  return products.filter((p) => p.category === category);
+  return listProducts({ category });
 }
 
 export function getBestSellers(limit?: number): Product[] {
-  const list = products.filter((p) => p.bestSeller);
-  return typeof limit === "number" ? list.slice(0, limit) : list;
+  return listProducts({ bestSeller: true, limit });
 }
 
 export function getNewArrivals(limit?: number): Product[] {
-  const list = products.filter((p) => p.newArrival);
-  return typeof limit === "number" ? list.slice(0, limit) : list;
+  return listProducts({ newArrival: true, limit });
 }
 
 export function searchProducts(query: string): Product[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  return products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(q) ||
-      p.latin.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      (p.tags ?? []).some((t) => t.toLowerCase().includes(q)),
-  );
+  if (!query.trim()) return [];
+  return listProducts({ q: query });
 }
 
 /** Group products by category, preserving the categories display order. */
@@ -48,7 +42,7 @@ export function getProductsGroupedByCategory(): {
   }));
 }
 
-/** Static params for the product detail route. */
+/** Static params for the product detail route (seed snapshot). */
 export function getProductIds(): string[] {
-  return products.map((p) => p.id);
+  return listProducts().map((p) => p.id);
 }

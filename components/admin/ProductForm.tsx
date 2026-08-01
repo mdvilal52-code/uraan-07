@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Save, ImagePlus, CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Save, ImagePlus, Loader2 } from "lucide-react";
 import { categories } from "@/data/jewelleryData";
 import type { Product } from "@/types";
 
@@ -25,21 +26,52 @@ const inputCls =
   "w-full rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3 text-sm text-ink outline-none transition focus:border-gold-400 placeholder:text-ink-faint";
 
 export function ProductForm({ product }: { product?: Product }) {
-  const [saved, setSaved] = useState(false);
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setSaving(true);
+    const fd = new FormData(e.currentTarget);
+    const body = {
+      name: fd.get("name"),
+      latin: fd.get("latin"),
+      description: fd.get("description"),
+      price: Number(fd.get("price")) || 0,
+      compareAt: fd.get("compareAt") ? Number(fd.get("compareAt")) : undefined,
+      category: fd.get("category"),
+      image: fd.get("image") || product?.image,
+      bestSeller: fd.get("bestSeller") === "on",
+      newArrival: fd.get("newArrival") === "on",
+    };
+
+    const res = await fetch(
+      product ? `/api/products/${product.id}` : "/api/products",
+      {
+        method: product ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
+    setSaving(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error ?? "تعذّر الحفظ");
+      return;
+    }
+    router.push("/admin/products");
+    router.refresh();
+  }
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2500);
-      }}
-      className="grid gap-5 lg:grid-cols-3"
-    >
+    <form onSubmit={submit} className="grid gap-5 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         <div className="card space-y-4 p-5">
           <Field label="اسم المنتج (عربي)">
             <input
+              name="name"
               className={inputCls}
               defaultValue={product?.name}
               placeholder="قلادة ماس ألماسي"
@@ -48,6 +80,7 @@ export function ProductForm({ product }: { product?: Product }) {
           </Field>
           <Field label="الاسم بالإنجليزية">
             <input
+              name="latin"
               className={inputCls}
               defaultValue={product?.latin}
               placeholder="Diamond Maas Necklace"
@@ -55,6 +88,7 @@ export function ProductForm({ product }: { product?: Product }) {
           </Field>
           <Field label="الوصف">
             <textarea
+              name="description"
               rows={4}
               className={`${inputCls} resize-none`}
               defaultValue={product?.description}
@@ -67,6 +101,7 @@ export function ProductForm({ product }: { product?: Product }) {
           <div className="grid grid-cols-2 gap-4">
             <Field label="السعر (AUD)">
               <input
+                name="price"
                 type="number"
                 className={inputCls}
                 defaultValue={product?.price}
@@ -76,6 +111,7 @@ export function ProductForm({ product }: { product?: Product }) {
             </Field>
             <Field label="سعر المقارنة (AUD)">
               <input
+                name="compareAt"
                 type="number"
                 className={inputCls}
                 defaultValue={product?.compareAt}
@@ -85,7 +121,11 @@ export function ProductForm({ product }: { product?: Product }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Field label="الفئة">
-              <select className={inputCls} defaultValue={product?.category}>
+              <select
+                name="category"
+                className={inputCls}
+                defaultValue={product?.category ?? "necklaces"}
+              >
                 {categories.map((c) => (
                   <option key={c.slug} value={c.slug}>
                     {c.name}
@@ -93,8 +133,13 @@ export function ProductForm({ product }: { product?: Product }) {
                 ))}
               </select>
             </Field>
-            <Field label="المخزون">
-              <input type="number" className={inputCls} defaultValue={24} />
+            <Field label="مسار الصورة">
+              <input
+                name="image"
+                className={inputCls}
+                defaultValue={product?.image}
+                placeholder="/images/necklace.svg"
+              />
             </Field>
           </div>
         </div>
@@ -117,6 +162,7 @@ export function ProductForm({ product }: { product?: Product }) {
           <label className="flex items-center justify-between">
             <span className="text-sm font-semibold text-ink">الأكثر مبيعًا</span>
             <input
+              name="bestSeller"
               type="checkbox"
               defaultChecked={product?.bestSeller}
               className="h-4 w-4 accent-forest-600"
@@ -125,6 +171,7 @@ export function ProductForm({ product }: { product?: Product }) {
           <label className="flex items-center justify-between">
             <span className="text-sm font-semibold text-ink">وصل حديثًا</span>
             <input
+              name="newArrival"
               type="checkbox"
               defaultChecked={product?.newArrival}
               className="h-4 w-4 accent-forest-600"
@@ -132,10 +179,16 @@ export function ProductForm({ product }: { product?: Product }) {
           </label>
         </div>
 
-        <button type="submit" className="btn-forest w-full">
-          {saved ? (
+        {error && (
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-600">
+            {error}
+          </p>
+        )}
+
+        <button type="submit" disabled={saving} className="btn-forest w-full disabled:opacity-60">
+          {saving ? (
             <>
-              <CheckCircle2 className="h-4 w-4" /> تم الحفظ
+              <Loader2 className="h-4 w-4 animate-spin" /> جارٍ الحفظ…
             </>
           ) : (
             <>
@@ -143,10 +196,7 @@ export function ProductForm({ product }: { product?: Product }) {
             </>
           )}
         </button>
-        <Link
-          href="/admin/products"
-          className="btn-outline w-full"
-        >
+        <Link href="/admin/products" className="btn-outline w-full">
           إلغاء
         </Link>
       </div>

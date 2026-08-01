@@ -1,31 +1,21 @@
-import { orders } from "./orders";
-import { customers } from "./users";
-import { products } from "@/data/jewelleryData";
+import { analytics as dbAnalytics } from "@/lib/db";
 
-/* Derived metrics for the admin analytics dashboard. */
+/* Derived metrics for the admin analytics dashboard (live from the store). */
 
 export function getRevenue(): number {
-  return orders
-    .filter((o) => o.status !== "cancelled")
-    .reduce((sum, o) => sum + o.total, 0);
+  return dbAnalytics().revenue;
 }
-
 export function getOrderCount(): number {
-  return orders.length;
+  return dbAnalytics().orders;
 }
-
 export function getCustomerCount(): number {
-  return customers.length;
+  return dbAnalytics().customers;
 }
-
 export function getProductCount(): number {
-  return products.length;
+  return dbAnalytics().products;
 }
-
 export function getAverageOrderValue(): number {
-  const valid = orders.filter((o) => o.status !== "cancelled");
-  if (valid.length === 0) return 0;
-  return Math.round(getRevenue() / valid.length);
+  return dbAnalytics().averageOrderValue;
 }
 
 /** Monthly revenue series for the dashboard chart (Arabic month labels). */
@@ -39,9 +29,12 @@ export const revenueSeries: { month: string; value: number }[] = [
   { month: "يوليو", value: 68 },
 ];
 
-export const kpis = () => [
-  { label: "الإيرادات", value: getRevenue(), prefix: "AUD", trend: "+12.4%" },
-  { label: "الطلبات", value: getOrderCount(), trend: "+6.1%" },
-  { label: "العملاء", value: getCustomerCount(), trend: "+3.2%" },
-  { label: "المنتجات", value: getProductCount(), trend: "+2 جديد" },
-];
+export const kpis = () => {
+  const a = dbAnalytics();
+  return [
+    { label: "الإيرادات", value: a.revenue, prefix: "AUD", trend: "+12.4%" },
+    { label: "الطلبات", value: a.orders, trend: "+6.1%" },
+    { label: "العملاء", value: a.customers, trend: "+3.2%" },
+    { label: "المنتجات", value: a.products, trend: "+2 جديد" },
+  ];
+};

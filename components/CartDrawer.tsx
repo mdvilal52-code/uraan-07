@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { X, Plus, Minus, Trash2 } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { ProductImage } from "./ProductImage";
-import { products } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
+import { useCart } from "@/context/CartContext";
 
-/* Presentational cart drawer with a small sample basket. */
-const sample = [
-  { product: products.find((p) => p.id === "nk-diamond-maas")!, qty: 1 },
-  { product: products.find((p) => p.id === "er-maas")!, qty: 2 },
-];
+const iconByCategory: Record<string, string> = {
+  necklaces: "necklace",
+  earrings: "earring",
+  rings: "ring",
+  bracelets: "bracelet",
+  pendants: "pendant",
+};
 
 export function CartDrawer({
   open,
@@ -20,6 +22,8 @@ export function CartDrawer({
   open: boolean;
   onClose: () => void;
 }) {
+  const { priced, setQty, remove } = useCart();
+
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -27,7 +31,7 @@ export function CartDrawer({
     };
   }, [open]);
 
-  const subtotal = sample.reduce((s, l) => s + l.product.price * l.qty, 0);
+  const lines = priced?.lines ?? [];
 
   return (
     <div
@@ -59,66 +63,93 @@ export function CartDrawer({
           </button>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-          {sample.map(({ product, qty }) => (
-            <div key={product.id} className="flex gap-3">
-              <ProductImage
-                surface={product.surface}
-                icon={categoryIcon(product.category)}
-                ratio="square"
-                className="h-20 w-20 shrink-0"
-                rounded="rounded-2xl"
-                label={product.name}
-              />
-              <div className="flex flex-1 flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-arabic text-sm font-bold text-ink">
-                    {product.name}
-                  </h3>
-                  <button aria-label="حذف" className="text-ink-faint transition hover:text-clay-500">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-                <span className="price mt-1 text-sm">{formatPrice(product.price)}</span>
-                <div className="mt-auto flex items-center gap-2">
-                  <div className="flex items-center gap-3 rounded-xl border border-cream-300 bg-cream-50 px-2 py-1">
-                    <button aria-label="نقص" className="text-ink-muted"><Minus className="h-3.5 w-3.5" /></button>
-                    <span className="min-w-4 text-center text-sm font-bold">{qty}</span>
-                    <button aria-label="زيادة" className="text-ink-muted"><Plus className="h-3.5 w-3.5" /></button>
+        {lines.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+            <ShoppingBag className="h-12 w-12 text-cream-400" />
+            <p className="font-arabic text-ink-muted">حقيبتك فارغة حاليًا.</p>
+            <Link href="/shop" onClick={onClose} className="btn-forest mt-1">
+              تصفّح المتجر
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+              {lines.map(({ product, quantity }) => (
+                <div key={product.id} className="flex gap-3">
+                  <ProductImage
+                    src={product.image}
+                    surface={product.surface}
+                    icon={iconByCategory[product.category] ?? "gem"}
+                    ratio="square"
+                    className="h-20 w-20 shrink-0"
+                    rounded="rounded-2xl"
+                    label={product.name}
+                    sizes="80px"
+                  />
+                  <div className="flex flex-1 flex-col">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-arabic text-sm font-bold text-ink">
+                        {product.name}
+                      </h3>
+                      <button
+                        onClick={() => remove(product.id)}
+                        aria-label="حذف"
+                        className="text-ink-faint transition hover:text-clay-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <span className="price mt-1 text-sm">
+                      {formatPrice(product.price)}
+                    </span>
+                    <div className="mt-auto flex items-center gap-2">
+                      <div className="flex items-center gap-3 rounded-xl border border-cream-300 bg-cream-50 px-2 py-1">
+                        <button
+                          onClick={() => setQty(product.id, quantity - 1)}
+                          aria-label="نقص"
+                          className="text-ink-muted"
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="min-w-4 text-center text-sm font-bold">
+                          {quantity}
+                        </span>
+                        <button
+                          onClick={() => setQty(product.id, quantity + 1)}
+                          aria-label="زيادة"
+                          className="text-ink-muted"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <div className="border-t border-cream-300 px-5 py-4">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="font-arabic text-sm text-ink-muted">المجموع الفرعي</span>
-            <span className="price text-lg">{formatPrice(subtotal)}</span>
-          </div>
-          <Link href="/checkout" onClick={onClose} className="btn-forest w-full">
-            إتمام الشراء
-          </Link>
-          <button
-            onClick={onClose}
-            className="mt-2 w-full py-2 text-center text-sm font-semibold text-ink-muted transition hover:text-ink"
-          >
-            متابعة التسوّق
-          </button>
-        </div>
+            <div className="border-t border-cream-300 px-5 py-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="font-arabic text-sm text-ink-muted">
+                  المجموع الفرعي
+                </span>
+                <span className="price text-lg">
+                  {formatPrice(priced?.subtotal ?? 0)}
+                </span>
+              </div>
+              <Link href="/checkout" onClick={onClose} className="btn-forest w-full">
+                إتمام الشراء
+              </Link>
+              <button
+                onClick={onClose}
+                className="mt-2 w-full py-2 text-center text-sm font-semibold text-ink-muted transition hover:text-ink"
+              >
+                متابعة التسوّق
+              </button>
+            </div>
+          </>
+        )}
       </aside>
     </div>
   );
-}
-
-function categoryIcon(category: string): string {
-  const map: Record<string, string> = {
-    necklaces: "necklace",
-    earrings: "earring",
-    rings: "ring",
-    bracelets: "bracelet",
-    pendants: "pendant",
-  };
-  return map[category] ?? "gem";
 }

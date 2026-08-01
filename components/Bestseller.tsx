@@ -35,6 +35,7 @@ export function Bestseller({
             className="press w-[9.5rem] shrink-0"
           >
             <ProductImage
+              src={p.image}
               surface={p.surface}
               icon={iconByCategory[p.category] ?? "gem"}
               ratio="square"

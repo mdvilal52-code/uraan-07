@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal, Cormorant_Garamond, Amiri } from "next/font/google";
+import { Providers } from "@/components/providers/Providers";
 import "./globals.css";
 import "../styles/luxury.css";
 import "../styles/animations.css";
@@ -77,7 +78,9 @@ export default function RootLayout({
       dir="rtl"
       className={`${tajawal.variable} ${cormorant.variable} ${amiri.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

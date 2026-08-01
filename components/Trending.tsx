@@ -23,6 +23,7 @@ export function Trending({
         {trendingCollections.map((c, i) => (
           <Link key={c.id} href="/collections" className="press">
             <ProductImage
+              src={c.image}
               surface="dark"
               icon={icons[i] ?? "gem"}
               ratio="square"

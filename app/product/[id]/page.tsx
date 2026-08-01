@@ -69,27 +69,31 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       <section className="px-5 pt-3" data-reveal>
         <div className="relative">
           <ProductImage
+            src={product.image}
             surface={product.surface}
             icon={iconByCategory[product.category] ?? "gem"}
             ratio="portrait"
             rounded="rounded-3xl"
             label={product.name}
-            shimmer
+            priority
+            sizes="(max-width: 480px) 100vw, 440px"
           />
           <div className="absolute end-3 top-3">
-            <WishlistButton />
+            <WishlistButton productId={product.id} />
           </div>
         </div>
         <div className="mt-3 grid grid-cols-4 gap-2">
-          {["gem", iconByCategory[product.category] ?? "gem", "gem", "necklace"].map(
-            (ic, i) => (
+          {[product.image, "/images/gemstones.svg", product.image, "/images/hero.svg"].map(
+            (imgSrc, i) => (
               <ProductImage
                 key={i}
+                src={imgSrc}
                 surface={i % 2 ? "cream" : product.surface}
-                icon={ic}
+                icon={iconByCategory[product.category] ?? "gem"}
                 ratio="square"
                 rounded="rounded-xl"
                 label={product.name}
+                sizes="25vw"
               />
             ),
           )}
@@ -150,8 +154,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         )}
 
         <div className="mt-5 flex items-center gap-3">
-          <AddToCartButton className="flex-1" />
-          <WishlistButton className="h-[3.1rem] w-[3.1rem] rounded-2xl border border-cream-300 bg-cream-50 shadow-card-soft" />
+          <AddToCartButton productId={product.id} className="flex-1" />
+          <WishlistButton
+            productId={product.id}
+            className="h-[3.1rem] w-[3.1rem] rounded-2xl border border-cream-300 bg-cream-50 shadow-card-soft"
+          />
         </div>
 
         {/* Trust row */}

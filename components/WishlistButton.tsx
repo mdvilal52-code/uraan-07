@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import { Heart } from "lucide-react";
+import { useWishlist } from "@/context/WishlistContext";
 
 export function WishlistButton({
+  productId,
   className = "h-10 w-10 rounded-full bg-cream-50/90 shadow-card-soft backdrop-blur",
 }: {
+  productId: string;
   className?: string;
 }) {
-  const [wished, setWished] = useState(false);
+  const { has, toggle } = useWishlist();
+  const wished = has(productId);
 
   return (
     <button
       type="button"
-      onClick={() => setWished((w) => !w)}
+      onClick={() => toggle(productId)}
       aria-pressed={wished}
       aria-label={wished ? "إزالة من المفضّلة" : "إضافة إلى المفضّلة"}
       className={`grid place-items-center text-ink transition active:scale-90 ${className}`}

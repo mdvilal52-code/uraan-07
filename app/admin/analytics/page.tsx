@@ -5,6 +5,9 @@ import { getProductsGroupedByCategory } from "@/lib/products";
 import { getAverageOrderValue } from "@/lib/analytics";
 import { formatPrice } from "@/lib/currency";
 
+
+export const dynamic = "force-dynamic";
+
 export default function AdminAnalyticsPage() {
   const groups = getProductsGroupedByCategory();
   const totalProducts = groups.reduce((s, g) => s + g.products.length, 0);

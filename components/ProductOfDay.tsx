@@ -30,12 +30,12 @@ export function ProductOfDay() {
 
         <div className="w-[42%] shrink-0">
           <ProductImage
+            src={productOfDay.image}
             surface={productOfDay.surface}
             icon="pendant"
             ratio="square"
             rounded="rounded-2xl"
             label={productOfDay.name}
-            shimmer
           />
         </div>
       </div>

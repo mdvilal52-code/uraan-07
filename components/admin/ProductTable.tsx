@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { ProductImage } from "@/components/ProductImage";
-import { getAllProducts } from "@/lib/products";
 import { categoryNameBySlug } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
+import type { Product } from "@/types";
 
 const iconByCategory: Record<string, string> = {
   necklaces: "necklace",
@@ -14,7 +17,34 @@ const iconByCategory: Record<string, string> = {
 };
 
 export function ProductTable() {
-  const items = getAllProducts();
+  const [items, setItems] = useState<Product[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = () =>
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((d) => setItems(d.products ?? []))
+      .catch(() => setItems([]));
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function remove(id: string) {
+    if (!confirm("حذف هذا المنتج؟")) return;
+    setBusy(id);
+    await fetch(`/api/products/${id}`, { method: "DELETE" });
+    await load();
+    setBusy(null);
+  }
+
+  if (!items) {
+    return (
+      <div className="card grid place-items-center py-16 text-ink-muted">
+        <Loader2 className="h-6 w-6 animate-spin text-gold-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="card overflow-hidden">
@@ -33,17 +63,19 @@ export function ProductTable() {
             {items.map((p) => (
               <tr
                 key={p.id}
-                className="border-b border-cream-100 text-sm last:border-0 hover:bg-cream-100/60"
+                className={`border-b border-cream-100 text-sm last:border-0 hover:bg-cream-100/60 ${busy === p.id ? "opacity-50" : ""}`}
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <ProductImage
+                      src={p.image}
                       surface={p.surface}
                       icon={iconByCategory[p.category] ?? "gem"}
                       ratio="square"
                       rounded="rounded-xl"
                       className="h-11 w-11 shrink-0"
                       label={p.name}
+                      sizes="44px"
                     />
                     <div>
                       <p className="font-arabic font-bold text-ink">{p.name}</p>
@@ -80,6 +112,7 @@ export function ProductTable() {
                       <Pencil className="h-4 w-4" />
                     </Link>
                     <button
+                      onClick={() => remove(p.id)}
                       aria-label="حذف"
                       className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
                     >

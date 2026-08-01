@@ -1,9 +1,9 @@
 import { Mail } from "lucide-react";
-import { getCustomers } from "@/lib/users";
+import { listCustomers } from "@/lib/db";
 import { formatPrice } from "@/lib/currency";
 
 export function CustomerTable() {
-  const customers = getCustomers();
+  const customers = listCustomers();
 
   return (
     <div className="card overflow-hidden">

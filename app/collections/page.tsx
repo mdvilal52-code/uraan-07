@@ -50,6 +50,7 @@ export default function CollectionsPage() {
 
             <div className="w-[38%] shrink-0">
               <ProductImage
+                src={c.image}
                 surface={c.surface}
                 icon={icons[i] ?? "gem"}
                 ratio="square"

@@ -1,6 +1,9 @@
 import { Topbar } from "@/components/admin/Topbar";
 import { CustomerTable } from "@/components/admin/CustomerTable";
 
+
+export const dynamic = "force-dynamic";
+
 export default function AdminCustomersPage() {
   return (
     <>

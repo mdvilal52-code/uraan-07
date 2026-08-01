@@ -18,13 +18,21 @@ export function Newsletter() {
         </p>
 
         <form
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            if (email.trim()) {
-              setDone(true);
-              setEmail("");
-              setTimeout(() => setDone(false), 2500);
+            if (!email.trim()) return;
+            try {
+              await fetch("/api/newsletter", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+              });
+            } catch {
+              /* ignore */
             }
+            setDone(true);
+            setEmail("");
+            setTimeout(() => setDone(false), 2500);
           }}
           className="mx-auto mt-4 flex max-w-sm items-center gap-2 rounded-2xl bg-cream-50 p-1.5"
         >

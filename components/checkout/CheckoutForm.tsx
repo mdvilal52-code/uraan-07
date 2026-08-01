@@ -2,15 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CreditCard, Wallet, Banknote, CheckCircle2 } from "lucide-react";
-import { products } from "@/data/jewelleryData";
+import { CreditCard, Wallet, Banknote, CheckCircle2, ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
-
-const summary = [
-  { id: "nk-diamond-maas", qty: 1 },
-  { id: "er-maas", qty: 2 },
-  { id: "rg-solitaire", qty: 1 },
-];
+import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 const payments = [
   { key: "card", label: "بطاقة ائتمان", icon: CreditCard },
@@ -36,18 +31,43 @@ function Field({
 }
 
 export function CheckoutForm() {
+  const { items, priced, clear } = useCart();
+  const { user } = useAuth();
   const [pay, setPay] = useState("card");
-  const [placed, setPlaced] = useState(false);
+  const [placing, setPlacing] = useState(false);
+  const [order, setOrder] = useState<{ id: string } | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
-  const rows = summary.map((s) => ({
-    product: products.find((p) => p.id === s.id)!,
-    qty: s.qty,
-  }));
-  const subtotal = rows.reduce((s, r) => s + r.product.price * r.qty, 0);
-  const shipping = subtotal > 500 ? 0 : 25;
-  const total = subtotal + shipping;
+  const subtotal = priced?.subtotal ?? 0;
+  const shipping = priced?.shipping ?? 0;
+  const total = priced?.total ?? 0;
 
-  if (placed) {
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (items.length === 0) return;
+    setPlacing(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          customer: name || user?.name,
+          email: email || user?.email,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOrder(data.order);
+        clear();
+      }
+    } finally {
+      setPlacing(false);
+    }
+  }
+
+  if (order) {
     return (
       <div className="grid place-items-center px-5 py-20 text-center">
         <CheckCircle2 className="h-16 w-16 text-forest-500" />
@@ -55,7 +75,8 @@ export function CheckoutForm() {
           تمّ تأكيد طلبك!
         </h2>
         <p className="mt-2 max-w-xs text-sm text-ink-muted">
-          شكرًا لتسوّقك من أريانا. سنرسل تفاصيل الشحن إلى بريدك الإلكتروني قريبًا.
+          رقم طلبك <span className="font-bold text-ink">{order.id}</span>. شكرًا
+          لتسوّقك من أريانا، سنرسل تفاصيل الشحن إلى بريدك قريبًا.
         </p>
         <Link href="/" className="btn-forest mt-6">
           العودة للرئيسية
@@ -64,19 +85,38 @@ export function CheckoutForm() {
     );
   }
 
+  if (priced && priced.lines.length === 0) {
+    return (
+      <div className="grid place-items-center px-5 py-20 text-center">
+        <ShoppingBag className="h-14 w-14 text-cream-400" />
+        <p className="mt-4 text-ink-muted">سلّتك فارغة، أضِف بعض القطع أولًا.</p>
+        <Link href="/shop" className="btn-forest mt-5">
+          تصفّح المتجر
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setPlaced(true);
-      }}
-      className="space-y-6 px-5 pb-6"
-    >
+    <form onSubmit={submit} className="space-y-6 px-5 pb-6">
       <section className="space-y-3">
         <h2 className="section-title text-lg">معلومات التواصل</h2>
-        <Field label="الاسم الكامل" placeholder="نورة القحطاني" required />
+        <Field
+          label="الاسم الكامل"
+          placeholder="نورة القحطاني"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="البريد الإلكتروني" type="email" placeholder="you@example.com" required />
+          <Field
+            label="البريد الإلكتروني"
+            type="email"
+            placeholder="you@example.com"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
           <Field label="رقم الجوّال" type="tel" placeholder="+971 5x xxx xxxx" required />
         </div>
       </section>
@@ -138,8 +178,8 @@ export function CheckoutForm() {
         </div>
       </div>
 
-      <button type="submit" className="btn-forest w-full">
-        تأكيد الطلب · {formatPrice(total)}
+      <button type="submit" disabled={placing} className="btn-forest w-full disabled:opacity-60">
+        {placing ? "جارٍ تأكيد الطلب…" : `تأكيد الطلب · ${formatPrice(total)}`}
       </button>
     </form>
   );

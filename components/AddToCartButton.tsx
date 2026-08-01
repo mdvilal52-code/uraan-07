@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 export function AddToCartButton({
+  productId,
   className = "",
   variant = "forest",
   label = "أضف إلى السلة",
 }: {
+  productId: string;
   className?: string;
   variant?: "forest" | "gold";
   label?: string;
 }) {
+  const { add } = useCart();
   const [added, setAdded] = useState(false);
 
   const base =
@@ -23,6 +27,7 @@ export function AddToCartButton({
     <button
       type="button"
       onClick={() => {
+        add(productId);
         setAdded(true);
         setTimeout(() => setAdded(false), 1500);
       }}

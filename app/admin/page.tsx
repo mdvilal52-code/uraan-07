@@ -16,6 +16,9 @@ const iconByCategory: Record<string, string> = {
   pendants: "pendant",
 };
 
+
+export const dynamic = "force-dynamic";
+
 export default function AdminDashboard() {
   const top = getBestSellers(4);
 
@@ -37,12 +40,14 @@ export default function AdminDashboard() {
               {top.map((p) => (
                 <div key={p.id} className="flex items-center gap-3">
                   <ProductImage
+                    src={p.image}
                     surface={p.surface}
                     icon={iconByCategory[p.category] ?? "gem"}
                     ratio="square"
                     rounded="rounded-xl"
                     className="h-10 w-10 shrink-0"
                     label={p.name}
+                    sizes="40px"
                   />
                   <span className="flex-1 truncate font-arabic text-sm font-semibold text-ink">
                     {p.name}

@@ -7,10 +7,14 @@ import { LotusMark } from "./icons/JewelIcons";
 import { MobileMenu } from "./MobileMenu";
 import { CartDrawer } from "./CartDrawer";
 import { BRAND } from "@/data/jewelleryData";
+import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const { count } = useCart();
+  const { count: wishCount } = useWishlist();
 
   return (
     <>
@@ -54,17 +58,27 @@ export function Navbar() {
             <Link
               href="/wishlist"
               aria-label="المفضّلة"
-              className="grid h-10 w-10 place-items-center rounded-xl text-ink transition active:scale-95 hover:bg-cream-200"
+              className="relative grid h-10 w-10 place-items-center rounded-xl text-ink transition active:scale-95 hover:bg-cream-200"
             >
               <Heart className="h-[1.35rem] w-[1.35rem]" strokeWidth={2} />
+              {wishCount > 0 && (
+                <span className="absolute end-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-clay-500 px-1 text-[0.6rem] font-bold text-cream-50">
+                  {wishCount}
+                </span>
+              )}
             </Link>
             <button
               type="button"
               onClick={() => setCartOpen(true)}
               aria-label="حقيبة التسوّق"
-              className="grid h-10 w-10 place-items-center rounded-xl bg-forest-600 text-cream-50 shadow-card-soft transition active:scale-95 hover:bg-forest-700"
+              className="relative grid h-10 w-10 place-items-center rounded-xl bg-forest-600 text-cream-50 shadow-card-soft transition active:scale-95 hover:bg-forest-700"
             >
               <ShoppingBag className="h-[1.3rem] w-[1.3rem]" strokeWidth={2} />
+              {count > 0 && (
+                <span className="absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-gold-gradient px-1 text-[0.62rem] font-extrabold text-forest-800 shadow">
+                  {count}
+                </span>
+              )}
             </button>
           </nav>
         </div>

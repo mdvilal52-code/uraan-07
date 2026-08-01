@@ -5,6 +5,8 @@ import { useState } from "react";
 import { ShoppingCart, Check, Heart } from "lucide-react";
 import { ProductImage } from "./ProductImage";
 import { formatPrice } from "@/lib/currency";
+import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import type { Product } from "@/types";
 
 const iconByCategory: Record<string, string> = {
@@ -16,14 +18,17 @@ const iconByCategory: Record<string, string> = {
 };
 
 export function ProductCard({ product }: { product: Product }) {
+  const { add } = useCart();
+  const { has, toggle } = useWishlist();
   const [added, setAdded] = useState(false);
-  const [wished, setWished] = useState(false);
+  const wished = has(product.id);
 
   return (
     <article className="card press flex flex-col overflow-hidden">
       <div className="relative">
         <Link href={`/product/${product.id}`} aria-label={product.name}>
           <ProductImage
+            src={product.image}
             surface={product.surface}
             icon={iconByCategory[product.category] ?? "gem"}
             ratio="landscape"
@@ -34,7 +39,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         <button
           type="button"
-          onClick={() => setWished((w) => !w)}
+          onClick={() => toggle(product.id)}
           aria-label={wished ? "إزالة من المفضّلة" : "إضافة إلى المفضّلة"}
           aria-pressed={wished}
           className="absolute end-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-cream-50/90 text-ink shadow-card-soft backdrop-blur transition active:scale-90"
@@ -63,6 +68,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           onClick={() => {
+            add(product.id);
             setAdded(true);
             setTimeout(() => setAdded(false), 1500);
           }}

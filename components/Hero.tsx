@@ -25,12 +25,15 @@ export function Hero() {
 
         <div className="relative w-[38%] shrink-0" data-reveal>
           <ProductImage
+            src="/images/hero.svg"
             surface="cream"
             icon="necklace"
             ratio="portrait"
             rounded="rounded-[1.75rem]"
             className="shadow-card animate-float"
             label="قلادة ذهبية فاخرة"
+            priority
+            sizes="40vw"
           />
           <span className="absolute -bottom-2 -start-2 grid h-11 w-11 place-items-center rounded-full bg-gold-gradient text-forest-800 shadow-gold">
             <Sparkles className="h-5 w-5" />

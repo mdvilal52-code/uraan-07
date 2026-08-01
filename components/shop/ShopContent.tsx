@@ -1,13 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Loader2 } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { categories, categoryNameBySlug } from "@/data/jewelleryData";
-import { getProductsGroupedByCategory } from "@/lib/products";
-import type { CategorySlug } from "@/types";
+import type { CategorySlug, Product } from "@/types";
 
 type Filter = "all" | CategorySlug;
 
@@ -22,11 +21,24 @@ export function ShopContent() {
   const [filter, setFilter] = useState<Filter>(
     pills.some((p) => p.key === initial) ? initial : "all",
   );
+  const [products, setProducts] = useState<Product[] | null>(null);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((d) => setProducts(d.products ?? []))
+      .catch(() => setProducts([]));
+  }, []);
 
   const groups = useMemo(() => {
-    const all = getProductsGroupedByCategory();
+    if (!products) return [];
+    const all = categories.map((c) => ({
+      slug: c.slug,
+      title: categoryNameBySlug[c.slug] ?? c.name,
+      products: products.filter((p) => p.category === c.slug),
+    }));
     return filter === "all" ? all : all.filter((g) => g.slug === filter);
-  }, [filter]);
+  }, [products, filter]);
 
   return (
     <div>
@@ -56,32 +68,39 @@ export function ShopContent() {
         </div>
       </div>
 
-      {/* Category sections */}
-      <div className="space-y-7 px-5 pb-6 pt-2">
-        {groups.map((g) => (
-          <section key={g.slug}>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="section-title">
-                {categoryNameBySlug[g.slug] ?? g.title}
-              </h2>
-              <Link href={`/shop?category=${g.slug}`} className="view-all">
-                عرض الكل
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-3.5" data-reveal-stagger>
-              {g.products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </section>
-        ))}
+      {/* Loading */}
+      {!products && (
+        <div className="grid place-items-center py-20 text-ink-muted">
+          <Loader2 className="h-7 w-7 animate-spin text-gold-500" />
+        </div>
+      )}
 
-        {groups.every((g) => g.products.length === 0) && (
-          <p className="py-16 text-center text-ink-muted">
-            لا توجد منتجات في هذه الفئة حاليًا.
-          </p>
-        )}
-      </div>
+      {/* Category sections */}
+      {products && (
+        <div className="space-y-7 px-5 pb-6 pt-2">
+          {groups.map((g) => (
+            <section key={g.slug}>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="section-title">{g.title}</h2>
+                <Link href={`/shop?category=${g.slug}`} className="view-all">
+                  عرض الكل
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-3.5">
+                {g.products.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            </section>
+          ))}
+
+          {groups.every((g) => g.products.length === 0) && (
+            <p className="py-16 text-center text-ink-muted">
+              لا توجد منتجات في هذه الفئة حاليًا.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

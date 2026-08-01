@@ -34,13 +34,13 @@ export function FeaturedProduct() {
           </div>
           <div className="w-[38%] shrink-0">
             <ProductImage
+              src={featuredProduct.image}
               surface="dark"
               icon="pendant"
               ratio="square"
               rounded="rounded-2xl"
               className="shadow-card"
               label={featuredProduct.name}
-              shimmer
             />
           </div>
         </div>
@@ -49,7 +49,11 @@ export function FeaturedProduct() {
           <span className="font-arabic text-2xl font-extrabold text-gold-200">
             {formatPrice(featuredProduct.price)}
           </span>
-          <AddToCartButton variant="gold" className="flex-1 max-w-[60%]" />
+          <AddToCartButton
+            productId={featuredProduct.id}
+            variant="gold"
+            className="flex-1 max-w-[60%]"
+          />
         </div>
       </div>
     </section>

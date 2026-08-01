@@ -1,18 +1,45 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Search as SearchIcon, X } from "lucide-react";
-import { ProductCard } from "@/components/ProductCard";
-import { searchProducts, getBestSellers } from "@/lib/products";
-import { categories } from "@/data/jewelleryData";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Search as SearchIcon, X, Loader2 } from "lucide-react";
+import { ProductCard } from "@/components/ProductCard";
+import { categories } from "@/data/jewelleryData";
+import type { Product } from "@/types";
 
 const suggestions = ["ألماس", "ذهب", "قلادة", "خاتم", "زفاف", "زمرّد"];
 
 export function SearchView() {
   const [q, setQ] = useState("");
-  const results = useMemo(() => searchProducts(q), [q]);
+  const [results, setResults] = useState<Product[]>([]);
+  const [featured, setFeatured] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
   const trimmed = q.trim();
+
+  // best sellers for the idle state
+  useEffect(() => {
+    fetch("/api/products?bestSeller=true&limit=4")
+      .then((r) => r.json())
+      .then((d) => setFeatured(d.products ?? []))
+      .catch(() => {});
+  }, []);
+
+  // debounced search
+  useEffect(() => {
+    if (!trimmed) {
+      setResults([]);
+      return;
+    }
+    setLoading(true);
+    const t = setTimeout(() => {
+      fetch(`/api/products?q=${encodeURIComponent(trimmed)}`)
+        .then((r) => r.json())
+        .then((d) => setResults(d.products ?? []))
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [trimmed]);
 
   return (
     <div className="px-5 pb-6">
@@ -26,7 +53,8 @@ export function SearchView() {
           aria-label="بحث"
           className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
         />
-        {q && (
+        {loading && <Loader2 className="h-4 w-4 animate-spin text-gold-500" />}
+        {q && !loading && (
           <button onClick={() => setQ("")} aria-label="مسح">
             <X className="h-4 w-4 text-ink-muted" />
           </button>
@@ -69,31 +97,34 @@ export function SearchView() {
             </div>
           </div>
 
-          <div className="mt-6">
-            <p className="mb-3 font-arabic text-lg font-bold text-ink">
-              الأكثر مبيعًا
-            </p>
-            <div className="grid grid-cols-2 gap-3.5">
-              {getBestSellers(4).map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+          {featured.length > 0 && (
+            <div className="mt-6">
+              <p className="mb-3 font-arabic text-lg font-bold text-ink">
+                الأكثر مبيعًا
+              </p>
+              <div className="grid grid-cols-2 gap-3.5">
+                {featured.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
       {trimmed && (
         <div className="mt-5">
           <p className="mb-3 text-sm text-ink-muted">
-            {results.length} نتيجة عن «{trimmed}»
+            {loading ? "جارٍ البحث…" : `${results.length} نتيجة عن «${trimmed}»`}
           </p>
-          {results.length > 0 ? (
+          {!loading && results.length > 0 && (
             <div className="grid grid-cols-2 gap-3.5">
               {results.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
-          ) : (
+          )}
+          {!loading && results.length === 0 && (
             <p className="py-16 text-center text-ink-muted">
               لا توجد نتائج مطابقة. جرّب كلمة أخرى.
             </p>
