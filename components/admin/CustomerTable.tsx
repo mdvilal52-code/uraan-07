@@ -2,8 +2,8 @@ import { Mail } from "lucide-react";
 import { listCustomers } from "@/lib/db";
 import { formatPrice } from "@/lib/currency";
 
-export function CustomerTable() {
-  const customers = listCustomers();
+export async function CustomerTable() {
+  const customers = await listCustomers();
 
   return (
     <div className="card overflow-hidden">

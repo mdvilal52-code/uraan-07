@@ -1,18 +1,16 @@
 import { notFound } from "next/navigation";
 import { Topbar } from "@/components/admin/Topbar";
 import { ProductForm } from "@/components/admin/ProductForm";
-import { getProductById, getProductIds } from "@/lib/products";
+import { getProductById } from "@/lib/products";
 
-export function generateStaticParams() {
-  return getProductIds().map((id) => ({ id }));
-}
+export const dynamic = "force-dynamic";
 
-export default function EditProductPage({
+export default async function EditProductPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const product = getProductById(params.id);
+  const product = await getProductById(params.id);
   if (!product) notFound();
 
   return (

@@ -2,9 +2,15 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Topbar } from "@/components/admin/Topbar";
 import { CategoryIcon } from "@/components/icons/JewelIcons";
 import { categories } from "@/data/jewelleryData";
-import { getProductsByCategory } from "@/lib/products";
+import { getAllProducts } from "@/lib/products";
 
-export default function AdminCategoriesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminCategoriesPage() {
+  const all = await getAllProducts();
+  const countBy = (slug: string) =>
+    all.filter((p) => p.category === slug).length;
+
   return (
     <>
       <Topbar title="الفئات" />
@@ -26,7 +32,7 @@ export default function AdminCategoriesPage() {
               <div className="flex-1">
                 <p className="font-arabic font-bold text-ink">{c.name}</p>
                 <p className="text-xs text-ink-muted">
-                  {getProductsByCategory(c.slug).length} منتج
+                  {countBy(c.slug)} منتج
                 </p>
               </div>
               <div className="flex gap-1.5">

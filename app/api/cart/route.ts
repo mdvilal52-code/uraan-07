@@ -8,5 +8,5 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({ items: [] as CartLine[] }));
   const items: CartLine[] = Array.isArray(body.items) ? body.items : [];
-  return NextResponse.json(priceCart(items));
+  return NextResponse.json(await priceCart(items));
 }

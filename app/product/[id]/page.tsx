@@ -8,13 +8,11 @@ import { ProductCard } from "@/components/ProductCard";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Footer } from "@/components/Footer";
-import {
-  getProductById,
-  getProductIds,
-  getProductsByCategory,
-} from "@/lib/products";
+import { getProductById, getProductsByCategory } from "@/lib/products";
 import { categoryNameBySlug } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
+
+export const dynamic = "force-dynamic";
 
 const iconByCategory: Record<string, string> = {
   necklaces: "necklace",
@@ -24,16 +22,12 @@ const iconByCategory: Record<string, string> = {
   pendants: "pendant",
 };
 
-export function generateStaticParams() {
-  return getProductIds().map((id) => ({ id }));
-}
-
-export function generateMetadata({
+export async function generateMetadata({
   params,
 }: {
   params: { id: string };
-}): Metadata {
-  const product = getProductById(params.id);
+}): Promise<Metadata> {
+  const product = await getProductById(params.id);
   if (!product) return { title: "المنتج غير موجود" };
   return {
     title: product.name,
@@ -41,11 +35,15 @@ export function generateMetadata({
   };
 }
 
-export default function ProductPage({ params }: { params: { id: string } }) {
-  const product = getProductById(params.id);
+export default async function ProductPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const product = await getProductById(params.id);
   if (!product) notFound();
 
-  const related = getProductsByCategory(product.category)
+  const related = (await getProductsByCategory(product.category))
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
 

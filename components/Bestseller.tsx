@@ -11,12 +11,12 @@ const iconByCategory: Record<string, string> = {
   pendants: "pendant",
 };
 
-export function Bestseller({
+export async function Bestseller({
   title = "الأكثر مبيعًا",
 }: {
   title?: string;
 }) {
-  const items = getBestSellers();
+  const items = await getBestSellers();
 
   return (
     <section className="py-4">

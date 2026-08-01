@@ -4,8 +4,8 @@ import { formatAmount } from "@/lib/currency";
 
 const icons = [DollarSign, ShoppingCart, Users, Package];
 
-export function AnalyticsCards() {
-  const data = kpis();
+export async function AnalyticsCards() {
+  const data = await kpis();
 
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

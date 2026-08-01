@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
-  const products = listProducts({
+  const products = await listProducts({
     category: sp.get("category") ?? undefined,
     q: sp.get("q") ?? undefined,
     bestSeller: sp.get("bestSeller") === "true" || undefined,
@@ -20,6 +20,6 @@ export async function POST(req: NextRequest) {
   if (!body.name) {
     return NextResponse.json({ error: "الاسم مطلوب" }, { status: 400 });
   }
-  const product = createProduct(body);
+  const product = await createProduct(body);
   return NextResponse.json({ product }, { status: 201 });
 }

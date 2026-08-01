@@ -1,136 +1,162 @@
-import { randomUUID, scryptSync, randomBytes, timingSafeEqual } from "node:crypto";
-import { products as seedProducts } from "@/data/jewelleryData";
-import { orders as seedOrders } from "@/lib/orders";
-import { customers as seedCustomers } from "@/lib/users";
-import type { CartLine, Customer, Order, Product } from "@/types";
+import { scryptSync, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { prisma } from "@/lib/prisma";
+import type {
+  CartLine,
+  CategorySlug,
+  Customer,
+  GemSurface,
+  Order,
+  Product,
+} from "@/types";
 
 /* ============================================================
-   In-memory data store (single source of truth at runtime).
-
-   Seeded from the static content files. Persisted on globalThis so
-   it survives dev hot-reloads and is shared across API routes within
-   a running server. Swap the internals of this module for a real
-   database (Prisma/Postgres, etc.) without touching callers.
+   Data-access layer backed by PostgreSQL via Prisma.
+   All functions are async. Callers (API routes + server
+   components) await them.
    ============================================================ */
 
-export interface User {
+type PrismaProduct = Awaited<ReturnType<typeof prisma.product.findFirst>>;
+type PrismaOrder = {
   id: string;
-  name: string;
+  customer: string;
   email: string;
-  salt: string;
-  hash: string;
-  role: "customer" | "admin";
-  createdAt: string;
-}
+  total: number;
+  status: string;
+  date: string;
+  items: number;
+};
 
-export interface Newsletter {
-  email: string;
-  createdAt: string;
-}
-
-export interface ContactMessage {
-  id: string;
-  name: string;
-  email: string;
-  message: string;
-  createdAt: string;
-}
-
-interface Store {
-  products: Product[];
-  orders: Order[];
-  customers: Customer[];
-  users: User[];
-  sessions: Map<string, string>; // token -> userId
-  newsletters: Newsletter[];
-  contacts: ContactMessage[];
-}
-
-function seed(): Store {
+/** Map a Prisma row to the domain Product shape. */
+function toProduct(p: NonNullable<PrismaProduct>): Product {
   return {
-    products: seedProducts.map((p) => ({ ...p })),
-    orders: seedOrders.map((o) => ({ ...o })),
-    customers: seedCustomers.map((c) => ({ ...c })),
-    users: [],
-    sessions: new Map(),
-    newsletters: [],
-    contacts: [],
+    id: p.id,
+    name: p.name,
+    latin: p.latin,
+    category: p.category as CategorySlug,
+    price: p.price,
+    compareAt: p.compareAt ?? undefined,
+    description: p.description,
+    surface: p.surface as GemSurface,
+    image: p.image,
+    tags: p.tags,
+    bestSeller: p.bestSeller,
+    newArrival: p.newArrival,
+    rating: p.rating,
+    reviews: p.reviews,
   };
 }
 
-const g = globalThis as unknown as { __arianaStore?: Store };
-const store: Store = g.__arianaStore ?? (g.__arianaStore = seed());
+function toOrder(o: PrismaOrder): Order {
+  return {
+    id: o.id,
+    customer: o.customer,
+    email: o.email,
+    total: o.total,
+    status: o.status as Order["status"],
+    date: o.date,
+    items: o.items,
+  };
+}
 
 /* ---------------- Products ---------------- */
 
-export function listProducts(opts?: {
+export async function listProducts(opts?: {
   category?: string;
   q?: string;
   bestSeller?: boolean;
   newArrival?: boolean;
   limit?: number;
-}): Product[] {
-  let items = store.products;
-  if (opts?.category && opts.category !== "all") {
-    items = items.filter((p) => p.category === opts.category);
-  }
-  if (opts?.bestSeller) items = items.filter((p) => p.bestSeller);
-  if (opts?.newArrival) items = items.filter((p) => p.newArrival);
+}): Promise<Product[]> {
+  const where: Record<string, unknown> = {};
+  if (opts?.category && opts.category !== "all") where.category = opts.category;
+  if (opts?.bestSeller) where.bestSeller = true;
+  if (opts?.newArrival) where.newArrival = true;
   if (opts?.q) {
-    const q = opts.q.trim().toLowerCase();
-    items = items.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.latin.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        (p.tags ?? []).some((t) => t.toLowerCase().includes(q)),
-    );
+    const q = opts.q.trim();
+    where.OR = [
+      { name: { contains: q, mode: "insensitive" } },
+      { latin: { contains: q, mode: "insensitive" } },
+      { description: { contains: q, mode: "insensitive" } },
+      { tags: { has: q } },
+    ];
   }
-  return typeof opts?.limit === "number" ? items.slice(0, opts.limit) : items;
+
+  const rows = await prisma.product.findMany({
+    where,
+    orderBy: { createdAt: "asc" },
+    ...(opts?.limit ? { take: opts.limit } : {}),
+  });
+  return rows.map(toProduct);
 }
 
-export function getProduct(id: string): Product | undefined {
-  return store.products.find((p) => p.id === id);
+export async function getProduct(id: string): Promise<Product | undefined> {
+  const row = await prisma.product.findUnique({ where: { id } });
+  return row ? toProduct(row) : undefined;
 }
 
-export function createProduct(input: Partial<Product>): Product {
-  const product: Product = {
-    id: input.id?.trim() || `prd-${randomUUID().slice(0, 8)}`,
-    name: input.name ?? "منتج جديد",
-    latin: input.latin ?? "New Product",
-    category: (input.category as Product["category"]) ?? "necklaces",
-    price: Number(input.price) || 0,
-    compareAt: input.compareAt ? Number(input.compareAt) : undefined,
-    description: input.description ?? "",
-    surface: (input.surface as Product["surface"]) ?? "gold",
-    image: input.image ?? "/images/necklace.svg",
-    tags: input.tags ?? [],
-    bestSeller: Boolean(input.bestSeller),
-    newArrival: Boolean(input.newArrival),
-    rating: input.rating ?? 5,
-    reviews: input.reviews ?? 0,
-  };
-  store.products.unshift(product);
-  return product;
+export async function createProduct(
+  input: Partial<Product>,
+): Promise<Product> {
+  const row = await prisma.product.create({
+    data: {
+      id: input.id?.trim() || `prd-${randomUUID().slice(0, 8)}`,
+      name: input.name ?? "منتج جديد",
+      latin: input.latin ?? "New Product",
+      category: (input.category as string) ?? "necklaces",
+      price: Number(input.price) || 0,
+      compareAt: input.compareAt ? Number(input.compareAt) : null,
+      description: input.description ?? "",
+      surface: (input.surface as string) ?? "gold",
+      image: input.image ?? "/images/necklace.svg",
+      tags: input.tags ?? [],
+      bestSeller: Boolean(input.bestSeller),
+      newArrival: Boolean(input.newArrival),
+      rating: input.rating ?? 5,
+      reviews: input.reviews ?? 0,
+    },
+  });
+  return toProduct(row);
 }
 
-export function updateProduct(
+export async function updateProduct(
   id: string,
   patch: Partial<Product>,
-): Product | undefined {
-  const idx = store.products.findIndex((p) => p.id === id);
-  if (idx === -1) return undefined;
-  const next = { ...store.products[idx], ...patch, id };
-  if (patch.price !== undefined) next.price = Number(patch.price) || 0;
-  store.products[idx] = next;
-  return next;
+): Promise<Product | undefined> {
+  const data: Record<string, unknown> = {};
+  for (const f of [
+    "name",
+    "latin",
+    "category",
+    "description",
+    "surface",
+    "image",
+  ] as const) {
+    if (patch[f] !== undefined) data[f] = patch[f];
+  }
+  if (patch.price !== undefined) data.price = Number(patch.price) || 0;
+  if (patch.compareAt !== undefined)
+    data.compareAt = patch.compareAt ? Number(patch.compareAt) : null;
+  if (patch.tags !== undefined) data.tags = patch.tags;
+  if (patch.bestSeller !== undefined) data.bestSeller = Boolean(patch.bestSeller);
+  if (patch.newArrival !== undefined) data.newArrival = Boolean(patch.newArrival);
+  if (patch.rating !== undefined) data.rating = patch.rating;
+  if (patch.reviews !== undefined) data.reviews = patch.reviews;
+
+  try {
+    const row = await prisma.product.update({ where: { id }, data });
+    return toProduct(row);
+  } catch {
+    return undefined;
+  }
 }
 
-export function deleteProduct(id: string): boolean {
-  const idx = store.products.findIndex((p) => p.id === id);
-  if (idx === -1) return false;
-  store.products.splice(idx, 1);
-  return true;
+export async function deleteProduct(id: string): Promise<boolean> {
+  try {
+    await prisma.product.delete({ where: { id } });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /* ---------------- Cart pricing ---------------- */
@@ -141,19 +167,29 @@ export interface PricedLine {
   lineTotal: number;
 }
 
-export function priceCart(lines: CartLine[]): {
+export async function priceCart(lines: CartLine[]): Promise<{
   lines: PricedLine[];
   subtotal: number;
   shipping: number;
   total: number;
   count: number;
-} {
+}> {
+  const ids = lines.map((l) => l.productId);
+  const rows = ids.length
+    ? await prisma.product.findMany({ where: { id: { in: ids } } })
+    : [];
+  const byId = new Map(rows.map((r) => [r.id, r]));
+
   const priced: PricedLine[] = [];
   for (const l of lines) {
-    const product = getProduct(l.productId);
-    if (!product) continue;
+    const row = byId.get(l.productId);
+    if (!row) continue;
     const quantity = Math.max(1, Math.floor(l.quantity));
-    priced.push({ product, quantity, lineTotal: product.price * quantity });
+    priced.push({
+      product: toProduct(row),
+      quantity,
+      lineTotal: row.price * quantity,
+    });
   }
   const subtotal = priced.reduce((s, l) => s + l.lineTotal, 0);
   const count = priced.reduce((s, l) => s + l.quantity, 0);
@@ -163,68 +199,104 @@ export function priceCart(lines: CartLine[]): {
 
 /* ---------------- Orders ---------------- */
 
-export function listOrders(limit?: number): Order[] {
-  const items = [...store.orders].sort((a, b) => b.date.localeCompare(a.date));
-  return typeof limit === "number" ? items.slice(0, limit) : items;
+export async function listOrders(limit?: number): Promise<Order[]> {
+  const rows = await prisma.order.findMany({
+    orderBy: { createdAt: "desc" },
+    ...(limit ? { take: limit } : {}),
+  });
+  return rows.map(toOrder);
 }
 
-export function createOrder(input: {
+export async function createOrder(input: {
   customer: string;
   email: string;
   lines: CartLine[];
-}): Order {
-  const { total, count } = priceCart(input.lines);
-  const seq = 10242 + store.orders.length;
-  const order: Order = {
-    id: `AR-${seq}`,
-    customer: input.customer || "زائر",
-    email: input.email || "guest@example.com",
-    total,
-    status: "paid",
-    date: new Date().toISOString().slice(0, 10),
-    items: count,
-  };
-  store.orders.unshift(order);
-  return order;
+}): Promise<Order> {
+  const priced = await priceCart(input.lines);
+  const count = await prisma.order.count();
+  const id = `AR-${10242 + count}`;
+
+  const row = await prisma.order.create({
+    data: {
+      id,
+      customer: input.customer || "زائر",
+      email: input.email || "guest@example.com",
+      total: priced.total,
+      status: "paid",
+      date: new Date().toISOString().slice(0, 10),
+      items: priced.count,
+      lines: {
+        create: priced.lines.map((l) => ({
+          productId: l.product.id,
+          name: l.product.name,
+          price: l.product.price,
+          quantity: l.quantity,
+        })),
+      },
+    },
+  });
+  return toOrder(row);
 }
 
 /* ---------------- Customers ---------------- */
 
-export function listCustomers(): Customer[] {
-  return store.customers;
+export async function listCustomers(): Promise<Customer[]> {
+  const rows = await prisma.customer.findMany({ orderBy: { joined: "desc" } });
+  return rows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    email: c.email,
+    orders: c.orders,
+    spent: c.spent,
+    joined: c.joined,
+  }));
 }
 
 /* ---------------- Auth ---------------- */
+
+interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 function hashPassword(password: string, salt: string): string {
   return scryptSync(password, salt, 64).toString("hex");
 }
 
-export function createUser(input: {
+export async function createUser(input: {
   name: string;
   email: string;
   password: string;
-}): { ok: true; user: User } | { ok: false; error: string } {
+}): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
   const email = input.email.trim().toLowerCase();
   if (!email || !input.password) return { ok: false, error: "بيانات ناقصة" };
-  if (store.users.some((u) => u.email === email))
-    return { ok: false, error: "هذا البريد مسجّل مسبقًا" };
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return { ok: false, error: "هذا البريد مسجّل مسبقًا" };
+
   const salt = randomBytes(16).toString("hex");
-  const user: User = {
-    id: `usr-${randomUUID().slice(0, 8)}`,
-    name: input.name.trim() || "عميلة",
-    email,
-    salt,
-    hash: hashPassword(input.password, salt),
-    role: "customer",
-    createdAt: new Date().toISOString(),
-  };
-  store.users.push(user);
+  const user = await prisma.user.create({
+    data: {
+      id: `usr-${randomUUID().slice(0, 8)}`,
+      name: input.name.trim() || "عميلة",
+      email,
+      salt,
+      hash: hashPassword(input.password, salt),
+      role: "customer",
+    },
+  });
   return { ok: true, user };
 }
 
-export function verifyUser(email: string, password: string): User | null {
-  const user = store.users.find((u) => u.email === email.trim().toLowerCase());
+export async function verifyUser(
+  email: string,
+  password: string,
+): Promise<AuthUser | null> {
+  const user = await prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() },
+  });
   if (!user) return null;
   const candidate = Buffer.from(hashPassword(password, user.salt), "hex");
   const stored = Buffer.from(user.hash, "hex");
@@ -232,65 +304,91 @@ export function verifyUser(email: string, password: string): User | null {
   return timingSafeEqual(candidate, stored) ? user : null;
 }
 
-export function createSession(userId: string): string {
+export async function createSession(userId: string): Promise<string> {
   const token = randomBytes(24).toString("hex");
-  store.sessions.set(token, userId);
+  await prisma.session.create({ data: { token, userId } });
   return token;
 }
 
-export function getUserByToken(token?: string | null): User | null {
+export async function getUserByToken(
+  token?: string | null,
+): Promise<AuthUser | null> {
   if (!token) return null;
-  const userId = store.sessions.get(token);
-  if (!userId) return null;
-  return store.users.find((u) => u.id === userId) ?? null;
+  const session = await prisma.session.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+  return session?.user ?? null;
 }
 
-export function destroySession(token?: string | null): void {
-  if (token) store.sessions.delete(token);
+export async function destroySession(token?: string | null): Promise<void> {
+  if (!token) return;
+  await prisma.session.deleteMany({ where: { token } });
 }
 
-export function publicUser(user: User) {
-  return { id: user.id, name: user.name, email: user.email, role: user.role };
+export function publicUser(user: AuthUser) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role as "customer" | "admin",
+  };
 }
 
 /* ---------------- Misc capture ---------------- */
 
-export function addNewsletter(email: string): boolean {
+export async function addNewsletter(email: string): Promise<boolean> {
   const e = email.trim().toLowerCase();
   if (!e) return false;
-  if (!store.newsletters.some((n) => n.email === e))
-    store.newsletters.push({ email: e, createdAt: new Date().toISOString() });
+  await prisma.newsletter.upsert({
+    where: { email: e },
+    update: {},
+    create: { email: e },
+  });
   return true;
 }
 
-export function addContact(input: {
+export async function addContact(input: {
   name: string;
   email: string;
   message: string;
-}): ContactMessage {
-  const msg: ContactMessage = {
-    id: `msg-${randomUUID().slice(0, 8)}`,
-    name: input.name,
-    email: input.email,
-    message: input.message,
-    createdAt: new Date().toISOString(),
-  };
-  store.contacts.push(msg);
-  return msg;
+}): Promise<{ id: string }> {
+  const msg = await prisma.contactMessage.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      message: input.message,
+    },
+  });
+  return { id: msg.id };
 }
 
 /* ---------------- Analytics ---------------- */
 
-export function analytics() {
-  const revenue = store.orders
-    .filter((o) => o.status !== "cancelled")
-    .reduce((s, o) => s + o.total, 0);
-  const valid = store.orders.filter((o) => o.status !== "cancelled").length;
+export async function analytics(): Promise<{
+  revenue: number;
+  orders: number;
+  customers: number;
+  products: number;
+  averageOrderValue: number;
+}> {
+  const [revenueAgg, validCount, orders, customers, products] =
+    await Promise.all([
+      prisma.order.aggregate({
+        _sum: { total: true },
+        where: { status: { not: "cancelled" } },
+      }),
+      prisma.order.count({ where: { status: { not: "cancelled" } } }),
+      prisma.order.count(),
+      prisma.customer.count(),
+      prisma.product.count(),
+    ]);
+  const revenue = revenueAgg._sum.total ?? 0;
   return {
     revenue,
-    orders: store.orders.length,
-    customers: store.customers.length,
-    products: store.products.length,
-    averageOrderValue: valid ? Math.round(revenue / valid) : 0,
+    orders,
+    customers,
+    products,
+    averageOrderValue: validCount ? Math.round(revenue / validCount) : 0,
   };
 }

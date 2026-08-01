@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST() {
   const token = cookies().get(SESSION_COOKIE)?.value;
-  destroySession(token);
+  await destroySession(token);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, "", { path: "/", maxAge: 0 });
   return res;

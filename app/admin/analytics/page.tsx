@@ -8,9 +8,10 @@ import { formatPrice } from "@/lib/currency";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminAnalyticsPage() {
-  const groups = getProductsGroupedByCategory();
+export default async function AdminAnalyticsPage() {
+  const groups = await getProductsGroupedByCategory();
   const totalProducts = groups.reduce((s, g) => s + g.products.length, 0);
+  const avgOrderValue = await getAverageOrderValue();
 
   return (
     <>
@@ -53,7 +54,7 @@ export default function AdminAnalyticsPage() {
 
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { label: "متوسط قيمة الطلب", value: formatPrice(getAverageOrderValue()) },
+            { label: "متوسط قيمة الطلب", value: formatPrice(avgOrderValue) },
             { label: "معدّل التحويل", value: "3.8%" },
             { label: "العملاء العائدون", value: "62%" },
           ].map((s) => (

@@ -3,8 +3,8 @@ import { listOrders } from "@/lib/db";
 import { StatusBadge } from "./StatusBadge";
 import { formatPrice } from "@/lib/currency";
 
-export function OrderTable({ limit }: { limit?: number }) {
-  const orders = listOrders(limit);
+export async function OrderTable({ limit }: { limit?: number }) {
+  const orders = await listOrders(limit);
 
   return (
     <div className="card overflow-hidden">

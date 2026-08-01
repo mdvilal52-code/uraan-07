@@ -1,0 +1,108 @@
+import { PrismaClient } from "@prisma/client";
+import { products } from "../data/jewelleryData";
+import { orders } from "../lib/orders";
+import { customers } from "../lib/users";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  // Products
+  for (const p of products) {
+    await prisma.product.upsert({
+      where: { id: p.id },
+      update: {
+        name: p.name,
+        latin: p.latin,
+        category: p.category,
+        price: p.price,
+        compareAt: p.compareAt ?? null,
+        description: p.description,
+        surface: p.surface,
+        image: p.image,
+        tags: p.tags ?? [],
+        bestSeller: Boolean(p.bestSeller),
+        newArrival: Boolean(p.newArrival),
+        rating: p.rating ?? 5,
+        reviews: p.reviews ?? 0,
+      },
+      create: {
+        id: p.id,
+        name: p.name,
+        latin: p.latin,
+        category: p.category,
+        price: p.price,
+        compareAt: p.compareAt ?? null,
+        description: p.description,
+        surface: p.surface,
+        image: p.image,
+        tags: p.tags ?? [],
+        bestSeller: Boolean(p.bestSeller),
+        newArrival: Boolean(p.newArrival),
+        rating: p.rating ?? 5,
+        reviews: p.reviews ?? 0,
+      },
+    });
+  }
+
+  // Customers
+  for (const c of customers) {
+    await prisma.customer.upsert({
+      where: { id: c.id },
+      update: {
+        name: c.name,
+        email: c.email,
+        orders: c.orders,
+        spent: c.spent,
+        joined: c.joined,
+      },
+      create: {
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        orders: c.orders,
+        spent: c.spent,
+        joined: c.joined,
+      },
+    });
+  }
+
+  // Historical orders (no line items)
+  for (const o of orders) {
+    await prisma.order.upsert({
+      where: { id: o.id },
+      update: {
+        customer: o.customer,
+        email: o.email,
+        total: o.total,
+        status: o.status,
+        date: o.date,
+        items: o.items,
+      },
+      create: {
+        id: o.id,
+        customer: o.customer,
+        email: o.email,
+        total: o.total,
+        status: o.status,
+        date: o.date,
+        items: o.items,
+      },
+    });
+  }
+
+  const [pc, cc, oc] = await Promise.all([
+    prisma.product.count(),
+    prisma.customer.count(),
+    prisma.order.count(),
+  ]);
+  console.log(`Seeded: ${pc} products, ${cc} customers, ${oc} orders`);
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

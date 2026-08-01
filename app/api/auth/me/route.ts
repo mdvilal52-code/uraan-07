@@ -7,6 +7,6 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const token = cookies().get(SESSION_COOKIE)?.value;
-  const user = getUserByToken(token);
+  const user = await getUserByToken(token);
   return NextResponse.json({ user: user ? publicUser(user) : null });
 }

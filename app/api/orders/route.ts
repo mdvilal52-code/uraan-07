@@ -7,7 +7,7 @@ import type { CartLine } from "@/types";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return NextResponse.json({ orders: listOrders() });
+  return NextResponse.json({ orders: await listOrders() });
 }
 
 export async function POST(req: NextRequest) {
@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "السلة فارغة" }, { status: 400 });
   }
 
-  const user = getUserByToken(cookies().get(SESSION_COOKIE)?.value);
+  const user = await getUserByToken(cookies().get(SESSION_COOKIE)?.value);
 
-  const order = createOrder({
+  const order = await createOrder({
     customer: body.customer || user?.name || "زائر",
     email: body.email || user?.email || "guest@example.com",
     lines: items,

@@ -8,6 +8,6 @@ export async function POST(req: NextRequest) {
   if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
     return NextResponse.json({ error: "بريد غير صالح" }, { status: 400 });
   }
-  addNewsletter(email);
+  await addNewsletter(email);
   return NextResponse.json({ ok: true });
 }

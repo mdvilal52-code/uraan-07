@@ -19,8 +19,8 @@ const iconByCategory: Record<string, string> = {
 
 export const dynamic = "force-dynamic";
 
-export default function AdminDashboard() {
-  const top = getBestSellers(4);
+export default async function AdminDashboard() {
+  const top = await getBestSellers(4);
 
   return (
     <>
