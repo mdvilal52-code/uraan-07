@@ -6,6 +6,17 @@ import { customers } from "../lib/users";
 const prisma = new PrismaClient();
 
 async function main() {
+  // Skip on an already-populated database (safe to run on every deploy).
+  // Set SEED_FORCE=1 to re-seed / upsert regardless.
+  const force = process.env.SEED_FORCE === "1" || process.env.SEED_FORCE === "true";
+  const existing = await prisma.product.count();
+  if (existing > 0 && !force) {
+    console.log(
+      `Products already present (${existing}); skipping seed. Set SEED_FORCE=1 to override.`,
+    );
+    return;
+  }
+
   // Products
   for (const p of products) {
     await prisma.product.upsert({

@@ -88,6 +88,30 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB?schema=public"
 data-access layer every API route and server component calls. Prices are
 computed server-side from the DB, and orders store relational line items.
 
+## ☁️ Deploy
+
+The app needs a `DATABASE_URL` at runtime — `.env` is **not** committed, so
+it must be provided by the host.
+
+### Render (one click, recommended)
+
+The repo ships a **`render.yaml` Blueprint** that provisions a managed
+PostgreSQL database, creates the web service, and injects `DATABASE_URL`
+automatically. On Render: **New + → Blueprint → select this repo**. On start
+it runs `prisma migrate deploy` and seeds the DB once.
+
+### Any host (Render manual, Railway, Fly, a VM, …)
+
+1. Create a PostgreSQL database and copy its connection string.
+2. Set the env var **`DATABASE_URL`** on the service (this is what the crash
+   `Environment variable not found: DATABASE_URL` means — it isn't set yet).
+3. **Build command:** `npm install && npm run build`
+4. **Start command:** `npm run start:prod`
+   (runs `prisma migrate deploy`, seeds once, then `next start`).
+
+> Managed Postgres options that pair well: Neon, Supabase, Railway, Render
+> Postgres. Use the pooled/direct connection string they give you.
+
 ## 🗂️ Structure
 
 ```

@@ -1,0 +1,31 @@
+# Render Blueprint — provisions a PostgreSQL database and the web service,
+# and wires DATABASE_URL automatically.
+#
+# Deploy: on Render, "New +" → "Blueprint" → pick this repo. Render reads
+# this file, creates the database + web service, and injects DATABASE_URL.
+# Migrations run (and the DB is seeded once) on start.
+
+databases:
+  - name: ariana-db
+    databaseName: ariana
+    user: ariana
+    plan: free
+
+services:
+  - type: web
+    name: ariana-jewellery
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    # migrate (required) → seed once (best-effort) → start
+    startCommand: npx prisma migrate deploy && (npx prisma db seed || echo 'seed skipped') && npm run start
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ariana-db
+          property: connectionString
+      - key: NODE_VERSION
+        value: "20.18.0"
+      - key: NODE_ENV
+        value: production
