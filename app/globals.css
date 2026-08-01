@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-tajawal: "Tajawal", system-ui, sans-serif;
+    --font-cormorant: "Cormorant Garamond", Georgia, serif;
+    --font-amiri: "Amiri", Georgia, serif;
+    --page-max: 480px; /* mobile-first canvas width */
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream-200 text-ink font-arabic antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Arabic numerals feel right-aligned in RTL price rows */
+  input,
+  textarea,
+  select,
+  button {
+    font-family: inherit;
+  }
+
+  ::selection {
+    background: theme("colors.gold.200");
+    color: theme("colors.ink.DEFAULT");
+  }
+}
+
+@layer components {
+  /* The mobile-first app canvas, centered on larger screens */
+  .app-shell {
+    @apply relative mx-auto w-full max-w-[var(--page-max)] bg-cream-100 min-h-screen shadow-[0_0_60px_-30px_rgba(36,27,18,0.5)];
+  }
+
+  .section-title {
+    @apply font-arabic text-[1.35rem] font-bold text-ink leading-tight;
+  }
+
+  .section-sub {
+    @apply text-sm text-ink-muted leading-relaxed;
+  }
+
+  .view-all {
+    @apply text-[0.8rem] font-semibold text-clay-500 whitespace-nowrap;
+  }
+
+  /* Primary green pill button */
+  .btn-forest {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-forest-600 px-6 py-3.5
+           text-sm font-bold text-cream-50 shadow-card-soft transition
+           active:scale-[0.98] hover:bg-forest-700;
+  }
+
+  /* Gold outline / soft button */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-gold-300/70 bg-cream-50 px-5 py-3
+           text-sm font-bold text-ink transition active:scale-[0.98] hover:border-gold-400;
+  }
+
+  .btn-ghost-gold {
+    @apply inline-flex items-center gap-1.5 text-sm font-bold text-clay-500 transition hover:text-clay-600;
+  }
+
+  .chip {
+    @apply inline-flex items-center justify-center rounded-2xl px-5 py-2.5 text-sm font-bold whitespace-nowrap transition;
+  }
+  .chip-active {
+    @apply bg-forest-600 text-cream-50 shadow-card-soft;
+  }
+  .chip-idle {
+    @apply bg-cream-50 text-ink-soft border border-cream-300;
+  }
+
+  .card {
+    @apply rounded-3xl bg-cream-50 shadow-card;
+  }
+
+  .icon-badge {
+    @apply grid place-items-center rounded-2xl bg-cream-50 text-gold-500 shadow-card-soft;
+  }
+
+  .price {
+    @apply font-arabic font-extrabold text-ink tracking-tight;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* subtle gold grain shimmer used on placeholders */
+  .shimmer-surface {
+    background-image: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0) 20%,
+      rgba(255, 255, 255, 0.35) 50%,
+      rgba(255, 255, 255, 0) 80%
+    );
+    background-size: 200% 100%;
+  }
+}
