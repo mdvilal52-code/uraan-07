@@ -93,14 +93,44 @@ computed server-side from the DB, and orders store relational line items.
 The app needs a `DATABASE_URL` at runtime — `.env` is **not** committed, so
 it must be provided by the host.
 
-### Render (one click, recommended)
+### Vercel
+
+Vercel is **serverless** — it never runs a "start command" (`next start`),
+so migrations can't happen at start time like on a traditional host. The
+repo handles this with a `vercel-build` script in `package.json`, which
+Vercel automatically uses instead of `build` when present:
+
+```
+vercel-build → prisma generate && prisma migrate deploy && seed (once) && next build
+```
+
+So migrations run **during the build step**. To deploy:
+
+1. **Database:** use a serverless-friendly Postgres — [Neon](https://neon.tech),
+   [Supabase](https://supabase.com), or Vercel's own Postgres integration all
+   work well (a self-hosted / internal-only Postgres, e.g. Render's
+   *Internal* URL, is usually not reachable from Vercel's build/runtime).
+   Copy its connection string.
+2. On your Vercel project: **Settings → Environment Variables** → add
+   **`DATABASE_URL`** with that connection string (Production, and Preview
+   if you use preview deployments) → Save.
+3. **Redeploy** (Deployments → ⋯ → Redeploy, or push a commit). The build
+   log should show `prisma migrate deploy` applying migrations, not "no
+   pending migrations", on the first run.
+4. If a deploy still shows a generic *"Application error: a server-side
+   exception has occurred"* with a digest, the real error is hidden by
+   Next.js in production — open **Vercel → your project → Deployments →
+   [the deployment] → Runtime Logs** (or **Functions** tab) for the actual
+   stack trace.
+
+### Render (one click, recommended for Render)
 
 The repo ships a **`render.yaml` Blueprint** that provisions a managed
 PostgreSQL database, creates the web service, and injects `DATABASE_URL`
 automatically. On Render: **New + → Blueprint → select this repo**. On start
 it runs `prisma migrate deploy` and seeds the DB once.
 
-### Any host (Render manual, Railway, Fly, a VM, …)
+### Any other host (Railway, Fly, a VM, …)
 
 1. Create a PostgreSQL database and copy its connection string.
 2. Set the env var **`DATABASE_URL`** on the service (this is what the crash
