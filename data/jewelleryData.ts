@@ -18,6 +18,18 @@ export const BRAND = {
   arabicName: "أريانا",
 } as const;
 
+/** Store contact details (single source of truth for footer + contact page). */
+export const CONTACT = {
+  address: "27C Langhorne St, Dandenong VIC 3175, Australia",
+  phoneIntl: "+61 3 9791 1331",
+  phoneLocal: "(03) 9791 1331",
+  phoneHref: "tel:+61397911331",
+  email: "hello@ariana.example",
+  hours: "يوميًا · 10 ص – 10 م",
+  mapsUrl:
+    "https://www.google.com/maps/search/?api=1&query=27C+Langhorne+St+Dandenong+VIC+3175+Australia",
+} as const;
+
 export const categories: Category[] = [
   { slug: "necklaces", name: "قلائد", latin: "Necklaces", icon: "necklace" },
   { slug: "earrings", name: "أقراط", latin: "Earrings", icon: "earring" },

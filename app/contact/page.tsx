@@ -3,6 +3,7 @@ import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { Footer } from "@/components/Footer";
+import { CONTACT } from "@/data/jewelleryData";
 
 export const metadata: Metadata = {
   title: "تواصل معنا",
@@ -10,10 +11,29 @@ export const metadata: Metadata = {
 };
 
 const info = [
-  { icon: Phone, label: "الهاتف", value: "‎+971 4 000 0000" },
-  { icon: Mail, label: "البريد", value: "hello@ariana.example" },
-  { icon: MapPin, label: "العنوان", value: "دبي، الإمارات العربية المتحدة" },
-  { icon: Clock, label: "أوقات العمل", value: "يوميًا · 10 ص – 10 م" },
+  {
+    icon: Phone,
+    label: "الهاتف",
+    value: CONTACT.phoneIntl,
+    sub: CONTACT.phoneLocal,
+    href: CONTACT.phoneHref,
+    ltr: true,
+  },
+  {
+    icon: Mail,
+    label: "البريد",
+    value: CONTACT.email,
+    href: `mailto:${CONTACT.email}`,
+    ltr: true,
+  },
+  {
+    icon: MapPin,
+    label: "العنوان",
+    value: CONTACT.address,
+    href: CONTACT.mapsUrl,
+    ltr: true,
+  },
+  { icon: Clock, label: "أوقات العمل", value: CONTACT.hours },
 ];
 
 export default function ContactPage() {
@@ -28,17 +48,45 @@ export default function ContactPage() {
 
       <section className="px-5 py-3">
         <div className="grid grid-cols-2 gap-2.5" data-reveal-stagger>
-          {info.map((i) => (
-            <div key={i.label} className="card flex flex-col gap-1.5 p-4">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-cream-100 text-gold-500">
-                <i.icon className="h-5 w-5" />
-              </span>
-              <span className="mt-1 text-[0.68rem] font-bold uppercase tracking-wide text-ink-muted">
-                {i.label}
-              </span>
-              <span className="text-sm font-semibold text-ink">{i.value}</span>
-            </div>
-          ))}
+          {info.map((i) => {
+            const Wrapper = i.href
+              ? (props: { children: React.ReactNode }) => (
+                  <a
+                    href={i.href}
+                    target={i.href!.startsWith("http") ? "_blank" : undefined}
+                    rel={i.href!.startsWith("http") ? "noopener noreferrer" : undefined}
+                    className="card flex flex-col gap-1.5 p-4 transition hover:border-gold-300"
+                  >
+                    {props.children}
+                  </a>
+                )
+              : (props: { children: React.ReactNode }) => (
+                  <div className="card flex flex-col gap-1.5 p-4">
+                    {props.children}
+                  </div>
+                );
+            return (
+              <Wrapper key={i.label}>
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-cream-100 text-gold-500">
+                  <i.icon className="h-5 w-5" />
+                </span>
+                <span className="mt-1 text-[0.68rem] font-bold uppercase tracking-wide text-ink-muted">
+                  {i.label}
+                </span>
+                <span
+                  dir={i.ltr ? "ltr" : undefined}
+                  className={`text-sm font-semibold text-ink ${i.ltr ? "text-start" : ""}`}
+                >
+                  {i.value}
+                </span>
+                {i.sub && (
+                  <span dir="ltr" className="text-start text-xs text-ink-muted">
+                    {i.sub}
+                  </span>
+                )}
+              </Wrapper>
+            );
+          })}
         </div>
       </section>
 

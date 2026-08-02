@@ -51,7 +51,7 @@ export function SettingsForm() {
             <span className="mb-1 block text-xs font-bold text-ink-soft">
               رقم الهاتف
             </span>
-            <input className={inputCls} defaultValue="+971 4 000 0000" dir="ltr" />
+            <input className={inputCls} defaultValue="+61 3 9791 1331" dir="ltr" />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">

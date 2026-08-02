@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Instagram, Facebook, Twitter, Mail, Phone } from "lucide-react";
+import { Instagram, Facebook, Twitter, Mail, Phone, MapPin } from "lucide-react";
 import { LotusMark } from "./icons/JewelIcons";
-import { BRAND } from "@/data/jewelleryData";
+import { BRAND, CONTACT } from "@/data/jewelleryData";
 
 const columns = [
   {
@@ -65,11 +65,26 @@ export function Footer() {
       </div>
 
       <div className="mt-8 space-y-2 text-sm text-cream-200/85">
-        <a href="tel:+97140000000" className="flex items-center gap-2">
-          <Phone className="h-4 w-4 text-gold-200" /> ‎+971 4 000 0000
+        <a
+          href={CONTACT.mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-start gap-2"
+        >
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-200" />
+          <span dir="ltr" className="text-start">
+            {CONTACT.address}
+          </span>
         </a>
-        <a href="mailto:hello@ariana.example" className="flex items-center gap-2">
-          <Mail className="h-4 w-4 text-gold-200" /> hello@ariana.example
+        <a href={CONTACT.phoneHref} className="flex items-center gap-2">
+          <Phone className="h-4 w-4 text-gold-200" />
+          <span dir="ltr">{CONTACT.phoneIntl}</span>
+        </a>
+        <a
+          href={`mailto:${CONTACT.email}`}
+          className="flex items-center gap-2"
+        >
+          <Mail className="h-4 w-4 text-gold-200" /> {CONTACT.email}
         </a>
       </div>
 

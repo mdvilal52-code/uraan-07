@@ -117,7 +117,7 @@ export function CheckoutForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Field label="رقم الجوّال" type="tel" placeholder="+971 5x xxx xxxx" required />
+          <Field label="رقم الجوّال" type="tel" placeholder="+61 4xx xxx xxx" required />
         </div>
       </section>
 
@@ -125,8 +125,8 @@ export function CheckoutForm() {
         <h2 className="section-title text-lg">عنوان الشحن</h2>
         <Field label="العنوان" placeholder="الشارع، المبنى، الشقة" required />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="المدينة" placeholder="دبي" required />
-          <Field label="الرمز البريدي" placeholder="00000" />
+          <Field label="المدينة" placeholder="ملبورن" required />
+          <Field label="الرمز البريدي" placeholder="3175" />
         </div>
       </section>
 
