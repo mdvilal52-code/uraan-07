@@ -81,17 +81,27 @@ export async function listProducts(opts?: {
     ];
   }
 
-  const rows = await prisma.product.findMany({
-    where,
-    orderBy: { createdAt: "asc" },
-    ...(opts?.limit ? { take: opts.limit } : {}),
-  });
-  return rows.map(toProduct);
+  try {
+    const rows = await prisma.product.findMany({
+      where,
+      orderBy: { createdAt: "asc" },
+      ...(opts?.limit ? { take: opts.limit } : {}),
+    });
+    return rows.map(toProduct);
+  } catch (err) {
+    console.error("[db] listProducts failed:", err);
+    return [];
+  }
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
-  const row = await prisma.product.findUnique({ where: { id } });
-  return row ? toProduct(row) : undefined;
+  try {
+    const row = await prisma.product.findUnique({ where: { id } });
+    return row ? toProduct(row) : undefined;
+  } catch (err) {
+    console.error("[db] getProduct failed:", err);
+    return undefined;
+  }
 }
 
 export async function createProduct(
@@ -175,9 +185,14 @@ export async function priceCart(lines: CartLine[]): Promise<{
   count: number;
 }> {
   const ids = lines.map((l) => l.productId);
-  const rows = ids.length
-    ? await prisma.product.findMany({ where: { id: { in: ids } } })
-    : [];
+  let rows: Awaited<ReturnType<typeof prisma.product.findMany>> = [];
+  try {
+    rows = ids.length
+      ? await prisma.product.findMany({ where: { id: { in: ids } } })
+      : [];
+  } catch (err) {
+    console.error("[db] priceCart failed:", err);
+  }
   const byId = new Map(rows.map((r) => [r.id, r]));
 
   const priced: PricedLine[] = [];
@@ -200,11 +215,16 @@ export async function priceCart(lines: CartLine[]): Promise<{
 /* ---------------- Orders ---------------- */
 
 export async function listOrders(limit?: number): Promise<Order[]> {
-  const rows = await prisma.order.findMany({
-    orderBy: { createdAt: "desc" },
-    ...(limit ? { take: limit } : {}),
-  });
-  return rows.map(toOrder);
+  try {
+    const rows = await prisma.order.findMany({
+      orderBy: { createdAt: "desc" },
+      ...(limit ? { take: limit } : {}),
+    });
+    return rows.map(toOrder);
+  } catch (err) {
+    console.error("[db] listOrders failed:", err);
+    return [];
+  }
 }
 
 export async function createOrder(input: {
@@ -241,15 +261,20 @@ export async function createOrder(input: {
 /* ---------------- Customers ---------------- */
 
 export async function listCustomers(): Promise<Customer[]> {
-  const rows = await prisma.customer.findMany({ orderBy: { joined: "desc" } });
-  return rows.map((c) => ({
-    id: c.id,
-    name: c.name,
-    email: c.email,
-    orders: c.orders,
-    spent: c.spent,
-    joined: c.joined,
-  }));
+  try {
+    const rows = await prisma.customer.findMany({ orderBy: { joined: "desc" } });
+    return rows.map((c) => ({
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      orders: c.orders,
+      spent: c.spent,
+      joined: c.joined,
+    }));
+  } catch (err) {
+    console.error("[db] listCustomers failed:", err);
+    return [];
+  }
 }
 
 /* ---------------- Auth ---------------- */
@@ -314,11 +339,16 @@ export async function getUserByToken(
   token?: string | null,
 ): Promise<AuthUser | null> {
   if (!token) return null;
-  const session = await prisma.session.findUnique({
-    where: { token },
-    include: { user: true },
-  });
-  return session?.user ?? null;
+  try {
+    const session = await prisma.session.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+    return session?.user ?? null;
+  } catch (err) {
+    console.error("[db] getUserByToken failed:", err);
+    return null;
+  }
 }
 
 export async function destroySession(token?: string | null): Promise<void> {
@@ -372,23 +402,28 @@ export async function analytics(): Promise<{
   products: number;
   averageOrderValue: number;
 }> {
-  const [revenueAgg, validCount, orders, customers, products] =
-    await Promise.all([
-      prisma.order.aggregate({
-        _sum: { total: true },
-        where: { status: { not: "cancelled" } },
-      }),
-      prisma.order.count({ where: { status: { not: "cancelled" } } }),
-      prisma.order.count(),
-      prisma.customer.count(),
-      prisma.product.count(),
-    ]);
-  const revenue = revenueAgg._sum.total ?? 0;
-  return {
-    revenue,
-    orders,
-    customers,
-    products,
-    averageOrderValue: validCount ? Math.round(revenue / validCount) : 0,
-  };
+  try {
+    const [revenueAgg, validCount, orders, customers, products] =
+      await Promise.all([
+        prisma.order.aggregate({
+          _sum: { total: true },
+          where: { status: { not: "cancelled" } },
+        }),
+        prisma.order.count({ where: { status: { not: "cancelled" } } }),
+        prisma.order.count(),
+        prisma.customer.count(),
+        prisma.product.count(),
+      ]);
+    const revenue = revenueAgg._sum.total ?? 0;
+    return {
+      revenue,
+      orders,
+      customers,
+      products,
+      averageOrderValue: validCount ? Math.round(revenue / validCount) : 0,
+    };
+  } catch (err) {
+    console.error("[db] analytics failed:", err);
+    return { revenue: 0, orders: 0, customers: 0, products: 0, averageOrderValue: 0 };
+  }
 }
