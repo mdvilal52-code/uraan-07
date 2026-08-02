@@ -17,13 +17,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "السلة فارغة" }, { status: 400 });
   }
 
-  const user = await getUserByToken(cookies().get(SESSION_COOKIE)?.value);
-
-  const order = await createOrder({
-    customer: body.customer || user?.name || "زائر",
-    email: body.email || user?.email || "guest@example.com",
-    lines: items,
-  });
-
-  return NextResponse.json({ order }, { status: 201 });
+  try {
+    const user = await getUserByToken(cookies().get(SESSION_COOKIE)?.value);
+    const order = await createOrder({
+      customer: body.customer || user?.name || "زائر",
+      email: body.email || user?.email || "guest@example.com",
+      lines: items,
+    });
+    return NextResponse.json({ order }, { status: 201 });
+  } catch (err) {
+    console.error("[api] create order failed:", err);
+    return NextResponse.json(
+      { error: "تعذّر إتمام الطلب حاليًا، حاول لاحقًا." },
+      { status: 500 },
+    );
+  }
 }

@@ -51,28 +51,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) return { error: data.error ?? "تعذّر تسجيل الدخول" };
-    setUser(data.user);
-    return {};
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: data.error ?? "تعذّر تسجيل الدخول" };
+      setUser(data.user);
+      return {};
+    } catch {
+      return { error: "تعذّر الاتصال بالخادم، تحقّقي من الإنترنت." };
+    }
   }, []);
 
   const register = useCallback(
     async (name: string, email: string, password: string) => {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) return { error: data.error ?? "تعذّر إنشاء الحساب" };
-      setUser(data.user);
-      return {};
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return { error: data.error ?? "تعذّر إنشاء الحساب" };
+        setUser(data.user);
+        return {};
+      } catch {
+        return { error: "تعذّر الاتصال بالخادم، تحقّقي من الإنترنت." };
+      }
     },
     [],
   );

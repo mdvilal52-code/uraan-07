@@ -6,15 +6,23 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json().catch(() => ({}));
-  const user = await verifyUser(email ?? "", password ?? "");
-  if (!user) {
+  try {
+    const user = await verifyUser(email ?? "", password ?? "");
+    if (!user) {
+      return NextResponse.json(
+        { error: "بريد إلكتروني أو كلمة مرور غير صحيحة" },
+        { status: 401 },
+      );
+    }
+    const token = await createSession(user.id);
+    const res = NextResponse.json({ user: publicUser(user) });
+    res.cookies.set(SESSION_COOKIE, token, SESSION_COOKIE_OPTIONS);
+    return res;
+  } catch (err) {
+    console.error("[api] login failed:", err);
     return NextResponse.json(
-      { error: "بريد إلكتروني أو كلمة مرور غير صحيحة" },
-      { status: 401 },
+      { error: "تعذّر تسجيل الدخول حاليًا، حاول لاحقًا." },
+      { status: 500 },
     );
   }
-  const token = await createSession(user.id);
-  const res = NextResponse.json({ user: publicUser(user) });
-  res.cookies.set(SESSION_COOKIE, token, SESSION_COOKIE_OPTIONS);
-  return res;
 }

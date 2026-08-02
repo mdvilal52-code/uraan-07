@@ -28,6 +28,11 @@ export const CONTACT = {
   hours: "يوميًا · 10 ص – 10 م",
   mapsUrl:
     "https://www.google.com/maps/search/?api=1&query=27C+Langhorne+St+Dandenong+VIC+3175+Australia",
+  social: {
+    facebook: "https://www.facebook.com/share/14knXVAZFtt/",
+    instagram:
+      "https://www.instagram.com/ariana_gems_jewellery?igsh=dDQwbDFrMmVvazBq",
+  },
 } as const;
 
 export const categories: Category[] = [

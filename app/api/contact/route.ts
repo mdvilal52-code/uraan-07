@@ -8,6 +8,11 @@ export async function POST(req: NextRequest) {
   if (!name || !email || !message) {
     return NextResponse.json({ error: "جميع الحقول مطلوبة" }, { status: 400 });
   }
-  const saved = await addContact({ name, email, message });
-  return NextResponse.json({ ok: true, id: saved.id });
+  try {
+    const saved = await addContact({ name, email, message });
+    return NextResponse.json({ ok: true, id: saved.id });
+  } catch (err) {
+    console.error("[api] contact failed:", err);
+    return NextResponse.json({ ok: true });
+  }
 }

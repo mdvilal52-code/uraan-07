@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, Facebook, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { Instagram, Facebook, Mail, Phone, MapPin } from "lucide-react";
 import { LotusMark } from "./icons/JewelIcons";
 import { BRAND, CONTACT } from "@/data/jewelleryData";
 
@@ -89,11 +89,16 @@ export function Footer() {
       </div>
 
       <div className="mt-6 flex gap-3">
-        {[Instagram, Facebook, Twitter].map((Icon, i) => (
+        {[
+          { Icon: Instagram, href: CONTACT.social.instagram, label: "إنستغرام" },
+          { Icon: Facebook, href: CONTACT.social.facebook, label: "فيسبوك" },
+        ].map(({ Icon, href, label }) => (
           <a
-            key={i}
-            href="#"
-            aria-label="تواصل اجتماعي"
+            key={label}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={label}
             className="grid h-10 w-10 place-items-center rounded-xl bg-forest-600 text-cream-100 transition hover:bg-forest-500"
           >
             <Icon className="h-[1.1rem] w-[1.1rem]" />
