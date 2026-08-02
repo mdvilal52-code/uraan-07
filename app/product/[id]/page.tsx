@@ -81,7 +81,7 @@ export default async function ProductPage({
           </div>
         </div>
         <div className="mt-3 grid grid-cols-4 gap-2">
-          {[product.image, "/images/gemstones.svg", product.image, "/images/hero.svg"].map(
+          {[product.image, "/images/gemstones.jpg", product.image, "/images/pendant.jpg"].map(
             (imgSrc, i) => (
               <ProductImage
                 key={i}

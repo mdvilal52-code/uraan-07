@@ -61,7 +61,7 @@ export const products: Product[] = [
     price: 2450,
     description: "قلادة ماسية بتصميم كلاسيكي راقٍ يليق بأرقى المناسبات.",
     surface: "gold",
-    image: "/images/necklace.svg",
+    image: "/images/necklace.jpg",
     bestSeller: true,
     newArrival: true,
     rating: 4.9,
@@ -76,7 +76,7 @@ export const products: Product[] = [
     price: 1650,
     description: "قلادة بولكي مستوحاة من التراث الملكي بلمسة عصرية.",
     surface: "gold",
-    image: "/images/necklace-2.svg",
+    image: "/images/necklace-2.jpg",
     bestSeller: true,
     rating: 4.8,
     reviews: 94,
@@ -91,7 +91,7 @@ export const products: Product[] = [
     price: 760,
     description: "أقراط ماسية لامعة تمنح إطلالتك بريقًا لا يُقاوم.",
     surface: "cream",
-    image: "/images/earrings.svg",
+    image: "/images/earrings.jpg",
     newArrival: true,
     rating: 4.9,
     reviews: 76,
@@ -105,7 +105,7 @@ export const products: Product[] = [
     price: 565,
     description: "أقراط جومكا ذهبية بتفاصيل يدوية دقيقة وأناقة أصيلة.",
     surface: "gold",
-    image: "/images/earrings-2.svg",
+    image: "/images/earrings-2.jpg",
     rating: 4.7,
     reviews: 58,
     tags: ["ذهب", "تراث"],
@@ -119,7 +119,7 @@ export const products: Product[] = [
     price: 1100,
     description: "خاتم سوليتير بحجر ماس مركزي يخطف الأنظار من أول نظرة.",
     surface: "cream",
-    image: "/images/ring.svg",
+    image: "/images/ring.jpg",
     bestSeller: true,
     rating: 5.0,
     reviews: 210,
@@ -133,7 +133,7 @@ export const products: Product[] = [
     price: 925,
     description: "خاتم مرصّع بأحجار كريمة زمرّدية تحيط بها حبّات الألماس.",
     surface: "gold",
-    image: "/images/ring-2.svg",
+    image: "/images/ring-2.jpg",
     rating: 4.8,
     reviews: 63,
     tags: ["زمرّد", "أحجار كريمة"],
@@ -147,7 +147,7 @@ export const products: Product[] = [
     price: 2250,
     description: "سوار ألماسي رفيع يلتفّ حول معصمك ببريقٍ متواصل.",
     surface: "cream",
-    image: "/images/bracelet.svg",
+    image: "/images/bracelet.jpg",
     bestSeller: true,
     rating: 4.9,
     reviews: 88,
@@ -161,7 +161,7 @@ export const products: Product[] = [
     price: 1580,
     description: "سوار ذهبي مرصّع بأحجار الزمرّد لإطلالة ملكية أنيقة.",
     surface: "gold",
-    image: "/images/bracelet-2.svg",
+    image: "/images/bracelet-2.jpg",
     newArrival: true,
     rating: 4.7,
     reviews: 41,
@@ -177,7 +177,7 @@ export const products: Product[] = [
     description:
       "رمزٌ للحب، مصنوعة من الذهب ومرصّعة بالماس الحقيقي لتبقى ذكرى خالدة.",
     surface: "dark",
-    image: "/images/heart-pendant.svg",
+    image: "/images/heart-pendant.jpg",
     bestSeller: true,
     newArrival: true,
     rating: 5.0,
@@ -192,7 +192,7 @@ export const products: Product[] = [
     price: 1450,
     description: "جمالٌ في كل بريق — قلادة سوليتير ماسية أنيقة وخالدة.",
     surface: "cream",
-    image: "/images/pendant.svg",
+    image: "/images/pendant.jpg",
     newArrival: true,
     rating: 4.9,
     reviews: 73,
@@ -222,7 +222,7 @@ export const trendingCollections: Collection[] = [
     description: "مجوهرات بولكي مستوحاة من تراثنا الغني.",
     price: 1200,
     surface: "dark",
-    image: "/images/collection-royal.svg",
+    image: "/images/collection-royal.jpg",
   },
   {
     id: "col-modern",
@@ -231,7 +231,7 @@ export const trendingCollections: Collection[] = [
     description: "تصاميم عصرية متوازنة لكل يوم.",
     price: 950,
     surface: "dark",
-    image: "/images/collection-modern.svg",
+    image: "/images/collection-modern.jpg",
   },
   {
     id: "col-bridal",
@@ -240,7 +240,7 @@ export const trendingCollections: Collection[] = [
     description: "لأجمل لحظاتك في يوم العمر.",
     price: 1800,
     surface: "dark",
-    image: "/images/collection-bridal.svg",
+    image: "/images/collection-bridal.jpg",
   },
 ];
 
@@ -253,7 +253,7 @@ export const collections: Collection[] = [
     description: "مجوهرات بولكي مستوحاة من تراثنا الغني.",
     price: 2450,
     surface: "dark",
-    image: "/images/collection-1.svg",
+    image: "/images/collection-1.jpg",
   },
   {
     id: "precious-luxe",
@@ -262,7 +262,7 @@ export const collections: Collection[] = [
     description: "مجوهرات أحجار فاخرة تدوم لأجيال.",
     price: 3250,
     surface: "dark",
-    image: "/images/collection-2.svg",
+    image: "/images/collection-2.jpg",
   },
   {
     id: "bridal-choice",
@@ -271,7 +271,7 @@ export const collections: Collection[] = [
     description: "لأجمل لحظاتك، صُمّمت لتبقى ذكرى مدى الحياة.",
     price: 2750,
     surface: "dark",
-    image: "/images/collection-3.svg",
+    image: "/images/collection-3.jpg",
   },
   {
     id: "diamond-elegance",
@@ -280,7 +280,7 @@ export const collections: Collection[] = [
     description: "ألماس كلاسيكي مصنوع بإتقانٍ وشغف.",
     price: 1650,
     surface: "cream",
-    image: "/images/collection-4.svg",
+    image: "/images/collection-4.jpg",
   },
   {
     id: "men-collection",
@@ -289,7 +289,7 @@ export const collections: Collection[] = [
     description: "تصاميم جريئة وأنيقة للرجل العصري.",
     price: 950,
     surface: "dark",
-    image: "/images/collection-5.svg",
+    image: "/images/collection-5.jpg",
   },
 ];
 
@@ -300,7 +300,7 @@ export const gemstoneFeature = {
     "اكتشف أجود الأحجار الكريمة التي تُضيف لونًا لكل لحظة مميّزة.",
   price: 2500,
   surface: "gold" as const,
-  image: "/images/gemstones.svg",
+  image: "/images/gemstones.jpg",
 };
 
 /** Editorial / info block (Explore screen). */
@@ -310,7 +310,7 @@ export const editorialFeature = {
   description: "تعرّف على الحِرفية، والعيارات، والأحجار الكريمة، والمزيد.",
   cta: "اقرأ المزيد",
   surface: "dark" as const,
-  image: "/images/editorial.svg",
+  image: "/images/editorial.jpg",
 };
 
 export const exhibitions: Exhibition[] = [

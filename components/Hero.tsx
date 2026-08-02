@@ -25,7 +25,7 @@ export function Hero() {
 
         <div className="relative w-[38%] shrink-0" data-reveal>
           <ProductImage
-            src="/images/hero.svg"
+            src="/images/hero.jpg"
             surface="cream"
             icon="necklace"
             ratio="portrait"
