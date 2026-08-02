@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/AppShell";
-import { ShippingForm } from "@/components/checkout/ShippingForm";
+import { PaymentForm } from "@/components/checkout/PaymentForm";
 
 export const metadata: Metadata = {
-  title: "الشحن والتواصل",
-  description: "أدخلي عنوان الشحن ومعلومات التواصل لإتمام الطلب.",
+  title: "الدفع",
+  description: "أكملي عملية الدفع بأمان.",
 };
 
-export default function CheckoutPage() {
+export default function CheckoutPaymentPage() {
   return (
     <AppShell>
       <header className="px-5 pb-1 pt-5">
@@ -15,7 +15,7 @@ export default function CheckoutPage() {
           إتمام الشراء
         </h1>
       </header>
-      <ShippingForm />
+      <PaymentForm />
     </AppShell>
   );
 }
