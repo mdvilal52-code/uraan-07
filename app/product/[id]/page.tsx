@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { ProductImage } from "@/components/ProductImage";
 import { ProductCard } from "@/components/ProductCard";
 import { AddToCartButton } from "@/components/AddToCartButton";
+import { BuyNowButton } from "@/components/BuyNowButton";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Footer } from "@/components/Footer";
 import { getProductById, getProductsByCategory } from "@/lib/products";
@@ -80,22 +81,6 @@ export default async function ProductPage({
             <WishlistButton productId={product.id} />
           </div>
         </div>
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          {[product.image, "/images/gemstones.jpg", product.image, "/images/pendant.jpg"].map(
-            (imgSrc, i) => (
-              <ProductImage
-                key={i}
-                src={imgSrc}
-                surface={i % 2 ? "cream" : product.surface}
-                icon={iconByCategory[product.category] ?? "gem"}
-                ratio="square"
-                rounded="rounded-xl"
-                label={product.name}
-                sizes="25vw"
-              />
-            ),
-          )}
-        </div>
       </section>
 
       {/* Info */}
@@ -152,10 +137,17 @@ export default async function ProductPage({
         )}
 
         <div className="mt-5 flex items-center gap-3">
-          <AddToCartButton productId={product.id} className="flex-1" />
+          <BuyNowButton productId={product.id} className="flex-1" />
           <WishlistButton
             productId={product.id}
             className="h-[3.1rem] w-[3.1rem] rounded-2xl border border-cream-300 bg-cream-50 shadow-card-soft"
+          />
+        </div>
+        <div className="mt-2.5">
+          <AddToCartButton
+            productId={product.id}
+            className="w-full"
+            variant="gold"
           />
         </div>
 

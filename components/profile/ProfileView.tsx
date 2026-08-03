@@ -69,7 +69,7 @@ export function ProfileView() {
         <div className="overflow-hidden rounded-3xl bg-forest-gradient p-5 text-cream-50">
           <div className="flex items-center gap-4">
             <div className="grid h-16 w-16 place-items-center rounded-full bg-gold-gradient font-arabic text-2xl font-extrabold text-forest-800">
-              {user.name.charAt(0)}
+              {(user.name || user.email || "؟").charAt(0)}
             </div>
             <div>
               <h1 className="font-arabic text-xl font-bold text-cream-50">

@@ -27,7 +27,7 @@ export async function CustomerTable() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-gradient font-arabic text-sm font-extrabold text-forest-800">
-                      {c.name.charAt(0)}
+                      {(c.name || c.email || "؟").charAt(0)}
                     </span>
                     <div>
                       <p className="font-arabic font-semibold text-ink">{c.name}</p>
