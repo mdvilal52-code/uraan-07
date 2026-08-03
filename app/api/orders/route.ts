@@ -7,7 +7,12 @@ import type { CartLine } from "@/types";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return NextResponse.json({ orders: await listOrders() });
+  // Orders are personal — scope strictly to the signed-in account so one
+  // customer can never see another's purchase history. Guests (no session)
+  // have no account to attribute orders to, so they see an empty list.
+  const user = await getUserByToken(cookies().get(SESSION_COOKIE)?.value);
+  if (!user) return NextResponse.json({ orders: [] });
+  return NextResponse.json({ orders: await listOrders({ userId: user.id }) });
 }
 
 export async function POST(req: NextRequest) {
@@ -24,6 +29,7 @@ export async function POST(req: NextRequest) {
       email: body.email || user?.email || "guest@example.com",
       lines: items,
       couponCode: typeof body.couponCode === "string" ? body.couponCode : undefined,
+      userId: user?.id,
     });
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: 400 });

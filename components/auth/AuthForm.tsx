@@ -77,6 +77,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               type={show ? "text" : "password"}
               placeholder="••••••••"
               required
+              minLength={isLogin ? undefined : 8}
+              autoComplete={isLogin ? "current-password" : "new-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-faint"
@@ -93,6 +95,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               )}
             </button>
           </div>
+          {!isLogin && (
+            <span className="mt-1 block text-xs text-ink-faint">
+              8 أحرف على الأقل
+            </span>
+          )}
         </div>
 
         {isLogin && (

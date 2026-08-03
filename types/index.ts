@@ -81,6 +81,8 @@ export interface Order {
   items: number;
   couponCode?: string;
   discount?: number;
+  /** Account that placed the order (undefined for guest checkout). */
+  userId?: string;
 }
 
 export interface Coupon {
