@@ -123,9 +123,18 @@ const SCHEMA_STATEMENTS = [
     "status" TEXT NOT NULL DEFAULT 'paid',
     "date" TEXT NOT NULL,
     "items" INTEGER NOT NULL DEFAULT 0,
+    "couponCode" TEXT,
+    "discount" INTEGER NOT NULL DEFAULT 0,
+    "userId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  // A table created by an older version of this bootstrap (before coupons /
+  // account-linked orders existed) would be missing these columns — heal it.
+  `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "couponCode" TEXT`,
+  `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "discount" INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "userId" TEXT`,
   `CREATE INDEX IF NOT EXISTS "Order_createdAt_idx" ON "Order"("createdAt")`,
+  `CREATE INDEX IF NOT EXISTS "Order_userId_idx" ON "Order"("userId")`,
 
   `CREATE TABLE IF NOT EXISTS "OrderItem" (
     "id" TEXT PRIMARY KEY,
@@ -177,6 +186,19 @@ const SCHEMA_STATEMENTS = [
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "message" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS "Coupon" (
+    "code" TEXT PRIMARY KEY,
+    "description" TEXT NOT NULL,
+    "discountType" TEXT NOT NULL DEFAULT 'percent',
+    "value" INTEGER NOT NULL,
+    "minSubtotal" INTEGER NOT NULL DEFAULT 0,
+    "maxUses" INTEGER,
+    "usedCount" INTEGER NOT NULL DEFAULT 0,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "expiresAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
 ];

@@ -4,7 +4,7 @@ import { StatusBadge } from "./StatusBadge";
 import { formatPrice } from "@/lib/currency";
 
 export async function OrderTable({ limit }: { limit?: number }) {
-  const orders = await listOrders(limit);
+  const orders = await listOrders({ limit });
 
   return (
     <div className="card overflow-hidden">

@@ -29,6 +29,7 @@ type PrismaOrder = {
   items: number;
   couponCode?: string | null;
   discount?: number;
+  userId?: string | null;
 };
 
 type PrismaCoupon = Awaited<ReturnType<typeof prisma.coupon.findFirst>>;
@@ -64,6 +65,7 @@ function toOrder(o: PrismaOrder): Order {
     items: o.items,
     couponCode: o.couponCode ?? undefined,
     discount: o.discount ?? 0,
+    userId: o.userId ?? undefined,
   };
 }
 
@@ -456,10 +458,16 @@ export async function deleteCoupon(code: string): Promise<boolean> {
 
 /* ---------------- Orders ---------------- */
 
-export async function listOrders(limit?: number): Promise<Order[]> {
+export async function listOrders(
+  opts?: number | { limit?: number; userId?: string },
+): Promise<Order[]> {
+  // Accept a bare number for back-compat with existing `listOrders(limit)` callers.
+  const { limit, userId } =
+    typeof opts === "number" ? { limit: opts, userId: undefined } : (opts ?? {});
   try {
     await ensureSchema();
     const rows = await prisma.order.findMany({
+      where: userId ? { userId } : undefined,
       orderBy: { createdAt: "desc" },
       ...(limit ? { take: limit } : {}),
     });
@@ -475,6 +483,7 @@ export async function createOrder(input: {
   email: string;
   lines: CartLine[];
   couponCode?: string;
+  userId?: string;
 }): Promise<{ ok: true; order: Order } | { ok: false; error: string }> {
   const priced = await priceCart(input.lines);
   if (priced.lines.length === 0) {
@@ -510,6 +519,7 @@ export async function createOrder(input: {
         items: priced.count,
         couponCode: couponCode ?? null,
         discount,
+        userId: input.userId ?? null,
         lines: {
           create: priced.lines.map((l) => ({
             productId: l.product.id,

@@ -42,12 +42,8 @@ export function ProfileView() {
   const [section, setSection] = useState<Section>("main");
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const [addresses, setAddresses] = useState<Address[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      return JSON.parse(localStorage.getItem("ariana_addresses") || "[]");
-    } catch { return []; }
-  });
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addressesReady, setAddressesReady] = useState(false);
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [nameEdit, setNameEdit] = useState("");
   const [editingName, setEditingName] = useState(false);
@@ -63,13 +59,28 @@ export function ProfileView() {
     }
   }, [section]);
 
+  // Hydrate from localStorage after mount (not during render) so the
+  // client's first render always matches the server-rendered HTML —
+  // reading localStorage inside a useState initializer runs on the client
+  // but not the server, which would otherwise mismatch during hydration.
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem("ariana_addresses");
+      if (raw) setAddresses(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+    setAddressesReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!addressesReady) return;
     try {
       localStorage.setItem("ariana_addresses", JSON.stringify(addresses));
     } catch {
       /* storage may be unavailable (private mode, quota, embedded webview) */
     }
-  }, [addresses]);
+  }, [addresses, addressesReady]);
 
   if (loading) {
     return (
@@ -382,12 +393,18 @@ function AddressesSection({
 }
 
 function PaymentSection() {
-  const [cards] = useState(() => {
-    if (typeof window === "undefined") return [];
+  const [cards, setCards] = useState<{ id: string }[]>([]);
+
+  // Read after mount, not during render, to avoid a server/client hydration
+  // mismatch (localStorage doesn't exist during server rendering).
+  useEffect(() => {
     try {
-      return JSON.parse(localStorage.getItem("ariana_cards") || "[]");
-    } catch { return []; }
-  });
+      const raw = localStorage.getItem("ariana_cards");
+      if (raw) setCards(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   return (
     <div className="space-y-3">

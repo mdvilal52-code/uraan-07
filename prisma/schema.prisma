@@ -51,11 +51,15 @@ model Order {
   items      Int         @default(0)
   couponCode String?
   discount   Int         @default(0)
+  /// The account that placed the order (null for guest checkout) — lets
+  /// "My Orders" show only the signed-in customer's own history.
+  userId     String?
   createdAt  DateTime    @default(now())
 
   lines      OrderItem[]
 
   @@index([createdAt])
+  @@index([userId])
 }
 
 model OrderItem {
