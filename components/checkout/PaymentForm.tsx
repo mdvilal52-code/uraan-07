@@ -51,7 +51,11 @@ function formatCvv(v: string): string {
 
 export function PaymentForm() {
   const router = useRouter();
-  const { items, priced, clear } = useCart();
+  const { items, priced, selectedPriced, removeMany } = useCart();
+  const selectedIds = new Set(
+    (selectedPriced?.lines ?? []).map((l) => l.product.id),
+  );
+  const selectedItems = items.filter((i) => selectedIds.has(i.productId));
 
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
   const [method, setMethod] = useState<Method>("card");
@@ -74,13 +78,13 @@ export function PaymentForm() {
     setShippingInfo(saved);
   }, [router]);
 
-  const subtotal = priced?.subtotal ?? 0;
-  const shipping = priced?.shipping ?? 0;
-  const total = priced?.total ?? 0;
+  const subtotal = selectedPriced?.subtotal ?? 0;
+  const shipping = selectedPriced?.shipping ?? 0;
+  const total = selectedPriced?.total ?? 0;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!shippingInfo || items.length === 0) return;
+    if (!shippingInfo || selectedItems.length === 0) return;
     setError("");
     setPlacing(true);
     try {
@@ -88,7 +92,7 @@ export function PaymentForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items,
+          items: selectedItems,
           customer: shippingInfo.name,
           email: shippingInfo.email,
         }),
@@ -99,7 +103,7 @@ export function PaymentForm() {
         return;
       }
       setOrder(data.order);
-      clear();
+      removeMany(selectedItems.map((i) => i.productId));
       clearShippingInfo();
     } catch {
       setError("تعذّر الاتصال بالخادم، تحقّقي من الإنترنت.");
@@ -133,6 +137,20 @@ export function PaymentForm() {
         <p className="mt-4 text-ink-muted">سلّتك فارغة، أضِف بعض القطع أولًا.</p>
         <Link href="/shop" className="btn-forest mt-5">
           تصفّح المتجر
+        </Link>
+      </div>
+    );
+  }
+
+  if (selectedPriced && selectedPriced.lines.length === 0) {
+    return (
+      <div className="grid place-items-center px-5 py-20 text-center">
+        <ShoppingBag className="h-14 w-14 text-cream-400" />
+        <p className="mt-4 text-ink-muted">
+          لم تختاري أي منتج للشراء. عودي إلى السلة واختاري منتجًا واحدًا على الأقل.
+        </p>
+        <Link href="/cart" className="btn-forest mt-5">
+          العودة إلى السلة
         </Link>
       </div>
     );

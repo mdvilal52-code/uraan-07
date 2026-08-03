@@ -29,7 +29,7 @@ function Field({
 
 export function ShippingForm() {
   const router = useRouter();
-  const { priced } = useCart();
+  const { priced, selectedPriced } = useCart();
   const { user } = useAuth();
 
   const [name, setName] = useState("");
@@ -56,9 +56,9 @@ export function ShippingForm() {
     }
   }, [user]);
 
-  const subtotal = priced?.subtotal ?? 0;
-  const shipping = priced?.shipping ?? 0;
-  const total = priced?.total ?? 0;
+  const subtotal = selectedPriced?.subtotal ?? 0;
+  const shipping = selectedPriced?.shipping ?? 0;
+  const total = selectedPriced?.total ?? 0;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -73,6 +73,20 @@ export function ShippingForm() {
         <p className="mt-4 text-ink-muted">سلّتك فارغة، أضِف بعض القطع أولًا.</p>
         <Link href="/shop" className="btn-forest mt-5">
           تصفّح المتجر
+        </Link>
+      </div>
+    );
+  }
+
+  if (selectedPriced && selectedPriced.lines.length === 0) {
+    return (
+      <div className="grid place-items-center px-5 py-20 text-center">
+        <ShoppingBag className="h-14 w-14 text-cream-400" />
+        <p className="mt-4 text-ink-muted">
+          لم تختاري أي منتج للشراء. عودي إلى السلة واختاري منتجًا واحدًا على الأقل.
+        </p>
+        <Link href="/cart" className="btn-forest mt-5">
+          العودة إلى السلة
         </Link>
       </div>
     );

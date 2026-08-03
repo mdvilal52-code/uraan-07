@@ -35,7 +35,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (ready) localStorage.setItem(KEY, JSON.stringify(ids));
+    if (!ready) return;
+    try {
+      localStorage.setItem(KEY, JSON.stringify(ids));
+    } catch {
+      /* storage may be unavailable (private mode, quota, embedded webview) */
+    }
   }, [ids, ready]);
 
   const toggle = useCallback((id: string) => {

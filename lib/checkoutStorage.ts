@@ -12,7 +12,11 @@ const KEY = "ariana_checkout_shipping";
 
 export function saveShippingInfo(info: ShippingInfo): void {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(KEY, JSON.stringify(info));
+  try {
+    sessionStorage.setItem(KEY, JSON.stringify(info));
+  } catch {
+    /* storage may be unavailable (private mode, quota, embedded webview) */
+  }
 }
 
 export function getShippingInfo(): ShippingInfo | null {
@@ -27,5 +31,9 @@ export function getShippingInfo(): ShippingInfo | null {
 
 export function clearShippingInfo(): void {
   if (typeof window === "undefined") return;
-  sessionStorage.removeItem(KEY);
+  try {
+    sessionStorage.removeItem(KEY);
+  } catch {
+    /* ignore */
+  }
 }

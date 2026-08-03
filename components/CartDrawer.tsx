@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag, Check } from "lucide-react";
 import { ProductImage } from "./ProductImage";
 import { formatPrice } from "@/lib/currency";
 import { useCart } from "@/context/CartContext";
@@ -22,7 +22,8 @@ export function CartDrawer({
   open: boolean;
   onClose: () => void;
 }) {
-  const { priced, setQty, remove } = useCart();
+  const { priced, selectedPriced, setQty, remove, isSelected, toggleSelected } =
+    useCart();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -32,6 +33,7 @@ export function CartDrawer({
   }, [open]);
 
   const lines = priced?.lines ?? [];
+  const selectedCount = selectedPriced?.lines.length ?? 0;
 
   return (
     <div
@@ -74,8 +76,23 @@ export function CartDrawer({
         ) : (
           <>
             <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
-              {lines.map(({ product, quantity }) => (
-                <div key={product.id} className="flex gap-3">
+              {lines.map(({ product, quantity }) => {
+                const checked = isSelected(product.id);
+                return (
+                <div key={product.id} className={`flex gap-3 transition-opacity ${checked ? "" : "opacity-50"}`}>
+                  <button
+                    type="button"
+                    onClick={() => toggleSelected(product.id)}
+                    aria-pressed={checked}
+                    aria-label={checked ? "إلغاء اختيار المنتج" : "اختيار المنتج للشراء"}
+                    className={`mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-lg border-2 transition ${
+                      checked
+                        ? "border-forest-600 bg-forest-600 text-cream-50"
+                        : "border-cream-400 bg-cream-50"
+                    }`}
+                  >
+                    {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+                  </button>
                   <ProductImage
                     src={product.image}
                     surface={product.surface}
@@ -125,21 +142,33 @@ export function CartDrawer({
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="border-t border-cream-300 px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
                 <span className="font-arabic text-sm text-ink-muted">
-                  المجموع الفرعي
+                  المجموع الفرعي {selectedCount > 0 && `(${selectedCount})`}
                 </span>
                 <span className="price text-lg">
-                  {formatPrice(priced?.subtotal ?? 0)}
+                  {formatPrice(selectedPriced?.subtotal ?? 0)}
                 </span>
               </div>
-              <Link href="/checkout" onClick={onClose} className="btn-forest w-full">
-                إتمام الشراء
-              </Link>
+              {selectedCount === 0 && (
+                <p className="mb-2 text-center text-xs font-semibold text-clay-500">
+                  اختاري منتجًا واحدًا على الأقل للمتابعة
+                </p>
+              )}
+              {selectedCount > 0 ? (
+                <Link href="/checkout" onClick={onClose} className="btn-forest w-full">
+                  إتمام الشراء
+                </Link>
+              ) : (
+                <span className="btn-forest w-full cursor-not-allowed opacity-50">
+                  إتمام الشراء
+                </span>
+              )}
               <button
                 onClick={onClose}
                 className="mt-2 w-full py-2 text-center text-sm font-semibold text-ink-muted transition hover:text-ink"

@@ -64,7 +64,11 @@ export function ProfileView() {
   }, [section]);
 
   useEffect(() => {
-    localStorage.setItem("ariana_addresses", JSON.stringify(addresses));
+    try {
+      localStorage.setItem("ariana_addresses", JSON.stringify(addresses));
+    } catch {
+      /* storage may be unavailable (private mode, quota, embedded webview) */
+    }
   }, [addresses]);
 
   if (loading) {

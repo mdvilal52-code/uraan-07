@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Minus, Trash2, ShoppingBag, Tag } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingBag, Tag, Check } from "lucide-react";
 import { ProductImage } from "@/components/ProductImage";
 import { formatPrice } from "@/lib/currency";
 import { useCart } from "@/context/CartContext";
@@ -15,8 +15,10 @@ const iconByCategory: Record<string, string> = {
 };
 
 export function CartView() {
-  const { priced, ready, setQty, remove } = useCart();
+  const { priced, selectedPriced, ready, setQty, remove, isSelected, toggleSelected } =
+    useCart();
   const lines = priced?.lines ?? [];
+  const selectedCount = selectedPriced?.lines.length ?? 0;
 
   if (ready && lines.length === 0) {
     return (
@@ -38,8 +40,23 @@ export function CartView() {
   return (
     <div className="px-5 pb-6">
       <div className="space-y-3">
-        {lines.map(({ product, quantity }) => (
-          <div key={product.id} className="card flex gap-3 p-3">
+        {lines.map(({ product, quantity }) => {
+          const checked = isSelected(product.id);
+          return (
+          <div key={product.id} className={`card flex gap-3 p-3 transition-opacity ${checked ? "" : "opacity-50"}`}>
+            <button
+              type="button"
+              onClick={() => toggleSelected(product.id)}
+              aria-pressed={checked}
+              aria-label={checked ? "إلغاء اختيار المنتج" : "اختيار المنتج للشراء"}
+              className={`mt-1 grid h-6 w-6 shrink-0 place-items-center self-start rounded-lg border-2 transition ${
+                checked
+                  ? "border-forest-600 bg-forest-600 text-cream-50"
+                  : "border-cream-400 bg-cream-50"
+              }`}
+            >
+              {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
+            </button>
             <ProductImage
               src={product.image}
               surface={product.surface}
@@ -95,7 +112,8 @@ export function CartView() {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Promo */}
@@ -113,25 +131,41 @@ export function CartView() {
 
       {/* Summary */}
       <div className="card mt-4 space-y-2 p-4">
-        <Row label="المجموع الفرعي" value={formatPrice(priced?.subtotal ?? 0)} />
+        <Row
+          label={`المجموع الفرعي${selectedCount > 0 ? ` (${selectedCount})` : ""}`}
+          value={formatPrice(selectedPriced?.subtotal ?? 0)}
+        />
         <Row
           label="الشحن"
           value={
-            (priced?.shipping ?? 0) === 0
+            (selectedPriced?.shipping ?? 0) === 0
               ? "مجّاني"
-              : formatPrice(priced?.shipping ?? 0)
+              : formatPrice(selectedPriced?.shipping ?? 0)
           }
         />
         <div className="hr-gold my-1" />
         <div className="flex items-center justify-between">
           <span className="font-arabic font-bold text-ink">الإجمالي</span>
-          <span className="price text-xl">{formatPrice(priced?.total ?? 0)}</span>
+          <span className="price text-xl">
+            {formatPrice(selectedPriced?.total ?? 0)}
+          </span>
         </div>
       </div>
 
-      <Link href="/checkout" className="btn-forest mt-4 w-full">
-        إتمام الشراء
-      </Link>
+      {selectedCount === 0 && (
+        <p className="mt-3 text-center text-xs font-semibold text-clay-500">
+          اختاري منتجًا واحدًا على الأقل للمتابعة
+        </p>
+      )}
+      {selectedCount > 0 ? (
+        <Link href="/checkout" className="btn-forest mt-4 w-full">
+          إتمام الشراء
+        </Link>
+      ) : (
+        <span className="btn-forest mt-4 w-full cursor-not-allowed opacity-50">
+          إتمام الشراء
+        </span>
+      )}
     </div>
   );
 }
