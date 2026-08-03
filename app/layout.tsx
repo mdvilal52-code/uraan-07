@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal, Cormorant_Garamond, Amiri } from "next/font/google";
 import { Providers } from "@/components/providers/Providers";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "../styles/luxury.css";
 import "../styles/animations.css";
@@ -27,7 +28,7 @@ const amiri = Amiri({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ariana-jewellery.example"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "أريانا للأحجار الكريمة والمجوهرات | Ariana Gems & Jewellery",
     template: "%s | أريانا",
@@ -56,6 +57,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ar_AE",
     siteName: "Ariana Gems & Jewellery",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "أريانا للأحجار الكريمة والمجوهرات",
+    description:
+      "أحجار كريمة ومجوهرات فاخرة مصنوعة بعناية — تألّقي للأبد، بريقٌ لا ينتهي.",
   },
   robots: { index: true, follow: true },
 };

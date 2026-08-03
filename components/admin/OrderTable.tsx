@@ -27,7 +27,14 @@ export async function OrderTable({ limit }: { limit?: number }) {
                 key={o.id}
                 className="border-b border-cream-100 text-sm last:border-0 hover:bg-cream-100/60"
               >
-                <td className="px-4 py-3 font-bold text-ink">{o.id}</td>
+                <td className="px-4 py-3 font-bold text-ink">
+                  {o.id}
+                  {o.couponCode && (
+                    <p className="mt-0.5 font-mono text-[0.65rem] font-semibold text-forest-600">
+                      {o.couponCode} · -{formatPrice(o.discount ?? 0)}
+                    </p>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <p className="font-arabic font-semibold text-ink">{o.customer}</p>
                   <p className="text-[0.7rem] text-ink-faint">{o.email}</p>

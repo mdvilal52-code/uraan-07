@@ -19,12 +19,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const user = await getUserByToken(cookies().get(SESSION_COOKIE)?.value);
-    const order = await createOrder({
+    const result = await createOrder({
       customer: body.customer || user?.name || "زائر",
       email: body.email || user?.email || "guest@example.com",
       lines: items,
+      couponCode: typeof body.couponCode === "string" ? body.couponCode : undefined,
     });
-    return NextResponse.json({ order }, { status: 201 });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+    return NextResponse.json({ order: result.order }, { status: 201 });
   } catch (err) {
     console.error("[api] create order failed:", err);
     return NextResponse.json(

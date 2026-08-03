@@ -12,6 +12,12 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  if (typeof password !== "string" || password.length < 8) {
+    return NextResponse.json(
+      { error: "كلمة المرور يجب ألا تقل عن 8 أحرف" },
+      { status: 400 },
+    );
+  }
   try {
     const result = await createUser({ name, email, password });
     if (!result.ok) {

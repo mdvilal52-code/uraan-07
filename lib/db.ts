@@ -1,9 +1,11 @@
 import { scryptSync, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { prisma, ensureSchema } from "@/lib/prisma";
 import { products as catalogProducts } from "@/data/jewelleryData";
+import { formatPrice } from "@/lib/currency";
 import type {
   CartLine,
   CategorySlug,
+  Coupon,
   Customer,
   GemSurface,
   Order,
@@ -25,7 +27,11 @@ type PrismaOrder = {
   status: string;
   date: string;
   items: number;
+  couponCode?: string | null;
+  discount?: number;
 };
+
+type PrismaCoupon = Awaited<ReturnType<typeof prisma.coupon.findFirst>>;
 
 /** Map a Prisma row to the domain Product shape. */
 function toProduct(p: NonNullable<PrismaProduct>): Product {
@@ -56,6 +62,22 @@ function toOrder(o: PrismaOrder): Order {
     status: o.status as Order["status"],
     date: o.date,
     items: o.items,
+    couponCode: o.couponCode ?? undefined,
+    discount: o.discount ?? 0,
+  };
+}
+
+function toCoupon(c: NonNullable<PrismaCoupon>): Coupon {
+  return {
+    code: c.code,
+    description: c.description,
+    discountType: c.discountType as Coupon["discountType"],
+    value: c.value,
+    minSubtotal: c.minSubtotal,
+    maxUses: c.maxUses ?? undefined,
+    usedCount: c.usedCount,
+    active: c.active,
+    expiresAt: c.expiresAt ? c.expiresAt.toISOString() : undefined,
   };
 }
 
@@ -301,6 +323,137 @@ export async function priceCart(lines: CartLine[]): Promise<{
   return { lines: priced, subtotal, shipping, total: subtotal + shipping, count };
 }
 
+/* ---------------- Coupons ---------------- */
+
+export interface CouponCheck {
+  ok: boolean;
+  code?: string;
+  description?: string;
+  /** AUD amount to subtract from the subtotal. */
+  discount?: number;
+  error?: string;
+}
+
+/** Validate a coupon code against the current subtotal (server-side source of truth). */
+export async function validateCoupon(
+  rawCode: string,
+  subtotal: number,
+): Promise<CouponCheck> {
+  const code = (rawCode ?? "").trim().toUpperCase();
+  if (!code) return { ok: false, error: "أدخلي كود الخصم" };
+
+  let row;
+  try {
+    await ensureSchema();
+    row = await prisma.coupon.findUnique({ where: { code } });
+  } catch (err) {
+    console.error("[db] validateCoupon lookup failed:", err);
+    return { ok: false, error: "تعذّر التحقق من الكود حاليًا، حاول لاحقًا." };
+  }
+
+  if (!row || !row.active) {
+    return { ok: false, error: "كود الخصم غير صالح" };
+  }
+  if (row.expiresAt && row.expiresAt.getTime() < Date.now()) {
+    return { ok: false, error: "انتهت صلاحية كود الخصم" };
+  }
+  if (row.maxUses != null && row.usedCount >= row.maxUses) {
+    return { ok: false, error: "تم استخدام هذا الكود بالكامل" };
+  }
+  if (subtotal < row.minSubtotal) {
+    return {
+      ok: false,
+      error: `هذا الكود يتطلب حدًا أدنى للطلب قدره ${formatPrice(row.minSubtotal)}`,
+    };
+  }
+
+  const discount =
+    row.discountType === "fixed"
+      ? Math.min(row.value, subtotal)
+      : Math.round(subtotal * (row.value / 100));
+
+  return { ok: true, code: row.code, description: row.description, discount };
+}
+
+/** Atomically mark one use of a coupon (best-effort; called right after an order is placed). */
+async function redeemCoupon(code: string): Promise<void> {
+  try {
+    await ensureSchema();
+    await prisma.coupon.update({
+      where: { code },
+      data: { usedCount: { increment: 1 } },
+    });
+  } catch (err) {
+    console.error("[db] redeemCoupon failed:", err);
+  }
+}
+
+export async function listCoupons(): Promise<Coupon[]> {
+  try {
+    await ensureSchema();
+    const rows = await prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map(toCoupon);
+  } catch (err) {
+    console.error("[db] listCoupons failed:", err);
+    return [];
+  }
+}
+
+export async function createCoupon(input: {
+  code: string;
+  description: string;
+  discountType?: "percent" | "fixed";
+  value: number;
+  minSubtotal?: number;
+  maxUses?: number | null;
+  expiresAt?: string | null;
+}): Promise<{ ok: true; coupon: Coupon } | { ok: false; error: string }> {
+  const code = (input.code ?? "").trim().toUpperCase();
+  if (!code) return { ok: false, error: "كود الكوبون مطلوب" };
+  if (!input.description?.trim()) return { ok: false, error: "الوصف مطلوب" };
+  const value = Number(input.value);
+  if (!Number.isFinite(value) || value <= 0) {
+    return { ok: false, error: "قيمة الخصم غير صالحة" };
+  }
+  const discountType = input.discountType === "fixed" ? "fixed" : "percent";
+  if (discountType === "percent" && value > 100) {
+    return { ok: false, error: "نسبة الخصم يجب ألا تتجاوز 100%" };
+  }
+
+  await ensureSchema();
+  try {
+    const row = await prisma.coupon.create({
+      data: {
+        code,
+        description: input.description.trim(),
+        discountType,
+        value: Math.round(value),
+        minSubtotal: Math.max(0, Math.round(Number(input.minSubtotal) || 0)),
+        maxUses:
+          input.maxUses == null || Number(input.maxUses) <= 0
+            ? null
+            : Math.round(Number(input.maxUses)),
+        expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+      },
+    });
+    return { ok: true, coupon: toCoupon(row) };
+  } catch (err) {
+    console.error("[db] createCoupon failed:", err);
+    return { ok: false, error: "هذا الكود مستخدم مسبقًا" };
+  }
+}
+
+export async function deleteCoupon(code: string): Promise<boolean> {
+  try {
+    await ensureSchema();
+    await prisma.coupon.delete({ where: { code: code.trim().toUpperCase() } });
+    return true;
+  } catch (err) {
+    console.error("[db] deleteCoupon failed:", err);
+    return false;
+  }
+}
+
 /* ---------------- Orders ---------------- */
 
 export async function listOrders(limit?: number): Promise<Order[]> {
@@ -321,8 +474,25 @@ export async function createOrder(input: {
   customer: string;
   email: string;
   lines: CartLine[];
-}): Promise<Order> {
+  couponCode?: string;
+}): Promise<{ ok: true; order: Order } | { ok: false; error: string }> {
   const priced = await priceCart(input.lines);
+  if (priced.lines.length === 0) {
+    return { ok: false, error: "السلة فارغة" };
+  }
+
+  let discount = 0;
+  let couponCode: string | undefined;
+  if (input.couponCode) {
+    const check = await validateCoupon(input.couponCode, priced.subtotal);
+    if (!check.ok) {
+      return { ok: false, error: check.error ?? "كود الخصم غير صالح" };
+    }
+    discount = check.discount ?? 0;
+    couponCode = check.code;
+  }
+
+  const total = Math.max(0, priced.subtotal - discount) + priced.shipping;
   const date = new Date().toISOString().slice(0, 10);
   try {
     await ensureSchema();
@@ -334,10 +504,12 @@ export async function createOrder(input: {
         id,
         customer: input.customer || "زائر",
         email: input.email || "guest@example.com",
-        total: priced.total,
+        total,
         status: "paid",
         date,
         items: priced.count,
+        couponCode: couponCode ?? null,
+        discount,
         lines: {
           create: priced.lines.map((l) => ({
             productId: l.product.id,
@@ -348,17 +520,23 @@ export async function createOrder(input: {
         },
       },
     });
-    return toOrder(row);
+    if (couponCode) await redeemCoupon(couponCode);
+    return { ok: true, order: toOrder(row) };
   } catch (err) {
     console.error("[db] createOrder DB insert failed, returning offline order:", err);
     return {
-      id: `AR-${10242 + Math.floor(Math.random() * 900)}`,
-      customer: input.customer || "زائر",
-      email: input.email || "guest@example.com",
-      total: priced.total,
-      status: "paid",
-      date,
-      items: priced.count,
+      ok: true,
+      order: {
+        id: `AR-${10242 + Math.floor(Math.random() * 900)}`,
+        customer: input.customer || "زائر",
+        email: input.email || "guest@example.com",
+        total,
+        status: "paid",
+        date,
+        items: priced.count,
+        couponCode,
+        discount,
+      },
     };
   }
 }

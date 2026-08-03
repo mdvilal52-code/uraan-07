@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -11,15 +11,27 @@ import {
   ShoppingBag,
   Lock,
   Pencil,
+  Tag,
+  X,
+  Loader2,
 } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
 import { useCart } from "@/context/CartContext";
 import {
   getShippingInfo,
   clearShippingInfo,
+  getCouponCode,
+  saveCouponCode,
+  clearCouponCode,
   type ShippingInfo,
 } from "@/lib/checkoutStorage";
 import { CheckoutStepper } from "./CheckoutStepper";
+
+interface AppliedCoupon {
+  code: string;
+  description: string;
+  discount: number;
+}
 
 const methods = [
   { key: "card", label: "بطاقة ائتمان", icon: CreditCard },
@@ -68,6 +80,11 @@ export function PaymentForm() {
   const [error, setError] = useState("");
   const [order, setOrder] = useState<{ id: string } | null>(null);
 
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+
   // No shipping info means the customer skipped step 1 — send them back.
   useEffect(() => {
     const saved = getShippingInfo();
@@ -80,7 +97,65 @@ export function PaymentForm() {
 
   const subtotal = selectedPriced?.subtotal ?? 0;
   const shipping = selectedPriced?.shipping ?? 0;
-  const total = selectedPriced?.total ?? 0;
+  const discount = appliedCoupon?.discount ?? 0;
+  const total = Math.max(0, subtotal - discount) + shipping;
+
+  const applyCoupon = useCallback(
+    async (rawCode: string, opts?: { silent?: boolean }) => {
+      const code = rawCode.trim();
+      if (!code) {
+        if (!opts?.silent) setCouponError("أدخلي كود الخصم");
+        return;
+      }
+      setCouponLoading(true);
+      if (!opts?.silent) setCouponError("");
+      try {
+        const res = await fetch("/api/coupons/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, subtotal }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          setAppliedCoupon({
+            code: data.code,
+            description: data.description,
+            discount: data.discount,
+          });
+          setCouponInput(data.code);
+          setCouponError("");
+          saveCouponCode(data.code);
+        } else {
+          setAppliedCoupon(null);
+          clearCouponCode();
+          if (!opts?.silent) setCouponError(data.error ?? "كود الخصم غير صالح");
+        }
+      } catch {
+        if (!opts?.silent)
+          setCouponError("تعذّر الاتصال بالخادم، تحقّقي من الإنترنت.");
+      } finally {
+        setCouponLoading(false);
+      }
+    },
+    [subtotal],
+  );
+
+  // Restore a previously-applied coupon (from step redo / page refresh) once
+  // the cart has a real subtotal to validate it against.
+  const restoredCouponRef = useRef(false);
+  useEffect(() => {
+    if (restoredCouponRef.current || subtotal <= 0) return;
+    restoredCouponRef.current = true;
+    const saved = getCouponCode();
+    if (saved) applyCoupon(saved, { silent: true });
+  }, [subtotal, applyCoupon]);
+
+  function removeCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError("");
+    clearCouponCode();
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,6 +170,7 @@ export function PaymentForm() {
           items: selectedItems,
           customer: shippingInfo.name,
           email: shippingInfo.email,
+          couponCode: appliedCoupon?.code,
         }),
       });
       const data = await res.json();
@@ -105,6 +181,7 @@ export function PaymentForm() {
       setOrder(data.order);
       removeMany(selectedItems.map((i) => i.productId));
       clearShippingInfo();
+      clearCouponCode();
     } catch {
       setError("تعذّر الاتصال بالخادم، تحقّقي من الإنترنت.");
     } finally {
@@ -321,11 +398,92 @@ export function PaymentForm() {
           </p>
         </section>
 
+        {/* Coupon code */}
+        <section className="card space-y-3 p-4">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
+            <Tag className="h-4 w-4 text-forest-600" />
+            كود الخصم
+          </h2>
+
+          {appliedCoupon ? (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-forest-200 bg-forest-50 px-4 py-3">
+              <div className="min-w-0">
+                <p className="font-mono text-sm font-extrabold tracking-wider text-forest-700">
+                  {appliedCoupon.code}
+                </p>
+                <p className="text-xs text-forest-600">{appliedCoupon.description}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-sm font-bold text-forest-700">
+                  -{formatPrice(appliedCoupon.discount)}
+                </span>
+                <button
+                  type="button"
+                  onClick={removeCoupon}
+                  aria-label="إزالة كود الخصم"
+                  className="grid h-7 w-7 place-items-center rounded-lg bg-white/70 text-forest-700 transition hover:bg-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <input
+                  dir="ltr"
+                  type="text"
+                  placeholder="ARIANA15"
+                  value={couponInput}
+                  onChange={(e) => {
+                    setCouponInput(e.target.value.toUpperCase());
+                    if (couponError) setCouponError("");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyCoupon(couponInput);
+                    }
+                  }}
+                  aria-label="كود الخصم"
+                  aria-invalid={couponError ? true : undefined}
+                  className={`${inputCls} flex-1 uppercase tracking-wider`}
+                />
+                <button
+                  type="button"
+                  disabled={couponLoading || !couponInput.trim()}
+                  onClick={() => applyCoupon(couponInput)}
+                  className="btn-forest shrink-0 px-5 disabled:opacity-60"
+                >
+                  {couponLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "تطبيق"
+                  )}
+                </button>
+              </div>
+              {couponError && (
+                <p role="alert" className="text-xs font-semibold text-red-600">
+                  {couponError}
+                </p>
+              )}
+            </>
+          )}
+        </section>
+
         <div className="card space-y-2 p-4">
           <div className="flex items-center justify-between text-sm">
             <span className="text-ink-muted">المجموع الفرعي</span>
             <span className="font-semibold text-ink">{formatPrice(subtotal)}</span>
           </div>
+          {appliedCoupon && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink-muted">خصم ({appliedCoupon.code})</span>
+              <span className="font-semibold text-forest-600">
+                -{formatPrice(discount)}
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between text-sm">
             <span className="text-ink-muted">الشحن</span>
             <span className="font-semibold text-ink">

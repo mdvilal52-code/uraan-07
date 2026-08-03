@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { products } from "../data/jewelleryData";
 import { orders } from "../lib/orders";
 import { customers } from "../lib/users";
+import { coupons } from "../lib/coupons";
 
 const prisma = new PrismaClient();
 
@@ -101,12 +102,41 @@ async function main() {
     });
   }
 
-  const [pc, cc, oc] = await Promise.all([
+  // Coupons
+  for (const c of coupons) {
+    await prisma.coupon.upsert({
+      where: { code: c.code },
+      update: {
+        description: c.description,
+        discountType: c.discountType,
+        value: c.value,
+        minSubtotal: c.minSubtotal,
+        maxUses: c.maxUses ?? null,
+        usedCount: c.usedCount,
+        active: c.active,
+        expiresAt: c.expiresAt ? new Date(c.expiresAt) : null,
+      },
+      create: {
+        code: c.code,
+        description: c.description,
+        discountType: c.discountType,
+        value: c.value,
+        minSubtotal: c.minSubtotal,
+        maxUses: c.maxUses ?? null,
+        usedCount: c.usedCount,
+        active: c.active,
+        expiresAt: c.expiresAt ? new Date(c.expiresAt) : null,
+      },
+    });
+  }
+
+  const [pc, cc, oc, kc] = await Promise.all([
     prisma.product.count(),
     prisma.customer.count(),
     prisma.order.count(),
+    prisma.coupon.count(),
   ]);
-  console.log(`Seeded: ${pc} products, ${cc} customers, ${oc} orders`);
+  console.log(`Seeded: ${pc} products, ${cc} customers, ${oc} orders, ${kc} coupons`);
 }
 
 main()

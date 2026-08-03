@@ -79,6 +79,20 @@ export interface Order {
   status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
   date: string;
   items: number;
+  couponCode?: string;
+  discount?: number;
+}
+
+export interface Coupon {
+  code: string;
+  description: string;
+  discountType: "percent" | "fixed";
+  value: number;
+  minSubtotal: number;
+  maxUses?: number;
+  usedCount: number;
+  active: boolean;
+  expiresAt?: string;
 }
 
 export interface Customer {

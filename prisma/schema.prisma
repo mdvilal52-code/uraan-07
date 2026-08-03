@@ -42,16 +42,18 @@ model Customer {
 }
 
 model Order {
-  id        String      @id
-  customer  String
-  email     String
-  total     Int
-  status    String      @default("paid")
-  date      String
-  items     Int         @default(0)
-  createdAt DateTime    @default(now())
+  id         String      @id
+  customer   String
+  email      String
+  total      Int
+  status     String      @default("paid")
+  date       String
+  items      Int         @default(0)
+  couponCode String?
+  discount   Int         @default(0)
+  createdAt  DateTime    @default(now())
 
-  lines     OrderItem[]
+  lines      OrderItem[]
 
   @@index([createdAt])
 }
@@ -103,4 +105,17 @@ model ContactMessage {
   email     String
   message   String
   createdAt DateTime @default(now())
+}
+
+model Coupon {
+  code         String    @id
+  description  String
+  discountType String    @default("percent") // "percent" | "fixed"
+  value        Int // percent (1-100) or fixed AUD amount, per discountType
+  minSubtotal  Int       @default(0)
+  maxUses      Int? // null = unlimited
+  usedCount    Int       @default(0)
+  active       Boolean   @default(true)
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
 }
