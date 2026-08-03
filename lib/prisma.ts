@@ -20,6 +20,19 @@ function resolveDatabaseUrl(): string | undefined {
 
 const url = resolveDatabaseUrl();
 
+/* Prisma's query engine validates the schema's `env("DATABASE_URL")`
+   reference (prisma/schema.prisma) internally — independent of the
+   `datasources` override passed to the client below — for some code
+   paths (raw queries, and apparently some regular queries too, per
+   production logs: `PrismaClientInitializationError: Environment
+   variable not found: DATABASE_URL`). The `datasources` override alone
+   does not prevent that internal check from running, so it must be set
+   on process.env directly whenever the real value came from a
+   provider-specific name like POSTGRES_PRISMA_URL. */
+if (url && !process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = url;
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   prismaSchemaReady?: Promise<void>;
