@@ -237,6 +237,7 @@ export async function updateProduct(
   if (patch.reviews !== undefined) data.reviews = patch.reviews;
 
   try {
+    await ensureSchema();
     const row = await prisma.product.update({ where: { id }, data });
     return toProduct(row);
   } catch {
@@ -246,6 +247,7 @@ export async function updateProduct(
 
 export async function deleteProduct(id: string): Promise<boolean> {
   try {
+    await ensureSchema();
     await prisma.product.delete({ where: { id } });
     return true;
   } catch {

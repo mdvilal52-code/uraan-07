@@ -1,37 +1,56 @@
 import { PrismaClient } from "@prisma/client";
 
+const CANDIDATE_KEYS = [
+  "DATABASE_URL",
+  "POSTGRES_PRISMA_URL",
+  "POSTGRES_URL",
+  "DATABASE_URL_UNPOOLED",
+  "POSTGRES_URL_NON_POOLING",
+];
+
 /* Resolve the connection string from whichever env var the host provides.
    Neon / Vercel Postgres integrations may name it POSTGRES_PRISMA_URL,
    POSTGRES_URL, DATABASE_URL_UNPOOLED, etc. — not always DATABASE_URL. */
 function resolveDatabaseUrl(): string | undefined {
-  const keys = [
-    "DATABASE_URL",
-    "POSTGRES_PRISMA_URL",
-    "POSTGRES_URL",
-    "DATABASE_URL_UNPOOLED",
-    "POSTGRES_URL_NON_POOLING",
-  ];
-  for (const k of keys) {
+  for (const k of CANDIDATE_KEYS) {
     const v = process.env[k];
     if (v && v.trim()) return v.trim();
   }
   return undefined;
 }
 
-const url = resolveDatabaseUrl();
+let envSynced = false;
+let loggedPresence = false;
 
 /* Prisma's query engine validates the schema's `env("DATABASE_URL")`
    reference (prisma/schema.prisma) internally — independent of the
-   `datasources` override passed to the client below — for some code
-   paths (raw queries, and apparently some regular queries too, per
-   production logs: `PrismaClientInitializationError: Environment
-   variable not found: DATABASE_URL`). The `datasources` override alone
-   does not prevent that internal check from running, so it must be set
-   on process.env directly whenever the real value came from a
-   provider-specific name like POSTGRES_PRISMA_URL. */
-if (url && !process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = url;
+   `datasources` override passed to the PrismaClient constructor — for
+   some code paths (raw queries, and per production logs, some regular
+   queries too: `PrismaClientInitializationError: Environment variable
+   not found: DATABASE_URL`). The constructor override alone does not
+   prevent that internal check from running.
+
+   This runs lazily (called from ensureSchema() below, not at module
+   top-level) and re-checks on every call rather than caching a single
+   failure: a first cold-start invocation that races ahead of Vercel's
+   own env var injection would otherwise permanently miss the value for
+   the rest of that warm instance's lifetime if we only ever checked
+   once at import time. */
+function syncDatabaseUrlEnv(): void {
+  if (!loggedPresence) {
+    loggedPresence = true;
+    const present = CANDIDATE_KEYS.filter((k) => !!process.env[k]?.trim());
+    console.log(`[prisma] env candidates present: [${present.join(", ")}] of [${CANDIDATE_KEYS.join(", ")}]`);
+  }
+  if (envSynced && process.env.DATABASE_URL) return;
+  const url = resolveDatabaseUrl();
+  if (url) {
+    process.env.DATABASE_URL = url;
+    envSynced = true;
+  }
 }
+
+const url = resolveDatabaseUrl();
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -191,6 +210,7 @@ async function bootstrapSchema(): Promise<void> {
  * try/catch handling against whatever state the DB is actually in.
  */
 export function ensureSchema(): Promise<void> {
+  syncDatabaseUrlEnv();
   if (!globalForPrisma.prismaSchemaReady) {
     globalForPrisma.prismaSchemaReady = bootstrapSchema().catch((err) => {
       console.error("[prisma] schema self-heal failed:", err);
