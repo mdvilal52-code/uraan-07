@@ -31,7 +31,7 @@ export function ProductCard({ product }: { product: Product }) {
             src={product.image}
             surface={product.surface}
             icon={iconByCategory[product.category] ?? "gem"}
-            ratio="landscape"
+            ratio="square"
             rounded="rounded-none"
             label={product.name}
           />
@@ -57,13 +57,13 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5">
         <Link href={`/product/${product.id}`}>
-          <h3 className="font-arabic text-[1.02rem] font-bold leading-snug text-ink">
+          <h3 className="font-arabic text-[0.95rem] font-bold leading-snug text-ink">
             {product.name}
           </h3>
         </Link>
-        <span className="price mt-1 text-[1.02rem]">{formatPrice(product.price)}</span>
+        <span className="price mt-0.5 text-[0.95rem]">{formatPrice(product.price)}</span>
 
         <button
           type="button"
@@ -72,16 +72,20 @@ export function ProductCard({ product }: { product: Product }) {
             setAdded(true);
             setTimeout(() => setAdded(false), 1500);
           }}
-          className={`btn-forest mt-3 w-full ${added ? "bg-forest-700" : ""}`}
+          className={`mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-extrabold transition active:scale-[0.98] ${
+            added
+              ? "bg-forest-700 text-cream-50"
+              : "bg-forest-600 text-cream-50 shadow-sm"
+          }`}
         >
           {added ? (
             <>
-              <Check className="h-4 w-4" /> تمّت الإضافة
+              <Check className="h-3.5 w-3.5" /> تمّت الإضافة
             </>
           ) : (
             <>
+              <ShoppingCart className="h-3.5 w-3.5" />
               أضف إلى السلة
-              <ShoppingCart className="h-4 w-4" />
             </>
           )}
         </button>

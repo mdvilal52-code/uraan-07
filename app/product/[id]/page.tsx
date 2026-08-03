@@ -5,23 +5,15 @@ import { Star, ShieldCheck, Truck, RefreshCw, ChevronLeft } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProductImage } from "@/components/ProductImage";
 import { ProductCard } from "@/components/ProductCard";
-import { AddToCartButton } from "@/components/AddToCartButton";
-import { BuyNowButton } from "@/components/BuyNowButton";
-import { WishlistButton } from "@/components/WishlistButton";
+import { ProductGallery } from "@/components/product/ProductGallery";
+import { ProductActions } from "@/components/product/ProductActions";
+import { ProductWeightInfo } from "@/components/product/ProductWeightInfo";
 import { Footer } from "@/components/Footer";
 import { getProductById, getProductsByCategory } from "@/lib/products";
 import { categoryNameBySlug } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
 
 export const dynamic = "force-dynamic";
-
-const iconByCategory: Record<string, string> = {
-  necklaces: "necklace",
-  earrings: "earring",
-  rings: "ring",
-  bracelets: "bracelet",
-  pendants: "pendant",
-};
 
 export async function generateMetadata({
   params,
@@ -48,6 +40,12 @@ export default async function ProductPage({
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
 
+  const relatedImages = related
+    .filter((p) => p.image)
+    .map((p) => p.image)
+    .slice(0, 3);
+  const galleryImages = [product.image, ...relatedImages];
+
   return (
     <AppShell>
       {/* Breadcrumb */}
@@ -64,32 +62,14 @@ export default async function ProductPage({
         </Link>
       </nav>
 
-      {/* Gallery */}
-      <section className="px-5 pt-3" data-reveal>
-        <div className="relative">
-          <ProductImage
-            src={product.image}
-            surface={product.surface}
-            icon={iconByCategory[product.category] ?? "gem"}
-            ratio="portrait"
-            rounded="rounded-3xl"
-            label={product.name}
-            priority
-            sizes="(max-width: 480px) 100vw, 440px"
-          />
-          <div className="absolute end-3 top-3">
-            <WishlistButton productId={product.id} />
-          </div>
-        </div>
-      </section>
+      {/* Gallery with thumbnails */}
+      <ProductGallery images={galleryImages} name={product.name} />
 
       {/* Info */}
       <section className="px-5 pt-5" data-reveal>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="font-arabic text-2xl font-extrabold leading-tight text-ink">
-            {product.name}
-          </h1>
-        </div>
+        <h1 className="font-arabic text-2xl font-extrabold leading-tight text-ink">
+          {product.name}
+        </h1>
 
         <div className="mt-2 flex items-center gap-2">
           <span className="flex gap-0.5" aria-label={`${product.rating} من 5`}>
@@ -136,27 +116,18 @@ export default async function ProductPage({
           </div>
         )}
 
-        <div className="mt-5 flex items-center gap-3">
-          <BuyNowButton productId={product.id} className="flex-1" />
-          <WishlistButton
-            productId={product.id}
-            className="h-[3.1rem] w-[3.1rem] rounded-2xl border border-cream-300 bg-cream-50 shadow-card-soft"
-          />
-        </div>
-        <div className="mt-2.5">
-          <AddToCartButton
-            productId={product.id}
-            className="w-full"
-            variant="gold"
-          />
-        </div>
+        {/* Gold weight & total weight */}
+        <ProductWeightInfo category={product.category} price={product.price} />
+
+        {/* Buy + Add to Cart + Wishlist */}
+        <ProductActions productId={product.id} />
 
         {/* Trust row */}
         <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-cream-50 p-3 shadow-card-soft">
           {[
-            { icon: ShieldCheck, label: "ضمان أصلي" },
-            { icon: Truck, label: "شحن آمن" },
             { icon: RefreshCw, label: "إرجاع سهل" },
+            { icon: Truck, label: "شحن آمن" },
+            { icon: ShieldCheck, label: "ضمان أصلي" },
           ].map((f) => (
             <div key={f.label} className="flex flex-col items-center gap-1 text-center">
               <f.icon className="h-5 w-5 text-gold-500" />
