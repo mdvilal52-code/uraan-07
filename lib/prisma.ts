@@ -107,11 +107,11 @@ const SCHEMA_STATEMENTS = [
   `DO $$ BEGIN
     ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey"
       FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-  EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  EXCEPTION WHEN OTHERS THEN NULL; END $$`,
   `DO $$ BEGIN
     ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_productId_fkey"
       FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-  EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  EXCEPTION WHEN OTHERS THEN NULL; END $$`,
 
   `CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT PRIMARY KEY,
@@ -133,7 +133,7 @@ const SCHEMA_STATEMENTS = [
   `DO $$ BEGIN
     ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey"
       FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-  EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
+  EXCEPTION WHEN OTHERS THEN NULL; END $$`,
 
   `CREATE TABLE IF NOT EXISTS "Newsletter" (
     "email" TEXT PRIMARY KEY,
@@ -150,8 +150,23 @@ const SCHEMA_STATEMENTS = [
 ];
 
 async function bootstrapSchema(): Promise<void> {
+  // Each statement is isolated: if one fails (e.g. a foreign-key DO block
+  // hitting an edge case on a particular provider), the rest must still
+  // run. A single shared try/catch around the whole loop previously meant
+  // one bad statement could silently skip every table after it — which is
+  // exactly how User/Session ended up never created while Product (earlier
+  // in the list) did.
+  let failures = 0;
   for (const sql of SCHEMA_STATEMENTS) {
-    await prisma.$executeRawUnsafe(sql);
+    try {
+      await prisma.$executeRawUnsafe(sql);
+    } catch (err) {
+      failures++;
+      console.error("[prisma] schema statement failed:", sql.slice(0, 60), err);
+    }
+  }
+  if (failures) {
+    console.error(`[prisma] schema self-heal finished with ${failures} failed statement(s)`);
   }
 }
 
