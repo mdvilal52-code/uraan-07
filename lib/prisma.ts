@@ -52,6 +52,17 @@ function syncDatabaseUrlEnv(): void {
 
 const url = resolveDatabaseUrl();
 
+// Mirror the resolved value into DATABASE_URL synchronously, before the
+// client below is constructed. Without this, on a cold start where the
+// value briefly isn't visible yet, the client gets built with no
+// `datasources` override and is stuck that way for the rest of this warm
+// instance's life — syncDatabaseUrlEnv() (called later, from ensureSchema())
+// only mutates process.env, it can't retroactively fix an already-built
+// client that resolved its connection lazily from the missing env var.
+if (url && !process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = url;
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   prismaSchemaReady?: Promise<void>;
