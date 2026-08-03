@@ -637,6 +637,24 @@ export async function verifyUser(
   return timingSafeEqual(candidate, stored) ? user : null;
 }
 
+export async function updateUserName(
+  userId: string,
+  name: string,
+): Promise<AuthUser | null> {
+  const trimmed = (name ?? "").trim();
+  if (!trimmed) return null;
+  try {
+    await ensureSchema();
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { name: trimmed },
+    });
+  } catch (err) {
+    console.error("[db] updateUserName failed:", err);
+    return null;
+  }
+}
+
 export async function createSession(userId: string): Promise<string> {
   await ensureSchema();
   const token = randomBytes(24).toString("hex");
