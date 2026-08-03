@@ -48,12 +48,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </p>
       </div>
 
-      <form onSubmit={submit} className="space-y-3">
+      <form onSubmit={submit} method="post" className="space-y-3">
         {!isLogin && (
           <IconField
             icon={User}
             label="الاسم الكامل"
             placeholder="نورة القحطاني"
+            name="name"
+            autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -63,38 +65,43 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           label="البريد الإلكتروني"
           type="email"
           placeholder="you@example.com"
+          name="email"
+          autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <div>
-          <span className="mb-1 block text-xs font-semibold text-ink-soft">
-            كلمة المرور
-          </span>
-          <div className="flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3">
-            <Lock className="h-4 w-4 text-ink-muted" />
-            <input
-              type={show ? "text" : "password"}
-              placeholder="••••••••"
-              required
-              minLength={isLogin ? undefined : 8}
-              autoComplete={isLogin ? "current-password" : "new-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-faint"
-            />
-            <button
-              type="button"
-              onClick={() => setShow((s) => !s)}
-              aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-            >
-              {show ? (
-                <EyeOff className="h-4 w-4 text-ink-muted" />
-              ) : (
-                <Eye className="h-4 w-4 text-ink-muted" />
-              )}
-            </button>
-          </div>
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold text-ink-soft">
+              كلمة المرور
+            </span>
+            <div className="flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3">
+              <Lock className="h-4 w-4 text-ink-muted" />
+              <input
+                type={show ? "text" : "password"}
+                placeholder="••••••••"
+                name="password"
+                required
+                minLength={isLogin ? undefined : 8}
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-faint"
+              />
+              <button
+                type="button"
+                onClick={() => setShow((s) => !s)}
+                aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+              >
+                {show ? (
+                  <EyeOff className="h-4 w-4 text-ink-muted" />
+                ) : (
+                  <Eye className="h-4 w-4 text-ink-muted" />
+                )}
+              </button>
+            </div>
+          </label>
           {!isLogin && (
             <span className="mt-1 block text-xs text-ink-faint">
               8 أحرف على الأقل
