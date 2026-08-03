@@ -65,6 +65,9 @@ export const metadata: Metadata = {
       "أحجار كريمة ومجوهرات فاخرة مصنوعة بعناية — تألّقي للأبد، بريقٌ لا ينتهي.",
   },
   robots: { index: true, follow: true },
+  other: {
+    google: "notranslate",
+  },
 };
 
 export const viewport: Viewport = {
@@ -83,6 +86,7 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
+      translate="no"
       className={`${tajawal.variable} ${cormorant.variable} ${amiri.variable}`}
     >
       <body>

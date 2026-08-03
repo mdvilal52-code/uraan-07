@@ -14,7 +14,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" translate="no">
       <body
         style={{
           margin: 0,
