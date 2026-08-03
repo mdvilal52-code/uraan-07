@@ -36,7 +36,7 @@ interface Address {
 }
 
 export function ProfileView() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, updateProfile } = useAuth();
   const { count: wishCount } = useWishlist();
   const router = useRouter();
   const [section, setSection] = useState<Section>("main");
@@ -47,6 +47,8 @@ export function ProfileView() {
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [nameEdit, setNameEdit] = useState("");
   const [editingName, setEditingName] = useState(false);
+  const [savingName, setSavingName] = useState(false);
+  const [nameError, setNameError] = useState("");
 
   useEffect(() => {
     if (section === "orders") {
@@ -147,6 +149,19 @@ export function ProfileView() {
               setNameEdit={setNameEdit}
               editingName={editingName}
               setEditingName={setEditingName}
+              saving={savingName}
+              error={nameError}
+              onSave={async () => {
+                setNameError("");
+                setSavingName(true);
+                const res = await updateProfile(nameEdit);
+                setSavingName(false);
+                if (res.error) {
+                  setNameError(res.error);
+                  return;
+                }
+                setEditingName(false);
+              }}
             />
           )}
         </div>
@@ -484,12 +499,18 @@ function SettingsSection({
   setNameEdit,
   editingName,
   setEditingName,
+  saving,
+  error,
+  onSave,
 }: {
   user: { name: string; email: string };
   nameEdit: string;
   setNameEdit: (v: string) => void;
   editingName: boolean;
   setEditingName: (v: boolean) => void;
+  saving: boolean;
+  error: string;
+  onSave: () => void;
 }) {
   return (
     <div className="space-y-3">
@@ -503,26 +524,31 @@ function SettingsSection({
               <input
                 value={nameEdit}
                 onChange={(e) => setNameEdit(e.target.value)}
-                className="mt-1 rounded-lg border border-cream-300 bg-cream-50 px-2 py-1 text-sm outline-none focus:border-gold-400"
+                disabled={saving}
+                className="mt-1 rounded-lg border border-cream-300 bg-cream-50 px-2 py-1 text-sm outline-none focus:border-gold-400 disabled:opacity-60"
               />
             ) : (
               <p className="text-sm font-bold text-ink">{user.name}</p>
             )}
           </div>
           <button
+            disabled={saving}
             onClick={() => {
               if (editingName) {
-                setEditingName(false);
+                onSave();
               } else {
                 setNameEdit(user.name);
                 setEditingName(true);
               }
             }}
-            className="text-xs font-bold text-clay-500"
+            className="text-xs font-bold text-clay-500 disabled:opacity-60"
           >
-            {editingName ? "حفظ" : "تعديل"}
+            {editingName ? (saving ? "جارٍ الحفظ…" : "حفظ") : "تعديل"}
           </button>
         </div>
+        {error && (
+          <p className="text-xs font-semibold text-red-600">{error}</p>
+        )}
 
         <div>
           <p className="text-xs text-ink-muted">البريد الإلكتروني</p>
