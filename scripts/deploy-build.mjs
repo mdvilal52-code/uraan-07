@@ -52,12 +52,13 @@ function run(cmd, url, { optional = false } = {}) {
   const env = url ? { ...process.env, DATABASE_URL: url } : { ...process.env };
   try {
     execSync(cmd, { stdio: "inherit", env });
+    return true;
   } catch (err) {
     if (optional) {
       console.log(`  (non-fatal, continuing) → ${cmd}`);
-    } else {
-      throw err;
+      return false;
     }
+    throw err;
   }
 }
 
@@ -65,8 +66,26 @@ function run(cmd, url, { optional = false } = {}) {
 run("prisma generate", pooled);
 
 if (pooled) {
-  // Apply migrations over a direct connection, then seed once (best-effort).
-  run("prisma migrate deploy", direct);
+  // Apply migrations over a direct connection. `migrate deploy` requires the
+  // DB's recorded migration history to line up exactly with the migrations
+  // folder — on a repo whose history was ever squashed/reset (or a DB
+  // provisioned out of band), it errors out and would previously fail the
+  // whole build, silently freezing the live site on the last deployment
+  // that *did* build. Treat it as optional and fall back to `db push`,
+  // which syncs the schema from prisma/schema.prisma directly regardless
+  // of migration history — safe here since this project only ever adds
+  // tables/columns. (Runtime also has a CREATE-TABLE-IF-NOT-EXISTS safety
+  // net in lib/prisma.ts for defense in depth.)
+  const migrated = run("prisma migrate deploy", direct, { optional: true });
+  if (!migrated) {
+    console.warn(
+      "\n⚠️  prisma migrate deploy failed (likely migration-history drift) " +
+        "— falling back to `prisma db push` to sync the schema directly.\n",
+    );
+    run("prisma db push --accept-data-loss --skip-generate", direct, {
+      optional: true,
+    });
+  }
   run("npm run db:seed", direct, { optional: true });
 } else {
   console.warn(

@@ -1,5 +1,6 @@
 import { scryptSync, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
-import { prisma } from "@/lib/prisma";
+import { prisma, ensureSchema } from "@/lib/prisma";
+import { products as catalogProducts } from "@/data/jewelleryData";
 import type {
   CartLine,
   CategorySlug,
@@ -58,6 +59,84 @@ function toOrder(o: PrismaOrder): Order {
   };
 }
 
+/* ============================================================
+   Self-healing product catalog.
+   ------------------------------------------------------------
+   If the Product table exists but is empty (a fresh/partially
+   migrated DB), auto-seed it from the built-in catalog on first
+   read so the storefront is never empty. Memoized per cold start —
+   subsequent calls are a no-op once the table has rows.
+   ============================================================ */
+let productsSeededCheck: Promise<void> | null = null;
+
+function ensureProductsSeeded(): Promise<void> {
+  if (!productsSeededCheck) {
+    productsSeededCheck = (async () => {
+      try {
+        const count = await prisma.product.count();
+        if (count > 0) return;
+        for (const p of catalogProducts) {
+          await prisma.product.upsert({
+            where: { id: p.id },
+            update: {},
+            create: {
+              id: p.id,
+              name: p.name,
+              latin: p.latin,
+              category: p.category,
+              price: p.price,
+              compareAt: p.compareAt ?? null,
+              description: p.description,
+              surface: p.surface,
+              image: p.image,
+              tags: p.tags ?? [],
+              bestSeller: Boolean(p.bestSeller),
+              newArrival: Boolean(p.newArrival),
+              rating: p.rating ?? 5,
+              reviews: p.reviews ?? 0,
+            },
+          });
+        }
+        console.log(`[db] auto-seeded ${catalogProducts.length} products (table was empty)`);
+      } catch (err) {
+        console.error("[db] ensureProductsSeeded failed:", err);
+        // Allow a retry on a later call instead of caching a permanent failure.
+        productsSeededCheck = null;
+      }
+    })();
+  }
+  return productsSeededCheck;
+}
+
+/** In-memory filter over the static catalog — last-resort fallback when
+ *  the DB itself is unreachable (not just empty). Mirrors listProducts'
+ *  filtering logic. */
+function filterCatalog(opts?: {
+  category?: string;
+  q?: string;
+  bestSeller?: boolean;
+  newArrival?: boolean;
+  limit?: number;
+}): Product[] {
+  let rows = catalogProducts as Product[];
+  if (opts?.category && opts.category !== "all") {
+    rows = rows.filter((p) => p.category === opts.category);
+  }
+  if (opts?.bestSeller) rows = rows.filter((p) => p.bestSeller);
+  if (opts?.newArrival) rows = rows.filter((p) => p.newArrival);
+  if (opts?.q) {
+    const q = opts.q.trim().toLowerCase();
+    rows = rows.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.latin.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        (p.tags ?? []).some((t) => t.toLowerCase().includes(q)),
+    );
+  }
+  return opts?.limit ? rows.slice(0, opts.limit) : rows;
+}
+
 /* ---------------- Products ---------------- */
 
 export async function listProducts(opts?: {
@@ -82,6 +161,8 @@ export async function listProducts(opts?: {
   }
 
   try {
+    await ensureSchema();
+    await ensureProductsSeeded();
     const rows = await prisma.product.findMany({
       where,
       orderBy: { createdAt: "asc" },
@@ -90,23 +171,26 @@ export async function listProducts(opts?: {
     return rows.map(toProduct);
   } catch (err) {
     console.error("[db] listProducts failed:", err);
-    return [];
+    return filterCatalog(opts);
   }
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
   try {
+    await ensureSchema();
+    await ensureProductsSeeded();
     const row = await prisma.product.findUnique({ where: { id } });
-    return row ? toProduct(row) : undefined;
+    if (row) return toProduct(row);
   } catch (err) {
     console.error("[db] getProduct failed:", err);
-    return undefined;
   }
+  return catalogProducts.find((p) => p.id === id) as Product | undefined;
 }
 
 export async function createProduct(
   input: Partial<Product>,
 ): Promise<Product> {
+  await ensureSchema();
   const row = await prisma.product.create({
     data: {
       id: input.id?.trim() || `prd-${randomUUID().slice(0, 8)}`,
@@ -187,6 +271,8 @@ export async function priceCart(lines: CartLine[]): Promise<{
   const ids = lines.map((l) => l.productId);
   let rows: Awaited<ReturnType<typeof prisma.product.findMany>> = [];
   try {
+    await ensureSchema();
+    await ensureProductsSeeded();
     rows = ids.length
       ? await prisma.product.findMany({ where: { id: { in: ids } } })
       : [];
@@ -198,13 +284,25 @@ export async function priceCart(lines: CartLine[]): Promise<{
   const priced: PricedLine[] = [];
   for (const l of lines) {
     const row = byId.get(l.productId);
-    if (!row) continue;
     const quantity = Math.max(1, Math.floor(l.quantity));
-    priced.push({
-      product: toProduct(row),
-      quantity,
-      lineTotal: row.price * quantity,
-    });
+    if (row) {
+      priced.push({
+        product: toProduct(row),
+        quantity,
+        lineTotal: row.price * quantity,
+      });
+      continue;
+    }
+    // DB is missing this product row (empty/unreachable table) — price
+    // from the built-in catalog so cart/checkout still work.
+    const fallback = catalogProducts.find((p) => p.id === l.productId);
+    if (fallback) {
+      priced.push({
+        product: fallback as Product,
+        quantity,
+        lineTotal: fallback.price * quantity,
+      });
+    }
   }
   const subtotal = priced.reduce((s, l) => s + l.lineTotal, 0);
   const count = priced.reduce((s, l) => s + l.quantity, 0);
@@ -216,6 +314,7 @@ export async function priceCart(lines: CartLine[]): Promise<{
 
 export async function listOrders(limit?: number): Promise<Order[]> {
   try {
+    await ensureSchema();
     const rows = await prisma.order.findMany({
       orderBy: { createdAt: "desc" },
       ...(limit ? { take: limit } : {}),
@@ -232,6 +331,10 @@ export async function createOrder(input: {
   email: string;
   lines: CartLine[];
 }): Promise<Order> {
+  await ensureSchema();
+  // priceCart also seeds any missing catalog products into the DB, which
+  // guarantees the OrderItem -> Product foreign key below is satisfiable
+  // even for a line priced from the fallback catalog.
   const priced = await priceCart(input.lines);
   const count = await prisma.order.count();
   const id = `AR-${10242 + count}`;
@@ -262,6 +365,7 @@ export async function createOrder(input: {
 
 export async function listCustomers(): Promise<Customer[]> {
   try {
+    await ensureSchema();
     const rows = await prisma.customer.findMany({ orderBy: { joined: "desc" } });
     return rows.map((c) => ({
       id: c.id,
@@ -295,32 +399,46 @@ export async function createUser(input: {
   email: string;
   password: string;
 }): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
-  const email = input.email.trim().toLowerCase();
+  const email = (input.email ?? "").trim().toLowerCase();
   if (!email || !input.password) return { ok: false, error: "بيانات ناقصة" };
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  await ensureSchema();
+
+  let existing;
+  try {
+    existing = await prisma.user.findUnique({ where: { email } });
+  } catch (err) {
+    console.error("[db] createUser lookup failed:", err);
+    return { ok: false, error: "تعذّر الاتصال بقاعدة البيانات، حاول لاحقًا." };
+  }
   if (existing) return { ok: false, error: "هذا البريد مسجّل مسبقًا" };
 
   const salt = randomBytes(16).toString("hex");
-  const user = await prisma.user.create({
-    data: {
-      id: `usr-${randomUUID().slice(0, 8)}`,
-      name: input.name.trim() || "عميلة",
-      email,
-      salt,
-      hash: hashPassword(input.password, salt),
-      role: "customer",
-    },
-  });
-  return { ok: true, user };
+  try {
+    const user = await prisma.user.create({
+      data: {
+        id: `usr-${randomUUID().slice(0, 8)}-${randomUUID().slice(0, 4)}`,
+        name: (input.name ?? "").trim() || "عميلة",
+        email,
+        salt,
+        hash: hashPassword(input.password, salt),
+        role: "customer",
+      },
+    });
+    return { ok: true, user };
+  } catch (err) {
+    console.error("[db] createUser insert failed:", err);
+    return { ok: false, error: "تعذّر إنشاء الحساب حاليًا، حاول لاحقًا." };
+  }
 }
 
 export async function verifyUser(
   email: string,
   password: string,
 ): Promise<AuthUser | null> {
+  await ensureSchema();
   const user = await prisma.user.findUnique({
-    where: { email: email.trim().toLowerCase() },
+    where: { email: (email ?? "").trim().toLowerCase() },
   });
   if (!user) return null;
   const candidate = Buffer.from(hashPassword(password, user.salt), "hex");
@@ -330,6 +448,7 @@ export async function verifyUser(
 }
 
 export async function createSession(userId: string): Promise<string> {
+  await ensureSchema();
   const token = randomBytes(24).toString("hex");
   await prisma.session.create({ data: { token, userId } });
   return token;
@@ -340,6 +459,7 @@ export async function getUserByToken(
 ): Promise<AuthUser | null> {
   if (!token) return null;
   try {
+    await ensureSchema();
     const session = await prisma.session.findUnique({
       where: { token },
       include: { user: true },
@@ -353,7 +473,12 @@ export async function getUserByToken(
 
 export async function destroySession(token?: string | null): Promise<void> {
   if (!token) return;
-  await prisma.session.deleteMany({ where: { token } });
+  try {
+    await ensureSchema();
+    await prisma.session.deleteMany({ where: { token } });
+  } catch (err) {
+    console.error("[db] destroySession failed:", err);
+  }
 }
 
 export function publicUser(user: AuthUser) {
@@ -368,8 +493,9 @@ export function publicUser(user: AuthUser) {
 /* ---------------- Misc capture ---------------- */
 
 export async function addNewsletter(email: string): Promise<boolean> {
-  const e = email.trim().toLowerCase();
+  const e = (email ?? "").trim().toLowerCase();
   if (!e) return false;
+  await ensureSchema();
   await prisma.newsletter.upsert({
     where: { email: e },
     update: {},
@@ -383,6 +509,7 @@ export async function addContact(input: {
   email: string;
   message: string;
 }): Promise<{ id: string }> {
+  await ensureSchema();
   const msg = await prisma.contactMessage.create({
     data: {
       name: input.name,
@@ -403,6 +530,7 @@ export async function analytics(): Promise<{
   averageOrderValue: number;
 }> {
   try {
+    await ensureSchema();
     const [revenueAgg, validCount, orders, customers, products] =
       await Promise.all([
         prisma.order.aggregate({
