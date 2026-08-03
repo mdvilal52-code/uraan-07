@@ -100,7 +100,6 @@ function ensureProductsSeeded(): Promise<void> {
         console.log(`[db] auto-seeded ${catalogProducts.length} products (table was empty)`);
       } catch (err) {
         console.error("[db] ensureProductsSeeded failed:", err);
-        // Allow a retry on a later call instead of caching a permanent failure.
         productsSeededCheck = null;
       }
     })();
@@ -109,15 +108,8 @@ function ensureProductsSeeded(): Promise<void> {
 }
 
 /** In-memory filter over the static catalog — last-resort fallback when
- *  the DB itself is unreachable (not just empty). Mirrors listProducts'
- *  filtering logic. */
-function filterCatalog(opts?: {
-  category?: string;
-  q?: string;
-  bestSeller?: boolean;
-  newArrival?: boolean;
-  limit?: number;
-}): Product[] {
+ *  the DB itself is unreachable (not just empty). */
+function filterCatalog(opts?: ListOpts): Product[] {
   let rows = catalogProducts as Product[];
   if (opts?.category && opts.category !== "all") {
     rows = rows.filter((p) => p.category === opts.category);
@@ -139,13 +131,15 @@ function filterCatalog(opts?: {
 
 /* ---------------- Products ---------------- */
 
-export async function listProducts(opts?: {
+type ListOpts = {
   category?: string;
   q?: string;
   bestSeller?: boolean;
   newArrival?: boolean;
   limit?: number;
-}): Promise<Product[]> {
+};
+
+export async function listProducts(opts?: ListOpts): Promise<Product[]> {
   const where: Record<string, unknown> = {};
   if (opts?.category && opts.category !== "all") where.category = opts.category;
   if (opts?.bestSeller) where.bestSeller = true;
@@ -168,6 +162,7 @@ export async function listProducts(opts?: {
       orderBy: { createdAt: "asc" },
       ...(opts?.limit ? { take: opts.limit } : {}),
     });
+    if (rows.length === 0) return filterCatalog(opts);
     return rows.map(toProduct);
   } catch (err) {
     console.error("[db] listProducts failed:", err);
@@ -271,40 +266,34 @@ export async function priceCart(lines: CartLine[]): Promise<{
   count: number;
 }> {
   const ids = lines.map((l) => l.productId);
-  let rows: Awaited<ReturnType<typeof prisma.product.findMany>> = [];
+  const byId = new Map<string, Product>();
   try {
     await ensureSchema();
     await ensureProductsSeeded();
-    rows = ids.length
-      ? await prisma.product.findMany({ where: { id: { in: ids } } })
-      : [];
+    if (ids.length) {
+      const rows = await prisma.product.findMany({ where: { id: { in: ids } } });
+      rows.forEach((r) => byId.set(r.id, toProduct(r)));
+    }
   } catch (err) {
-    console.error("[db] priceCart failed:", err);
+    console.error("[db] priceCart DB lookup failed:", err);
   }
-  const byId = new Map(rows.map((r) => [r.id, r]));
+  for (const l of lines) {
+    if (!byId.has(l.productId)) {
+      const fallback = catalogProducts.find((p) => p.id === l.productId);
+      if (fallback) byId.set(l.productId, fallback as Product);
+    }
+  }
 
   const priced: PricedLine[] = [];
   for (const l of lines) {
-    const row = byId.get(l.productId);
+    const product = byId.get(l.productId);
+    if (!product) continue;
     const quantity = Math.max(1, Math.floor(l.quantity));
-    if (row) {
-      priced.push({
-        product: toProduct(row),
-        quantity,
-        lineTotal: row.price * quantity,
-      });
-      continue;
-    }
-    // DB is missing this product row (empty/unreachable table) — price
-    // from the built-in catalog so cart/checkout still work.
-    const fallback = catalogProducts.find((p) => p.id === l.productId);
-    if (fallback) {
-      priced.push({
-        product: fallback as Product,
-        quantity,
-        lineTotal: fallback.price * quantity,
-      });
-    }
+    priced.push({
+      product,
+      quantity,
+      lineTotal: product.price * quantity,
+    });
   }
   const subtotal = priced.reduce((s, l) => s + l.lineTotal, 0);
   const count = priced.reduce((s, l) => s + l.quantity, 0);
@@ -334,9 +323,6 @@ export async function createOrder(input: {
   lines: CartLine[];
 }): Promise<Order> {
   await ensureSchema();
-  // priceCart also seeds any missing catalog products into the DB, which
-  // guarantees the OrderItem -> Product foreign key below is satisfiable
-  // even for a line priced from the fallback catalog.
   const priced = await priceCart(input.lines);
   const count = await prisma.order.count();
   const id = `AR-${10242 + count}`;
