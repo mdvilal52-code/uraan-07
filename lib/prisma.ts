@@ -19,6 +19,40 @@ function resolveDatabaseUrl(): string | undefined {
   return undefined;
 }
 
+/* True while `next build` is statically pre-rendering pages
+   (Next sets NEXT_PHASE=phase-production-build for the build process and its
+   render workers). Data-access code checks this to serve the built-in static
+   catalog instead of opening a database connection: the build must never
+   depend on a live DB, or an unreachable/paused database stalls static
+   generation until Next's 60s worker timeout kills the build. */
+export function isBuildPhase(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+/* Tracks whether the last connectivity probe reached the database, so
+   callers (e.g. product self-seeding) can cheaply skip further DB work on a
+   cold start when the server is down instead of hanging on each query.
+   Optimistic by default — assume reachable until a probe proves otherwise. */
+let dbReachable = true;
+export function databaseReachable(): boolean {
+  return dbReachable;
+}
+
+/* Append short connect/pool timeouts so a query against an unreachable or
+   paused database fails in a few seconds and falls back to the catalog,
+   rather than blocking the request (and, at build time, the whole worker)
+   for the full TCP/pool timeout. Existing params on the URL are preserved. */
+function withTimeouts(rawUrl: string): string {
+  try {
+    const u = new URL(rawUrl);
+    if (!u.searchParams.has("connect_timeout")) u.searchParams.set("connect_timeout", "5");
+    if (!u.searchParams.has("pool_timeout")) u.searchParams.set("pool_timeout", "10");
+    return u.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
 let envSynced = false;
 let loggedPresence = false;
 
@@ -45,12 +79,13 @@ function syncDatabaseUrlEnv(): void {
   if (envSynced && process.env.DATABASE_URL) return;
   const url = resolveDatabaseUrl();
   if (url) {
-    process.env.DATABASE_URL = url;
+    process.env.DATABASE_URL = withTimeouts(url);
     envSynced = true;
   }
 }
 
-const url = resolveDatabaseUrl();
+const rawUrl = resolveDatabaseUrl();
+const url = rawUrl ? withTimeouts(rawUrl) : undefined;
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -214,6 +249,25 @@ const SCHEMA_STATEMENTS = [
 ];
 
 async function bootstrapSchema(): Promise<void> {
+  // Never touch the database while `next build` pre-renders pages — the build
+  // reads from the static catalog instead (see lib/db.ts).
+  if (isBuildPhase()) return;
+
+  // One fast connectivity probe before firing ~25 sequential DDL statements.
+  // If the server is unreachable, each of those statements would otherwise
+  // block on its own connection attempt, and the cumulative stall is what used
+  // to trip Next's 60s static-generation timeout at build time and drag out
+  // cold starts at runtime. Probe once, record the result, and bail on
+  // failure — callers fall back to the built-in catalog.
+  try {
+    await prisma.$queryRawUnsafe("SELECT 1");
+    dbReachable = true;
+  } catch (err) {
+    dbReachable = false;
+    console.error("[prisma] database unreachable — skipping schema bootstrap:", err);
+    return;
+  }
+
   // Each statement is isolated: if one fails (e.g. a foreign-key DO block
   // hitting an edge case on a particular provider), the rest must still
   // run. A single shared try/catch around the whole loop previously meant
@@ -242,6 +296,9 @@ async function bootstrapSchema(): Promise<void> {
  * try/catch handling against whatever state the DB is actually in.
  */
 export function ensureSchema(): Promise<void> {
+  // During `next build` the data layer serves the static catalog, so there is
+  // nothing to sync or self-heal — and connecting here would stall the build.
+  if (isBuildPhase()) return Promise.resolve();
   syncDatabaseUrlEnv();
   if (!globalForPrisma.prismaSchemaReady) {
     globalForPrisma.prismaSchemaReady = bootstrapSchema().catch((err) => {

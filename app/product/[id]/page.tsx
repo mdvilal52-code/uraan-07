@@ -10,10 +10,32 @@ import { ProductActions } from "@/components/product/ProductActions";
 import { ProductWeightInfo } from "@/components/product/ProductWeightInfo";
 import { Footer } from "@/components/Footer";
 import { getProductById, getProductsByCategory } from "@/lib/products";
-import { categoryNameBySlug } from "@/data/jewelleryData";
+import {
+  categoryNameBySlug,
+  products as catalogProducts,
+} from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
 
-export const dynamic = "force-dynamic";
+// Product pages carry no per-request or per-user data — everyone viewing a
+// given product sees the same catalogue-driven content (the cart/wishlist
+// actions are client components with their own state). `force-dynamic` meant a
+// DB round-trip on *every* view with no caching, which is slow on cold
+// serverless instances. ISR renders each product once, caches it, and
+// refreshes in the background so pages load instantly while admin edits still
+// appear within the revalidation window. The DB→catalogue fallback in lib/db
+// keeps rendering safe even when the database is unreachable.
+export const revalidate = 60;
+export const dynamicParams = true;
+
+// Pre-render every built-in catalogue product at build time so their pages
+// load instantly (no cold-start DB round-trip on first view). This is
+// build-safe: at build time lib/db serves the static catalogue without ever
+// opening a database connection. Products added later via the admin panel
+// aren't in this list but still render on demand (dynamicParams) and are then
+// cached by ISR.
+export function generateStaticParams() {
+  return catalogProducts.map((p) => ({ id: p.id }));
+}
 
 export async function generateMetadata({
   params,
