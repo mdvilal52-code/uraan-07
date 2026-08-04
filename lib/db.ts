@@ -669,10 +669,59 @@ export async function createUser(input: {
   }
 }
 
+/**
+ * Idempotently ensure the designated admin account exists, driven entirely
+ * by environment variables (ADMIN_EMAIL + ADMIN_PASSWORD) — never hardcoded.
+ * Run once per cold start before an admin login is verified, so the panel
+ * has exactly one legitimate way to gain admin access: the operator-provided
+ * credentials. Existing users matching ADMIN_EMAIL are promoted to admin;
+ * their password is only (re)set when the row is first created.
+ */
+let adminSeededCheck: Promise<void> | null = null;
+
+export function ensureAdminSeeded(): Promise<void> {
+  if (adminSeededCheck) return adminSeededCheck;
+  adminSeededCheck = (async () => {
+    const email = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+    const password = process.env.ADMIN_PASSWORD ?? "";
+    if (!email || !password) return; // No admin configured — nothing to do.
+    try {
+      await ensureSchema();
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) {
+        if (existing.role !== "admin") {
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: { role: "admin" },
+          });
+        }
+        return;
+      }
+      const salt = randomBytes(16).toString("hex");
+      await prisma.user.create({
+        data: {
+          id: `usr-${randomUUID().slice(0, 8)}-${randomUUID().slice(0, 4)}`,
+          name: process.env.ADMIN_NAME?.trim() || "Administrator",
+          email,
+          salt,
+          hash: hashPassword(password, salt),
+          role: "admin",
+        },
+      });
+      console.log("[db] admin account ensured from environment");
+    } catch (err) {
+      console.error("[db] ensureAdminSeeded failed:", err);
+      adminSeededCheck = null; // Allow a retry on the next call.
+    }
+  })();
+  return adminSeededCheck;
+}
+
 export async function verifyUser(
   email: string,
   password: string,
 ): Promise<AuthUser | null> {
+  await ensureAdminSeeded();
   await ensureSchema();
   const user = await prisma.user.findUnique({
     where: { email: (email ?? "").trim().toLowerCase() },
@@ -702,10 +751,14 @@ export async function updateUserName(
   }
 }
 
+/** Absolute session lifetime (matches the session cookie's max-age). */
+export const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+
 export async function createSession(userId: string): Promise<string> {
   await ensureSchema();
-  const token = randomBytes(24).toString("hex");
-  await prisma.session.create({ data: { token, userId } });
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_MS);
+  await prisma.session.create({ data: { token, userId, expiresAt } });
   return token;
 }
 
@@ -719,7 +772,19 @@ export async function getUserByToken(
       where: { token },
       include: { user: true },
     });
-    return session?.user ?? null;
+    if (!session) return null;
+
+    // Enforce absolute expiry. Legacy rows without an explicit expiry fall
+    // back to createdAt + max-age, so no session outlives the policy window.
+    const expiry =
+      session.expiresAt?.getTime() ??
+      session.createdAt.getTime() + SESSION_MAX_AGE_MS;
+    if (Number.isFinite(expiry) && expiry < Date.now()) {
+      // Best-effort cleanup of the expired token; ignore failures.
+      prisma.session.deleteMany({ where: { token } }).catch(() => {});
+      return null;
+    }
+    return session.user ?? null;
   } catch (err) {
     console.error("[db] getUserByToken failed:", err);
     return null;

@@ -93,11 +93,13 @@ model User {
 }
 
 model Session {
-  token     String   @id
+  token     String    @id
   userId    String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  /// Absolute expiry. A session is rejected (and cleaned up) once past this.
+  expiresAt DateTime?
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProduct, updateProduct, deleteProduct } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,9 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const gate = await requireAdmin();
+  if (gate instanceof NextResponse) return gate;
+
   const body = await req.json().catch(() => ({}));
   const product = await updateProduct(params.id, body);
   if (!product)
@@ -28,6 +32,9 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } },
 ) {
+  const gate = await requireAdmin();
+  if (gate instanceof NextResponse) return gate;
+
   const ok = await deleteProduct(params.id);
   return NextResponse.json({ ok }, { status: ok ? 200 : 404 });
 }
