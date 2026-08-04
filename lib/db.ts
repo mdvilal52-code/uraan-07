@@ -18,6 +18,33 @@ import type {
    components) await them.
    ============================================================ */
 
+/* ------------------------------------------------------------
+   Fail-fast DB guard.
+   ------------------------------------------------------------
+   When the database is unreachable (e.g. a production build running
+   on a host whose network can't reach the DB, or a runtime outage),
+   the Prisma query engine retries the connection with backoff and can
+   hang far longer than Next.js's 60s static-generation worker timeout —
+   which aborts the whole build. Racing every DB read against a short
+   deadline turns that indefinite hang into a fast rejection, so callers
+   fall through to their static-catalog fallback and the page still
+   renders. Tunable via DB_TIMEOUT_MS (default 8s, well under the 60s
+   worker limit). ------------------------------------------------------------ */
+const DB_TIMEOUT_MS = Number(process.env.DB_TIMEOUT_MS) || 8000;
+
+function withDbTimeout<T>(work: () => Promise<T>, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`[db] ${label} exceeded ${DB_TIMEOUT_MS}ms`)),
+      DB_TIMEOUT_MS,
+    );
+  });
+  return Promise.race([work(), timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
 type PrismaProduct = Awaited<ReturnType<typeof prisma.product.findFirst>>;
 type PrismaOrder = {
   id: string;
@@ -146,7 +173,6 @@ function ensureProductsSeeded(): Promise<void> {
             });
           }
         }
-        console.log(`[db] ensured ${catalogProducts.length} built-in products present`);
       } catch (err) {
         console.error("[db] ensureProductsSeeded failed:", err);
         productsSeededCheck = null;
@@ -204,13 +230,15 @@ export async function listProducts(opts?: ListOpts): Promise<Product[]> {
   }
 
   try {
-    await ensureSchema();
-    await ensureProductsSeeded();
-    const rows = await prisma.product.findMany({
-      where,
-      orderBy: { createdAt: "asc" },
-      ...(opts?.limit ? { take: opts.limit } : {}),
-    });
+    const rows = await withDbTimeout(async () => {
+      await ensureSchema();
+      await ensureProductsSeeded();
+      return prisma.product.findMany({
+        where,
+        orderBy: { createdAt: "asc" },
+        ...(opts?.limit ? { take: opts.limit } : {}),
+      });
+    }, "listProducts");
     if (rows.length === 0) return filterCatalog(opts);
     return rows.map(toProduct);
   } catch (err) {
@@ -221,9 +249,11 @@ export async function listProducts(opts?: ListOpts): Promise<Product[]> {
 
 export async function getProduct(id: string): Promise<Product | undefined> {
   try {
-    await ensureSchema();
-    await ensureProductsSeeded();
-    const row = await prisma.product.findUnique({ where: { id } });
+    const row = await withDbTimeout(async () => {
+      await ensureSchema();
+      await ensureProductsSeeded();
+      return prisma.product.findUnique({ where: { id } });
+    }, "getProduct");
     if (row) return toProduct(row);
   } catch (err) {
     console.error("[db] getProduct failed:", err);
@@ -339,10 +369,12 @@ export async function priceCart(lines: CartLine[]): Promise<{
   const ids = lines.map((l) => l.productId);
   const byId = new Map<string, Product>();
   try {
-    await ensureSchema();
-    await ensureProductsSeeded();
     if (ids.length) {
-      const rows = await prisma.product.findMany({ where: { id: { in: ids } } });
+      const rows = await withDbTimeout(async () => {
+        await ensureSchema();
+        await ensureProductsSeeded();
+        return prisma.product.findMany({ where: { id: { in: ids } } });
+      }, "priceCart");
       rows.forEach((r) => byId.set(r.id, toProduct(r)));
     }
   } catch (err) {
@@ -393,8 +425,10 @@ export async function validateCoupon(
 
   let row;
   try {
-    await ensureSchema();
-    row = await prisma.coupon.findUnique({ where: { code } });
+    row = await withDbTimeout(async () => {
+      await ensureSchema();
+      return prisma.coupon.findUnique({ where: { code } });
+    }, "validateCoupon");
   } catch (err) {
     console.error("[db] validateCoupon lookup failed:", err);
     return { ok: false, error: "تعذّر التحقق من الكود حاليًا، حاول لاحقًا." };
@@ -439,8 +473,10 @@ async function redeemCoupon(code: string): Promise<void> {
 
 export async function listCoupons(): Promise<Coupon[]> {
   try {
-    await ensureSchema();
-    const rows = await prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
+    const rows = await withDbTimeout(async () => {
+      await ensureSchema();
+      return prisma.coupon.findMany({ orderBy: { createdAt: "desc" } });
+    }, "listCoupons");
     return rows.map(toCoupon);
   } catch (err) {
     console.error("[db] listCoupons failed:", err);
@@ -512,12 +548,14 @@ export async function listOrders(
   const { limit, userId } =
     typeof opts === "number" ? { limit: opts, userId: undefined } : (opts ?? {});
   try {
-    await ensureSchema();
-    const rows = await prisma.order.findMany({
-      where: userId ? { userId } : undefined,
-      orderBy: { createdAt: "desc" },
-      ...(limit ? { take: limit } : {}),
-    });
+    const rows = await withDbTimeout(async () => {
+      await ensureSchema();
+      return prisma.order.findMany({
+        where: userId ? { userId } : undefined,
+        orderBy: { createdAt: "desc" },
+        ...(limit ? { take: limit } : {}),
+      });
+    }, "listOrders");
     return rows.map(toOrder);
   } catch (err) {
     console.error("[db] listOrders failed:", err);
@@ -602,8 +640,10 @@ export async function createOrder(input: {
 
 export async function listCustomers(): Promise<Customer[]> {
   try {
-    await ensureSchema();
-    const rows = await prisma.customer.findMany({ orderBy: { joined: "desc" } });
+    const rows = await withDbTimeout(async () => {
+      await ensureSchema();
+      return prisma.customer.findMany({ orderBy: { joined: "desc" } });
+    }, "listCustomers");
     return rows.map((c) => ({
       id: c.id,
       name: c.name,
@@ -708,7 +748,6 @@ export function ensureAdminSeeded(): Promise<void> {
           role: "admin",
         },
       });
-      console.log("[db] admin account ensured from environment");
     } catch (err) {
       console.error("[db] ensureAdminSeeded failed:", err);
       adminSeededCheck = null; // Allow a retry on the next call.
@@ -850,18 +889,20 @@ export async function analytics(): Promise<{
   averageOrderValue: number;
 }> {
   try {
-    await ensureSchema();
     const [revenueAgg, validCount, orders, customers, products] =
-      await Promise.all([
-        prisma.order.aggregate({
-          _sum: { total: true },
-          where: { status: { not: "cancelled" } },
-        }),
-        prisma.order.count({ where: { status: { not: "cancelled" } } }),
-        prisma.order.count(),
-        prisma.customer.count(),
-        prisma.product.count(),
-      ]);
+      await withDbTimeout(async () => {
+        await ensureSchema();
+        return Promise.all([
+          prisma.order.aggregate({
+            _sum: { total: true },
+            where: { status: { not: "cancelled" } },
+          }),
+          prisma.order.count({ where: { status: { not: "cancelled" } } }),
+          prisma.order.count(),
+          prisma.customer.count(),
+          prisma.product.count(),
+        ]);
+      }, "analytics");
     const revenue = revenueAgg._sum.total ?? 0;
     return {
       revenue,

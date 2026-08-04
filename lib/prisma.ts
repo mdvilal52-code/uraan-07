@@ -20,7 +20,6 @@ function resolveDatabaseUrl(): string | undefined {
 }
 
 let envSynced = false;
-let loggedPresence = false;
 
 /* Prisma's query engine validates the schema's `env("DATABASE_URL")`
    reference (prisma/schema.prisma) internally — independent of the
@@ -37,11 +36,6 @@ let loggedPresence = false;
    the rest of that warm instance's lifetime if we only ever checked
    once at import time. */
 function syncDatabaseUrlEnv(): void {
-  if (!loggedPresence) {
-    loggedPresence = true;
-    const present = CANDIDATE_KEYS.filter((k) => !!process.env[k]?.trim());
-    console.log(`[prisma] env candidates present: [${present.join(", ")}] of [${CANDIDATE_KEYS.join(", ")}]`);
-  }
   if (envSynced && process.env.DATABASE_URL) return;
   const url = resolveDatabaseUrl();
   if (url) {
