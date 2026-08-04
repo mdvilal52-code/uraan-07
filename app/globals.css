@@ -6,7 +6,6 @@
   :root {
     --font-tajawal: "Tajawal", system-ui, sans-serif;
     --font-cormorant: "Cormorant Garamond", Georgia, serif;
-    --font-amiri: "Amiri", Georgia, serif;
     --page-max: 480px; /* mobile-first canvas width */
   }
 
