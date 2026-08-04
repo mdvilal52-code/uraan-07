@@ -4,7 +4,7 @@
   "private": true,
   "description": "Ariana Gems & Jewellery — luxury Arabic (RTL) jewellery storefront built with Next.js, TypeScript, Tailwind CSS, Prisma and PostgreSQL.",
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
