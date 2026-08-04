@@ -1,29 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Tajawal, Cormorant_Garamond, Amiri } from "next/font/google";
+import { Tajawal, Cormorant_Garamond } from "next/font/google";
 import { Providers } from "@/components/providers/Providers";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "../styles/luxury.css";
 import "../styles/animations.css";
 
+// Only the weights the UI actually uses are loaded (body 400, bold 700,
+// extrabold 800 — `font-semibold` resolves to 700, Tajawal has no 600).
+// Fewer weights = fewer preloaded font files = faster first paint.
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "700", "800", "900"],
+  weight: ["400", "700", "800"],
   variable: "--font-tajawal",
   display: "swap",
 });
 
+// Brand wordmark only — always rendered at `font-semibold` (600).
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600"],
   variable: "--font-cormorant",
-  display: "swap",
-});
-
-const amiri = Amiri({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "700"],
-  variable: "--font-amiri",
   display: "swap",
 });
 
@@ -83,7 +80,7 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
-      className={`${tajawal.variable} ${cormorant.variable} ${amiri.variable}`}
+      className={`${tajawal.variable} ${cormorant.variable}`}
     >
       <body>
         <Providers>{children}</Providers>
