@@ -9,11 +9,28 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductActions } from "@/components/product/ProductActions";
 import { ProductWeightInfo } from "@/components/product/ProductWeightInfo";
 import { Footer } from "@/components/Footer";
-import { getProductById, getProductsByCategory } from "@/lib/products";
+import {
+  getAllProducts,
+  getProductById,
+  getProductsByCategory,
+} from "@/lib/products";
 import { categoryNameBySlug } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
 
-export const dynamic = "force-dynamic";
+// ISR instead of force-dynamic: known products are prerendered and served
+// from the CDN cache (instant loads, no per-view DB round-trip), while the
+// admin product APIs call revalidatePath() on every mutation so edits still
+// go live immediately. Unknown ids render on demand without the streaming
+// shell, so notFound() can return a real HTTP 404 (force-dynamic + the root
+// loading.tsx yielded soft-404s: 200 + not-found body).
+export const revalidate = 300;
+
+export async function generateStaticParams() {
+  // lib/db falls back to the built-in catalogue when the DB is unreachable
+  // at build time, so this never blocks or fails a deploy.
+  const products = await getAllProducts();
+  return products.map((p) => ({ id: p.id }));
+}
 
 export async function generateMetadata({
   params,
@@ -21,7 +38,10 @@ export async function generateMetadata({
   params: { id: string };
 }): Promise<Metadata> {
   const product = await getProductById(params.id);
-  if (!product) return { title: "المنتج غير موجود" };
+  // notFound() here (before streaming starts) makes the response a real
+  // HTTP 404 — thrown only from the page body it arrives after the
+  // app/loading.tsx shell has already been flushed with a 200 (soft-404).
+  if (!product) notFound();
   return {
     title: product.name,
     description: product.description,
