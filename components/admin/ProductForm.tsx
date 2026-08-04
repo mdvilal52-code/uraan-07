@@ -45,6 +45,11 @@ export function ProductForm({ product }: { product?: Product }) {
       image: fd.get("image") || product?.image,
       bestSeller: fd.get("bestSeller") === "on",
       newArrival: fd.get("newArrival") === "on",
+      // Admin-controlled gold specs. Sent as-is (comma string / raw value);
+      // the API normalizes them and stores null/[] when left blank → N/A.
+      karats: fd.get("karats") ?? "",
+      goldWeight: fd.get("goldWeight") ?? "",
+      totalWeight: fd.get("totalWeight") ?? "",
     };
 
     const res = await fetch(
@@ -139,6 +144,44 @@ export function ProductForm({ product }: { product?: Product }) {
                 className={inputCls}
                 defaultValue={product?.image}
                 placeholder="/images/necklace.svg"
+              />
+            </Field>
+          </div>
+        </div>
+
+        {/* Gold specs — control the "الوزن والعيار" box on the product page.
+            Leave any field blank to show N/A there. */}
+        <div className="card space-y-4 p-5">
+          <h3 className="text-sm font-bold text-ink">تفاصيل الوزن والعيار</h3>
+          <Field label="الأعيرة المتاحة (افصلي بفاصلة، مثال: 18K, 22K, 24K)">
+            <input
+              name="karats"
+              className={inputCls}
+              defaultValue={product?.karats?.join(", ")}
+              placeholder="18K, 22K, 24K"
+            />
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="وزن الذهب (غرام)">
+              <input
+                name="goldWeight"
+                type="number"
+                step="0.1"
+                min="0"
+                className={inputCls}
+                defaultValue={product?.goldWeight}
+                placeholder="—"
+              />
+            </Field>
+            <Field label="الوزن الإجمالي (غرام)">
+              <input
+                name="totalWeight"
+                type="number"
+                step="0.1"
+                min="0"
+                className={inputCls}
+                defaultValue={product?.totalWeight}
+                placeholder="—"
               />
             </Field>
           </div>

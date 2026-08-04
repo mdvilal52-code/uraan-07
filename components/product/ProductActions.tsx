@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { ShoppingCart, Zap, Check, Heart, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
 
 export function ProductActions({ productId }: { productId: string }) {
   const { add } = useCart();
   const { has, toggle } = useWishlist();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [added, setAdded] = useState(false);
   const [buying, setBuying] = useState(false);
@@ -20,11 +22,13 @@ export function ProductActions({ productId }: { productId: string }) {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          disabled={buying}
+          disabled={buying || loading}
           onClick={() => {
             setBuying(true);
             add(productId);
-            router.push("/checkout");
+            // Guests must sign in before buying; send them to login and bring
+            // them back to checkout afterwards. The item is already in the cart.
+            router.push(user ? "/checkout" : "/login?next=/checkout");
           }}
           className="btn-forest flex-1 disabled:opacity-60"
         >

@@ -25,6 +25,10 @@ model Product {
   newArrival  Boolean  @default(false)
   rating      Float    @default(5)
   reviews     Int      @default(0)
+  // Admin-controlled gold specs. Empty/null → the product page shows N/A.
+  karats      String[] @default([])
+  goldWeight  Float?
+  totalWeight Float?
   createdAt   DateTime @default(now())
 
   orderItems  OrderItem[]

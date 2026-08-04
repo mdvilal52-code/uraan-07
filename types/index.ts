@@ -5,7 +5,8 @@ export type CategorySlug =
   | "earrings"
   | "rings"
   | "bracelets"
-  | "pendants";
+  | "pendants"
+  | "gems";
 
 export type GemSurface = "gold" | "dark" | "cream";
 
@@ -17,6 +18,8 @@ export interface Category {
   latin: string;
   /** lucide-style icon key resolved in the UI */
   icon: string;
+  /** optional real photo shown in the category circle instead of the icon */
+  image?: string;
 }
 
 export interface Product {
@@ -36,6 +39,13 @@ export interface Product {
   newArrival?: boolean;
   rating?: number;
   reviews?: number;
+  /** Available gold purities for this piece (e.g. ["18K","22K","24K"]).
+   *  Admin-controlled; empty/undefined → the product page shows N/A. */
+  karats?: string[];
+  /** Net gold weight in grams (admin-controlled; undefined → N/A). */
+  goldWeight?: number;
+  /** Gross/total weight in grams (admin-controlled; undefined → N/A). */
+  totalWeight?: number;
 }
 
 export interface Collection {

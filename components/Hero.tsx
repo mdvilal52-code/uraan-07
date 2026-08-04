@@ -2,52 +2,50 @@ import Link from "next/link";
 import { Sparkles, ArrowLeft } from "lucide-react";
 import { ProductImage } from "./ProductImage";
 
-/* Faint woven-fabric backdrop, shared by both the text and the photo so the
-   whole hero reads as one textured surface rather than a flat panel. */
-const weaveTexture = {
-  backgroundImage:
-    "repeating-linear-gradient(45deg, rgba(124,106,77,0.5) 0, rgba(124,106,77,0.5) 1px, transparent 1px, transparent 9px), repeating-linear-gradient(-45deg, rgba(124,106,77,0.5) 0, rgba(124,106,77,0.5) 1px, transparent 1px, transparent 9px)",
-};
-
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-cream-radial px-5 pb-7 pt-6">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
-        style={weaveTexture}
-      />
+    <section className="px-4 pb-2 pt-4">
+      {/* Full-bleed model image fills the whole hero card; copy sits on a soft
+          scrim at the bottom so the jewellery stays fully visible. */}
+      <div className="relative overflow-hidden rounded-[2rem] shadow-card" data-reveal>
+        <ProductImage
+          src="/images/hero.jpg"
+          surface="dark"
+          icon="necklace"
+          ratio="portrait"
+          rounded="rounded-[2rem]"
+          className="min-h-[26rem]"
+          label="طقم قلادة وأقراط من الأحجار الكريمة"
+          priority
+          sizes="(max-width: 480px) 100vw, 480px"
+        />
 
-      <div className="relative flex items-start gap-3">
-        <div className="relative z-10 flex-1 pt-2" data-reveal>
-          <h1 className="font-arabic text-[1.7rem] font-extrabold leading-[1.2] text-ink text-balance">
+        {/* legibility scrim */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-forest-900/85 via-forest-900/25 to-transparent" />
+
+        {/* Overlaid copy */}
+        <div className="absolute inset-x-0 bottom-0 p-5">
+          <h1 className="font-arabic text-[1.85rem] font-extrabold leading-[1.2] text-cream-50 text-balance drop-shadow-sm">
             تألّقي للأبد،
             <span className="mt-1 flex items-center gap-1.5">
               بريقٌ لا ينتهي
-              <Sparkles className="h-5 w-5 shrink-0 text-gold-400" fill="currentColor" fillOpacity={0.25} />
+              <Sparkles
+                className="h-5 w-5 shrink-0 text-gold-300"
+                fill="currentColor"
+                fillOpacity={0.35}
+              />
             </span>
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-ink-muted">
+          <p className="mt-2 max-w-[17rem] text-sm leading-relaxed text-cream-100/90">
             أحجار كريمة ومجوهرات راقية، مصنوعة من أجلكِ.
           </p>
-          <Link href="/shop" className="btn-forest mt-5">
+          <Link
+            href="/shop"
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-2xl bg-gold-gradient px-6 py-3.5 text-sm font-extrabold text-forest-800 shadow-gold transition active:scale-[0.98]"
+          >
             تسوّقي الآن
             <ArrowLeft className="h-4 w-4" />
           </Link>
-        </div>
-
-        <div className="relative -my-2 w-[42%] shrink-0" data-reveal>
-          <div className="absolute inset-6 rounded-full bg-gold-200/50 blur-2xl" />
-          <ProductImage
-            src="/images/hero-pendant.jpg"
-            surface="cream"
-            icon="necklace"
-            ratio="portrait"
-            rounded="rounded-[2rem]"
-            className="relative animate-float [mask-image:radial-gradient(ellipse_75%_75%_at_50%_42%,black_58%,transparent_100%)] [-webkit-mask-image:radial-gradient(ellipse_75%_75%_at_50%_42%,black_58%,transparent_100%)]"
-            label="قلادة قلب الزمرد"
-            priority
-            sizes="45vw"
-          />
         </div>
       </div>
     </section>

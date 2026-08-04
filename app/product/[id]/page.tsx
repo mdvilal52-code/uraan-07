@@ -116,8 +116,12 @@ export default async function ProductPage({
           </div>
         )}
 
-        {/* Gold weight & total weight */}
-        <ProductWeightInfo category={product.category} price={product.price} />
+        {/* Gold weight & karat — admin-controlled, N/A when unset */}
+        <ProductWeightInfo
+          karats={product.karats}
+          goldWeight={product.goldWeight}
+          totalWeight={product.totalWeight}
+        />
 
         {/* Buy + Add to Cart + Wishlist */}
         <ProductActions productId={product.id} />
