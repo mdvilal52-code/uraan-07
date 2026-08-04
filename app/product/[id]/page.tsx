@@ -9,27 +9,33 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductActions } from "@/components/product/ProductActions";
 import { ProductWeightInfo } from "@/components/product/ProductWeightInfo";
 import { Footer } from "@/components/Footer";
+import { getProductById, getProductsByCategory } from "@/lib/products";
 import {
-  getAllProducts,
-  getProductById,
-  getProductsByCategory,
-} from "@/lib/products";
-import { categoryNameBySlug } from "@/data/jewelleryData";
+  categoryNameBySlug,
+  products as catalogProducts,
+} from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
 
-// ISR instead of force-dynamic: known products are prerendered and served
-// from the CDN cache (instant loads, no per-view DB round-trip), while the
-// admin product APIs call revalidatePath() on every mutation so edits still
-// go live immediately. Unknown ids render on demand without the streaming
-// shell, so notFound() can return a real HTTP 404 (force-dynamic + the root
-// loading.tsx yielded soft-404s: 200 + not-found body).
-export const revalidate = 300;
+// Product pages carry no per-request or per-user data — everyone viewing a
+// given product sees the same catalogue-driven content (the cart/wishlist
+// actions are client components with their own state). `force-dynamic` meant a
+// DB round-trip on *every* view with no caching, which is slow on cold
+// serverless instances. ISR renders each product once, caches it, and serves
+// it instantly; the admin product APIs call revalidatePath() on every
+// mutation so edits still go live immediately, with the 60s window as a
+// safety net. Unknown ids render on demand without the streaming shell, so
+// notFound() can return a real HTTP 404.
+export const revalidate = 60;
+export const dynamicParams = true;
 
-export async function generateStaticParams() {
-  // lib/db falls back to the built-in catalogue when the DB is unreachable
-  // at build time, so this never blocks or fails a deploy.
-  const products = await getAllProducts();
-  return products.map((p) => ({ id: p.id }));
+// Pre-render every built-in catalogue product at build time so their pages
+// load instantly (no cold-start DB round-trip on first view). This is
+// build-safe: at build time lib/db serves the static catalogue without ever
+// opening a database connection. Products added later via the admin panel
+// aren't in this list but still render on demand (dynamicParams) and are then
+// cached by ISR.
+export function generateStaticParams() {
+  return catalogProducts.map((p) => ({ id: p.id }));
 }
 
 export async function generateMetadata({
