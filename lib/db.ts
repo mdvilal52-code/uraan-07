@@ -1,5 +1,5 @@
 import { scryptSync, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
-import { prisma, ensureSchema } from "@/lib/prisma";
+import { prisma, ensureSchema, isBuildPhase, databaseReachable } from "@/lib/prisma";
 import { products as catalogProducts } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
 import type {
@@ -146,7 +146,6 @@ function ensureProductsSeeded(): Promise<void> {
             });
           }
         }
-        console.log(`[db] ensured ${catalogProducts.length} built-in products present`);
       } catch (err) {
         console.error("[db] ensureProductsSeeded failed:", err);
         productsSeededCheck = null;
@@ -154,6 +153,17 @@ function ensureProductsSeeded(): Promise<void> {
     })();
   }
   return productsSeededCheck;
+}
+
+function ensureProductsSeededMaybe(): Promise<void> {
+  // Skip the seed pass while `next build` renders (the catalog is served
+  // directly) and on a cold start where the DB is known-unreachable — its
+  // upsert-per-product loop would otherwise stall on each connection attempt.
+  if (isBuildPhase() || !databaseReachable()) {
+    productsSeededCheck = null; // let a later call retry once the DB is back
+    return Promise.resolve();
+  }
+  return ensureProductsSeeded();
 }
 
 /** In-memory filter over the static catalog — last-resort fallback when
@@ -189,6 +199,10 @@ type ListOpts = {
 };
 
 export async function listProducts(opts?: ListOpts): Promise<Product[]> {
+  // At build time serve the built-in catalog directly — never open a DB
+  // connection, which would stall static generation if the server is down.
+  if (isBuildPhase()) return filterCatalog(opts);
+
   const where: Record<string, unknown> = {};
   if (opts?.category && opts.category !== "all") where.category = opts.category;
   if (opts?.bestSeller) where.bestSeller = true;
@@ -205,7 +219,7 @@ export async function listProducts(opts?: ListOpts): Promise<Product[]> {
 
   try {
     await ensureSchema();
-    await ensureProductsSeeded();
+    await ensureProductsSeededMaybe();
     const rows = await prisma.product.findMany({
       where,
       orderBy: { createdAt: "asc" },
@@ -220,9 +234,13 @@ export async function listProducts(opts?: ListOpts): Promise<Product[]> {
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
+  // Build time: resolve from the static catalog without touching the DB.
+  if (isBuildPhase()) {
+    return catalogProducts.find((p) => p.id === id) as Product | undefined;
+  }
   try {
     await ensureSchema();
-    await ensureProductsSeeded();
+    await ensureProductsSeededMaybe();
     const row = await prisma.product.findUnique({ where: { id } });
     if (row) return toProduct(row);
   } catch (err) {
@@ -340,7 +358,7 @@ export async function priceCart(lines: CartLine[]): Promise<{
   const byId = new Map<string, Product>();
   try {
     await ensureSchema();
-    await ensureProductsSeeded();
+    await ensureProductsSeededMaybe();
     if (ids.length) {
       const rows = await prisma.product.findMany({ where: { id: { in: ids } } });
       rows.forEach((r) => byId.set(r.id, toProduct(r)));
