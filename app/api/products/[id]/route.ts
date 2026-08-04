@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getProduct, updateProduct, deleteProduct } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+
+/** Product pages + home are ISR-cached — refresh them after any mutation
+    so admin edits go live immediately. */
+function revalidateProduct(id: string) {
+  revalidatePath(`/product/${id}`);
+  revalidatePath("/");
+}
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +33,7 @@ export async function PUT(
   const product = await updateProduct(params.id, body);
   if (!product)
     return NextResponse.json({ error: "غير موجود" }, { status: 404 });
+  revalidateProduct(params.id);
   return NextResponse.json({ product });
 }
 
@@ -36,5 +45,6 @@ export async function DELETE(
   if (gate instanceof NextResponse) return gate;
 
   const ok = await deleteProduct(params.id);
+  if (ok) revalidateProduct(params.id);
   return NextResponse.json({ ok }, { status: ok ? 200 : 404 });
 }
