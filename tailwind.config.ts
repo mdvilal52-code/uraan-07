@@ -55,7 +55,6 @@ const config: Config = {
         sans: ["var(--font-tajawal)", "system-ui", "sans-serif"],
         arabic: ["var(--font-tajawal)", "system-ui", "sans-serif"],
         serif: ["var(--font-cormorant)", "Georgia", "serif"],
-        display: ["var(--font-amiri)", "Georgia", "serif"],
       },
       borderRadius: {
         xl: "1rem",
