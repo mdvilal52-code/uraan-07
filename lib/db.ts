@@ -173,7 +173,6 @@ function ensureProductsSeeded(): Promise<void> {
             });
           }
         }
-        console.log(`[db] ensured ${catalogProducts.length} built-in products present`);
       } catch (err) {
         console.error("[db] ensureProductsSeeded failed:", err);
         productsSeededCheck = null;
@@ -749,7 +748,6 @@ export function ensureAdminSeeded(): Promise<void> {
           role: "admin",
         },
       });
-      console.log("[db] admin account ensured from environment");
     } catch (err) {
       console.error("[db] ensureAdminSeeded failed:", err);
       adminSeededCheck = null; // Allow a retry on the next call.
