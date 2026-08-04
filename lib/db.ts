@@ -51,6 +51,9 @@ function toProduct(p: NonNullable<PrismaProduct>): Product {
     newArrival: p.newArrival,
     rating: p.rating,
     reviews: p.reviews,
+    karats: p.karats ?? [],
+    goldWeight: p.goldWeight ?? undefined,
+    totalWeight: p.totalWeight ?? undefined,
   };
 }
 
@@ -97,8 +100,11 @@ function ensureProductsSeeded(): Promise<void> {
   if (!productsSeededCheck) {
     productsSeededCheck = (async () => {
       try {
-        const count = await prisma.product.count();
-        if (count > 0) return;
+        // Create-if-missing for every built-in catalogue product (idempotent,
+        // once per cold start). `update: {}` means existing rows — including
+        // any admin edits — are never overwritten; this only fills in products
+        // that aren't in the DB yet (e.g. a newly added category like Gems),
+        // so the storefront always carries the full built-in catalogue.
         for (const p of catalogProducts) {
           await prisma.product.upsert({
             where: { id: p.id },
@@ -118,10 +124,29 @@ function ensureProductsSeeded(): Promise<void> {
               newArrival: Boolean(p.newArrival),
               rating: p.rating ?? 5,
               reviews: p.reviews ?? 0,
+              karats: p.karats ?? [],
+              goldWeight: p.goldWeight ?? null,
+              totalWeight: p.totalWeight ?? null,
             },
           });
+
+          // One-time backfill of the canonical gold specs for built-in products
+          // that predate these columns (their rows were seeded before the
+          // weight/karat feature existed, so they'd otherwise show N/A). Guarded
+          // on `goldWeight: null` so it never overwrites a value an admin has
+          // since entered — admin control stays authoritative.
+          if (p.goldWeight != null || p.totalWeight != null || (p.karats?.length ?? 0) > 0) {
+            await prisma.product.updateMany({
+              where: { id: p.id, goldWeight: null },
+              data: {
+                karats: p.karats ?? [],
+                goldWeight: p.goldWeight ?? null,
+                totalWeight: p.totalWeight ?? null,
+              },
+            });
+          }
         }
-        console.log(`[db] auto-seeded ${catalogProducts.length} products (table was empty)`);
+        console.log(`[db] ensured ${catalogProducts.length} built-in products present`);
       } catch (err) {
         console.error("[db] ensureProductsSeeded failed:", err);
         productsSeededCheck = null;
@@ -206,6 +231,20 @@ export async function getProduct(id: string): Promise<Product | undefined> {
   return catalogProducts.find((p) => p.id === id) as Product | undefined;
 }
 
+/** Accept karats as an array or a comma-separated string; trim + drop blanks. */
+function normalizeKarats(v: unknown): string[] {
+  if (Array.isArray(v)) return v.map((k) => String(k).trim()).filter(Boolean);
+  if (typeof v === "string")
+    return v.split(",").map((k) => k.trim()).filter(Boolean);
+  return [];
+}
+
+/** A positive finite weight in grams, otherwise null (→ shown as N/A). */
+function weightOrNull(v: unknown): number | null {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 export async function createProduct(
   input: Partial<Product>,
 ): Promise<Product> {
@@ -226,6 +265,9 @@ export async function createProduct(
       newArrival: Boolean(input.newArrival),
       rating: input.rating ?? 5,
       reviews: input.reviews ?? 0,
+      karats: normalizeKarats(input.karats),
+      goldWeight: weightOrNull(input.goldWeight),
+      totalWeight: weightOrNull(input.totalWeight),
     },
   });
   return toProduct(row);
@@ -254,6 +296,11 @@ export async function updateProduct(
   if (patch.newArrival !== undefined) data.newArrival = Boolean(patch.newArrival);
   if (patch.rating !== undefined) data.rating = patch.rating;
   if (patch.reviews !== undefined) data.reviews = patch.reviews;
+  if (patch.karats !== undefined) data.karats = normalizeKarats(patch.karats);
+  if (patch.goldWeight !== undefined)
+    data.goldWeight = weightOrNull(patch.goldWeight);
+  if (patch.totalWeight !== undefined)
+    data.totalWeight = weightOrNull(patch.totalWeight);
 
   try {
     await ensureSchema();

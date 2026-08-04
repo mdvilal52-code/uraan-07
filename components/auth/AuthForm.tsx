@@ -32,7 +32,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         setError(res.error);
         return;
       }
-      router.push("/profile");
+      // Honour a ?next=/path return target (e.g. guest tapped "Buy Now" and was
+      // sent here). Read it at submit time so these statically-rendered pages
+      // don't need useSearchParams. Only allow same-site paths.
+      const next = new URLSearchParams(window.location.search).get("next");
+      const dest =
+        next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";
+      router.push(dest);
     } catch {
       // login()/register() resolve to { error } rather than throwing, but guard
       // anyway so an unexpected exception can never leave the button spinning

@@ -36,6 +36,13 @@ export const CONTACT = {
 } as const;
 
 export const categories: Category[] = [
+  {
+    slug: "gems",
+    name: "أحجار كريمة",
+    latin: "Gems",
+    icon: "gem",
+    image: "/images/gemstones.jpg",
+  },
   { slug: "necklaces", name: "قلائد", latin: "Necklaces", icon: "necklace" },
   { slug: "earrings", name: "أقراط", latin: "Earrings", icon: "earring" },
   { slug: "rings", name: "خواتم", latin: "Rings", icon: "ring" },
@@ -49,7 +56,12 @@ export const categoryNameBySlug: Record<string, string> = {
   rings: "الخواتم",
   bracelets: "الأساور",
   pendants: "المعلّقات",
+  gems: "الأحجار الكريمة",
 };
+
+/** Default gold purities offered on catalogue pieces. Admin can override
+ *  per product; a product with no karats/weights set shows N/A on its page. */
+const DEFAULT_KARATS = ["18K", "22K", "24K"];
 
 export const products: Product[] = [
   // القلائد — Necklaces
@@ -67,6 +79,9 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 128,
     tags: ["ألماس", "زفاف"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 16.3,
+    totalWeight: 17.8,
   },
   {
     id: "nk-polki",
@@ -81,6 +96,9 @@ export const products: Product[] = [
     rating: 4.8,
     reviews: 94,
     tags: ["تراث", "ذهب"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 11.2,
+    totalWeight: 12.5,
   },
   // الأقراط — Earrings
   {
@@ -96,6 +114,9 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 76,
     tags: ["ألماس"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 4.8,
+    totalWeight: 5.2,
   },
   {
     id: "er-jhumka",
@@ -109,6 +130,9 @@ export const products: Product[] = [
     rating: 4.7,
     reviews: 58,
     tags: ["ذهب", "تراث"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 6.1,
+    totalWeight: 6.4,
   },
   // الخواتم — Rings
   {
@@ -124,6 +148,9 @@ export const products: Product[] = [
     rating: 5.0,
     reviews: 210,
     tags: ["ألماس", "خطوبة"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 5.4,
+    totalWeight: 5.9,
   },
   {
     id: "rg-gemstone",
@@ -137,6 +164,9 @@ export const products: Product[] = [
     rating: 4.8,
     reviews: 63,
     tags: ["زمرّد", "أحجار كريمة"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 4.9,
+    totalWeight: 6.1,
   },
   // الأساور — Bracelets
   {
@@ -152,6 +182,9 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 88,
     tags: ["ألماس"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 14.2,
+    totalWeight: 15.6,
   },
   {
     id: "br-gold",
@@ -166,6 +199,9 @@ export const products: Product[] = [
     rating: 4.7,
     reviews: 41,
     tags: ["ذهب", "زمرّد"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 18.5,
+    totalWeight: 19.8,
   },
   // المعلّقات — Pendants
   {
@@ -183,6 +219,9 @@ export const products: Product[] = [
     rating: 5.0,
     reviews: 156,
     tags: ["ألماس", "ذهب", "هدية"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 6.8,
+    totalWeight: 8.0,
   },
   {
     id: "pd-solitaire",
@@ -197,6 +236,46 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 73,
     tags: ["ألماس"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 3.9,
+    totalWeight: 4.6,
+  },
+  // الأحجار الكريمة — Gems
+  {
+    id: "gem-emerald-suite",
+    name: "طقم زمرّد فاخر",
+    latin: "Emerald Luxe Suite",
+    category: "gems",
+    price: 3850,
+    description:
+      "طقم زمرّد فاخر مرصّع بالألماس، أحجار كريمة طبيعية بلونٍ أخضر آسر.",
+    surface: "gold",
+    image: "/images/gemstones.jpg",
+    bestSeller: true,
+    newArrival: true,
+    rating: 5.0,
+    reviews: 64,
+    tags: ["زمرّد", "أحجار كريمة", "زفاف"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 22.4,
+    totalWeight: 26.1,
+  },
+  {
+    id: "gem-emerald-ring",
+    name: "خاتم زمرّد ملكي",
+    latin: "Royal Emerald Ring",
+    category: "gems",
+    price: 1320,
+    description: "خاتم زمرّد ملكي محاط بالألماس، حجرٌ كريم يليق بالمناسبات.",
+    surface: "gold",
+    image: "/images/ring-2.jpg",
+    newArrival: true,
+    rating: 4.9,
+    reviews: 37,
+    tags: ["زمرّد", "أحجار كريمة"],
+    karats: DEFAULT_KARATS,
+    goldWeight: 5.6,
+    totalWeight: 7.2,
   },
 ];
 

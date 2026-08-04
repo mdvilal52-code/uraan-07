@@ -102,9 +102,16 @@ const SCHEMA_STATEMENTS = [
     "newArrival" BOOLEAN NOT NULL DEFAULT false,
     "rating" DOUBLE PRECISION NOT NULL DEFAULT 5,
     "reviews" INTEGER NOT NULL DEFAULT 0,
+    "karats" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "goldWeight" DOUBLE PRECISION,
+    "totalWeight" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE INDEX IF NOT EXISTS "Product_category_idx" ON "Product"("category")`,
+  // Heal older Product tables that predate the admin-controlled gold specs.
+  `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "karats" TEXT[] DEFAULT ARRAY[]::TEXT[]`,
+  `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "goldWeight" DOUBLE PRECISION`,
+  `ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "totalWeight" DOUBLE PRECISION`,
 
   `CREATE TABLE IF NOT EXISTS "Customer" (
     "id" TEXT PRIMARY KEY,
