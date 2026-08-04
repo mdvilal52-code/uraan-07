@@ -2,8 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  UserPlus,
+  LogIn,
+  Loader2,
+} from "lucide-react";
 import { LotusMark } from "@/components/icons/JewelIcons";
 import { useAuth } from "@/context/AuthContext";
 
@@ -18,6 +27,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Capture a ?next=/path return target (e.g. a guest tapped "Buy Now" and was
+  // sent to /login?next=/checkout) so we can carry it across the login ⇄
+  // register switch. Read from window in an effect rather than useSearchParams
+  // so these pages stay statically rendered. Only same-site paths are kept.
+  const [nextParam, setNextParam] = useState("");
+  useEffect(() => {
+    const n = new URLSearchParams(window.location.search).get("next");
+    if (n && n.startsWith("/") && !n.startsWith("//")) setNextParam(n);
+  }, []);
+  const withNext = (path: string) =>
+    nextParam ? `${path}?next=${encodeURIComponent(nextParam)}` : path;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -154,19 +175,35 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <span className="hr-gold flex-1" />
       </div>
 
-      <Link href="/shop" className="btn-outline w-full">
-        المتابعة كضيف
+      {/* Prominent path for new customers to register (or existing ones to log
+          in). Carries the ?next= return target so a guest who taps "Buy Now",
+          then creates an account, still lands back on checkout afterwards. */}
+      <p className="mb-2 text-center text-sm text-ink-muted">
+        {isLogin ? "ليس لديكِ حساب؟" : "لديكِ حساب بالفعل؟"}
+      </p>
+      <Link
+        href={withNext(isLogin ? "/register" : "/login")}
+        className="btn-outline w-full"
+      >
+        {isLogin ? (
+          <>
+            <UserPlus className="h-4 w-4" />
+            إنشاء حساب جديد
+          </>
+        ) : (
+          <>
+            <LogIn className="h-4 w-4" />
+            تسجيل الدخول
+          </>
+        )}
       </Link>
 
-      <p className="mt-6 text-center text-sm text-ink-muted">
-        {isLogin ? "ليس لديكِ حساب؟ " : "لديكِ حساب بالفعل؟ "}
-        <Link
-          href={isLogin ? "/register" : "/login"}
-          className="font-bold text-clay-500"
-        >
-          {isLogin ? "أنشئي حسابًا" : "سجّلي الدخول"}
-        </Link>
-      </p>
+      <Link
+        href="/shop"
+        className="mt-3 block text-center text-sm font-semibold text-ink-muted transition hover:text-ink"
+      >
+        المتابعة كضيف
+      </Link>
     </div>
   );
 }
