@@ -21,17 +21,26 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return; // ignore double-submits (Enter + click)
     setError("");
     setLoading(true);
-    const res = isLogin
-      ? await login(email, password)
-      : await register(name, email, password);
-    setLoading(false);
-    if (res.error) {
-      setError(res.error);
-      return;
+    try {
+      const res = isLogin
+        ? await login(email, password)
+        : await register(name, email, password);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      router.push("/profile");
+    } catch {
+      // login()/register() resolve to { error } rather than throwing, but guard
+      // anyway so an unexpected exception can never leave the button spinning
+      // or surface as an unhandled rejection in the console.
+      setError("تعذّر إتمام العملية، حاولي مرة أخرى.");
+    } finally {
+      setLoading(false);
     }
-    router.push("/profile");
   }
 
   return (

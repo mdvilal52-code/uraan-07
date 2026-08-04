@@ -110,9 +110,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    const id = ++requestIdRef.current;
-    await fetch("/api/auth/logout", { method: "POST" });
-    if (id === requestIdRef.current) setUser(null);
+    // Bump the request id so any in-flight `/api/auth/me` (or login/register)
+    // response can no longer write `user` back in after we've logged out.
+    ++requestIdRef.current;
+    // Logout is an explicit intent to end the session. Clear local auth state
+    // unconditionally and never let a network failure surface as an unhandled
+    // rejection — the client must end up logged out regardless of whether the
+    // server round-trip succeeds. The cookie is cleared by the response when it
+    // does reach the server; a failed call at worst leaves a dangling
+    // server-side session row, never a stuck-logged-in client.
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      /* offline / server unreachable — still clear the client below */
+    }
+    setUser(null);
+    setLoading(false);
   }, []);
 
   const updateProfile = useCallback(async (name: string) => {
