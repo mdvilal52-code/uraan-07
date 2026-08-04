@@ -37,12 +37,13 @@ export default function AboutPage() {
 
       <section className="px-5 py-4" data-reveal>
         <ProductImage
+          src="/images/editorial.jpg"
           surface="gold"
           icon="gem"
           ratio="wide"
           rounded="rounded-3xl"
           label="ورشة أريانا"
-          shimmer
+          sizes="(max-width: 640px) 100vw, 600px"
         />
       </section>
 

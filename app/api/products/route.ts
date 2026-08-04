@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listProducts, createProduct } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const gate = await requireAdmin();
+  if (gate instanceof NextResponse) return gate;
+
   const body = await req.json().catch(() => ({}));
   if (!body.name) {
     return NextResponse.json({ error: "الاسم مطلوب" }, { status: 400 });
