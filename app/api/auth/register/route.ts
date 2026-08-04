@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createUser, createSession, publicUser } from "@/lib/db";
 import { SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from "@/lib/session";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
+// Cap sign-ups per IP so the endpoint can't be used to spam accounts.
+const REGISTER_LIMIT = {
+  limit: 5,
+  windowMs: 60 * 60 * 1000,
+  lockoutMs: 30 * 60 * 1000,
+};
+
 export async function POST(req: NextRequest) {
+  const rl = checkRateLimit(`register:${clientIp(req)}`, REGISTER_LIMIT);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "محاولات كثيرة جدًا. حاول مرة أخرى لاحقًا." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   const { name, email, password } = await req.json().catch(() => ({}));
   if (!email || !password) {
     return NextResponse.json(

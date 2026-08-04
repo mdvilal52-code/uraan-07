@@ -186,8 +186,11 @@ const SCHEMA_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS "Session" (
     "token" TEXT PRIMARY KEY,
     "userId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3)
   )`,
+  // Heal older Session tables that predate absolute session expiry.
+  `ALTER TABLE "Session" ADD COLUMN IF NOT EXISTS "expiresAt" TIMESTAMP(3)`,
   `CREATE INDEX IF NOT EXISTS "Session_userId_idx" ON "Session"("userId")`,
   `DO $$ BEGIN
     ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey"
