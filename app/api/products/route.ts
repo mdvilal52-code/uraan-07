@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { listProducts, createProduct } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
@@ -25,5 +26,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "الاسم مطلوب" }, { status: 400 });
   }
   const product = await createProduct(body);
+  // Product pages + home are ISR-cached — refresh them so the new product
+  // is visible immediately rather than after the next revalidate window.
+  revalidatePath(`/product/${product.id}`);
+  revalidatePath("/");
   return NextResponse.json({ product }, { status: 201 });
 }

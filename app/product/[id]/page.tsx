@@ -20,10 +20,11 @@ import { formatPrice } from "@/lib/currency";
 // given product sees the same catalogue-driven content (the cart/wishlist
 // actions are client components with their own state). `force-dynamic` meant a
 // DB round-trip on *every* view with no caching, which is slow on cold
-// serverless instances. ISR renders each product once, caches it, and
-// refreshes in the background so pages load instantly while admin edits still
-// appear within the revalidation window. The DB→catalogue fallback in lib/db
-// keeps rendering safe even when the database is unreachable.
+// serverless instances. ISR renders each product once, caches it, and serves
+// it instantly; the admin product APIs call revalidatePath() on every
+// mutation so edits still go live immediately, with the 60s window as a
+// safety net. Unknown ids render on demand without the streaming shell, so
+// notFound() can return a real HTTP 404.
 export const revalidate = 60;
 export const dynamicParams = true;
 
@@ -43,7 +44,10 @@ export async function generateMetadata({
   params: { id: string };
 }): Promise<Metadata> {
   const product = await getProductById(params.id);
-  if (!product) return { title: "المنتج غير موجود" };
+  // notFound() here (before streaming starts) makes the response a real
+  // HTTP 404 — thrown only from the page body it arrives after the
+  // app/loading.tsx shell has already been flushed with a 200 (soft-404).
+  if (!product) notFound();
   return {
     title: product.name,
     description: product.description,
