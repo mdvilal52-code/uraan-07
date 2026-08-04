@@ -19,8 +19,63 @@ function resolveDatabaseUrl(): string | undefined {
   return undefined;
 }
 
+/* True while `next build` is statically pre-rendering pages
+   (Next sets NEXT_PHASE=phase-production-build for the build process and its
+   render workers). Data-access code checks this to serve the built-in static
+   catalog instead of opening a database connection: the build must never
+   depend on a live DB, or an unreachable/paused database stalls static
+   generation until Next's 60s worker timeout kills the build. */
+export function isBuildPhase(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+/* Tracks whether the last connectivity probe reached the database, so
+   callers (e.g. product self-seeding) can cheaply skip further DB work on a
+   cold start when the server is down instead of hanging on each query.
+   Optimistic by default — assume reachable until a probe proves otherwise. */
+let dbReachable = true;
+let lastProbeFailedAt = 0;
+const REPROBE_COOLDOWN_MS = 30_000;
+
+export function databaseReachable(): boolean {
+  return dbReachable;
+}
+
+/**
+ * Gate for read paths that have a static-catalogue fallback. While the DB is
+ * known-unreachable this answers `false` instantly (no connection attempt),
+ * so every request isn't taxed the full connect_timeout before falling back.
+ * At most one real re-probe (≤5s, capped by connect_timeout) runs per
+ * 30s window, so the app recovers by itself shortly after the DB comes back.
+ */
+export async function dbUsable(): Promise<boolean> {
+  if (dbReachable) return true;
+  if (Date.now() - lastProbeFailedAt < REPROBE_COOLDOWN_MS) return false;
+  try {
+    await prisma.$queryRawUnsafe("SELECT 1");
+    dbReachable = true;
+  } catch {
+    lastProbeFailedAt = Date.now();
+  }
+  return dbReachable;
+}
+
+/* Append short connect/pool timeouts so a query against an unreachable or
+   paused database fails in a few seconds and falls back to the catalog,
+   rather than blocking the request (and, at build time, the whole worker)
+   for the full TCP/pool timeout. Existing params on the URL are preserved. */
+function withTimeouts(rawUrl: string): string {
+  try {
+    const u = new URL(rawUrl);
+    if (!u.searchParams.has("connect_timeout")) u.searchParams.set("connect_timeout", "5");
+    if (!u.searchParams.has("pool_timeout")) u.searchParams.set("pool_timeout", "10");
+    return u.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
 let envSynced = false;
-let loggedPresence = false;
 
 /* Prisma's query engine validates the schema's `env("DATABASE_URL")`
    reference (prisma/schema.prisma) internally — independent of the
@@ -37,20 +92,27 @@ let loggedPresence = false;
    the rest of that warm instance's lifetime if we only ever checked
    once at import time. */
 function syncDatabaseUrlEnv(): void {
-  if (!loggedPresence) {
-    loggedPresence = true;
-    const present = CANDIDATE_KEYS.filter((k) => !!process.env[k]?.trim());
-    console.log(`[prisma] env candidates present: [${present.join(", ")}] of [${CANDIDATE_KEYS.join(", ")}]`);
-  }
   if (envSynced && process.env.DATABASE_URL) return;
   const url = resolveDatabaseUrl();
   if (url) {
-    process.env.DATABASE_URL = url;
+    process.env.DATABASE_URL = withTimeouts(url);
     envSynced = true;
   }
 }
 
-const url = resolveDatabaseUrl();
+const rawUrl = resolveDatabaseUrl();
+const url = rawUrl ? withTimeouts(rawUrl) : undefined;
+
+// Mirror the resolved value into DATABASE_URL synchronously, before the
+// client below is constructed. Without this, on a cold start where the
+// value briefly isn't visible yet, the client gets built with no
+// `datasources` override and is stuck that way for the rest of this warm
+// instance's life — syncDatabaseUrlEnv() (called later, from ensureSchema())
+// only mutates process.env, it can't retroactively fix an already-built
+// client that resolved its connection lazily from the missing env var.
+if (url && !process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = url;
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -213,7 +275,36 @@ const SCHEMA_STATEMENTS = [
   )`,
 ];
 
-async function bootstrapSchema(): Promise<void> {
+/** @returns true when the DDL pass ran (memoize), false when skipped
+    because the DB is unreachable (leave un-memoized so a later call
+    retries once the re-probe cooldown elapses). */
+async function bootstrapSchema(): Promise<boolean> {
+  // Never touch the database while `next build` pre-renders pages — the build
+  // reads from the static catalog instead (see lib/db.ts).
+  if (isBuildPhase()) return true;
+
+  // While the DB is known-down and inside the cooldown, skip instantly —
+  // no connection attempt, no log spam on every request.
+  if (!dbReachable && Date.now() - lastProbeFailedAt < REPROBE_COOLDOWN_MS) {
+    return false;
+  }
+
+  // One fast connectivity probe before firing ~25 sequential DDL statements.
+  // If the server is unreachable, each of those statements would otherwise
+  // block on its own connection attempt, and the cumulative stall is what used
+  // to trip Next's 60s static-generation timeout at build time and drag out
+  // cold starts at runtime. Probe once, record the result, and bail on
+  // failure — callers fall back to the built-in catalog.
+  try {
+    await prisma.$queryRawUnsafe("SELECT 1");
+    dbReachable = true;
+  } catch (err) {
+    dbReachable = false;
+    lastProbeFailedAt = Date.now();
+    console.error("[prisma] database unreachable — skipping schema bootstrap:", err);
+    return false;
+  }
+
   // Each statement is isolated: if one fails (e.g. a foreign-key DO block
   // hitting an edge case on a particular provider), the rest must still
   // run. A single shared try/catch around the whole loop previously meant
@@ -232,6 +323,7 @@ async function bootstrapSchema(): Promise<void> {
   if (failures) {
     console.error(`[prisma] schema self-heal finished with ${failures} failed statement(s)`);
   }
+  return true;
 }
 
 /**
@@ -242,13 +334,22 @@ async function bootstrapSchema(): Promise<void> {
  * try/catch handling against whatever state the DB is actually in.
  */
 export function ensureSchema(): Promise<void> {
+  // During `next build` the data layer serves the static catalog, so there is
+  // nothing to sync or self-heal — and connecting here would stall the build.
+  if (isBuildPhase()) return Promise.resolve();
   syncDatabaseUrlEnv();
   if (!globalForPrisma.prismaSchemaReady) {
-    globalForPrisma.prismaSchemaReady = bootstrapSchema().catch((err) => {
-      console.error("[prisma] schema self-heal failed:", err);
-      // Allow a retry on the next cold start / call rather than caching a rejection forever.
-      globalForPrisma.prismaSchemaReady = undefined;
-    });
+    globalForPrisma.prismaSchemaReady = bootstrapSchema()
+      .then((completed) => {
+        // Skipped because the DB was down: leave un-memoized so the
+        // bootstrap re-runs (cooldown-gated) once the DB comes back.
+        if (!completed) globalForPrisma.prismaSchemaReady = undefined;
+      })
+      .catch((err) => {
+        console.error("[prisma] schema self-heal failed:", err);
+        // Allow a retry on the next cold start / call rather than caching a rejection forever.
+        globalForPrisma.prismaSchemaReady = undefined;
+      });
   }
   return globalForPrisma.prismaSchemaReady ?? Promise.resolve();
 }

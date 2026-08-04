@@ -52,11 +52,20 @@ const firstSet = (keys) => {
 const pooled = firstSet(POOLED_KEYS);
 const direct = firstSet(DIRECT_KEYS) || pooled;
 
-function run(cmd, url, { optional = false } = {}) {
+function run(cmd, url, { optional = false, unsetDbUrl = false } = {}) {
   console.log(`\n▶ ${cmd}`);
   // Only override DATABASE_URL when we actually resolved one, so a missing
   // value never clobbers a .env-provided URL for local runs.
   const env = url ? { ...process.env, DATABASE_URL: url } : { ...process.env };
+  if (unsetDbUrl) {
+    // The DB is known-unreachable: strip every connection-string variable so
+    // nothing in the build can even attempt a connection. An unreachable-but-
+    // hanging host (e.g. an IPv6-only address from an IPv4 builder) would
+    // otherwise stall page-data collection into Next's 60s worker timeout.
+    // Runtime is unaffected — serverless functions read env vars at request
+    // time, not from the build environment.
+    for (const k of new Set([...POOLED_KEYS, ...DIRECT_KEYS])) delete env[k];
+  }
   try {
     execSync(cmd, { stdio: "inherit", env });
     return true;
@@ -111,8 +120,11 @@ function probeDatabase(url, timeoutMs = 5000) {
 // Prisma Client generation never needs a live DB.
 run("prisma generate", pooled);
 
+let dbReachable = false;
+
 if (pooled) {
   const reachable = await probeDatabase(direct);
+  dbReachable = reachable;
   if (!reachable) {
     let where = direct;
     try {
@@ -162,4 +174,7 @@ if (pooled) {
   );
 }
 
-run("next build", pooled);
+// When the DB is unreachable, build with every connection-string variable
+// stripped: pages render from the built-in catalogue (fast, deterministic)
+// instead of stalling on doomed connection attempts.
+run("next build", dbReachable ? pooled : "", { unsetDbUrl: !dbReachable });
