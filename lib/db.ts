@@ -146,7 +146,6 @@ function ensureProductsSeeded(): Promise<void> {
             });
           }
         }
-        console.log(`[db] ensured ${catalogProducts.length} built-in products present`);
       } catch (err) {
         console.error("[db] ensureProductsSeeded failed:", err);
         productsSeededCheck = null;
