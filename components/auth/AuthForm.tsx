@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
 import { LotusMark } from "@/components/icons/JewelIcons";
 import { useAuth } from "@/context/AuthContext";
+
+/** Only allow a same-site absolute path as a redirect target — never an
+ *  external URL (`//evil.com`, `https://…`) or any non-path value. */
+function sanitizeNext(next: string | null): string | null {
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+}
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -18,6 +24,31 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Flips true only after React has hydrated on the client. The submit button
+  // stays disabled until then — and with no enabled submit control the browser
+  // cannot natively submit the form (neither a click nor Enter). That closes
+  // the pre-hydration window this form used to have: a tap before the JS loaded
+  // fired a raw browser submit at the page route (which has no POST handler, so
+  // it just reloaded the page — silently dropping the typed input and creating
+  // no account, the confusing "nothing happened, try again" that preceded the
+  // eventual profile redirect). Submission now goes through submit() only, which
+  // always preventDefault()s, so it can never leave through the browser.
+  const [mounted, setMounted] = useState(false);
+  // The `?next=/path` return target (e.g. a guest tapped "Buy Now" and was
+  // routed through sign-in). Captured once on mount from the URL — not via
+  // useSearchParams — so these pages stay statically rendered. It drives both
+  // the post-auth redirect and the login↔register cross-link, so the return
+  // target survives the hop between the two auth screens instead of being
+  // dropped, which is what used to strand a new customer on /profile mid-order
+  // instead of returning them to checkout.
+  const [nextParam, setNextParam] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setNextParam(
+      sanitizeNext(new URLSearchParams(window.location.search).get("next")),
+    );
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,13 +63,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         setError(res.error);
         return;
       }
-      // Honour a ?next=/path return target (e.g. guest tapped "Buy Now" and was
-      // sent here). Read it at submit time so these statically-rendered pages
-      // don't need useSearchParams. Only allow same-site paths.
-      const next = new URLSearchParams(window.location.search).get("next");
-      const dest =
-        next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";
-      router.push(dest);
+      // Honour the return target captured on mount; default to the profile.
+      router.push(nextParam ?? "/profile");
     } catch {
       // login()/register() resolve to { error } rather than throwing, but guard
       // anyway so an unexpected exception can never leave the button spinning
@@ -63,7 +89,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </p>
       </div>
 
-      <form onSubmit={submit} method="post" className="space-y-3">
+      <form onSubmit={submit} className="space-y-3">
         {!isLogin && (
           <IconField
             icon={User}
@@ -140,7 +166,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !mounted}
           className="btn-forest w-full disabled:opacity-60"
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -161,7 +187,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       <p className="mt-6 text-center text-sm text-ink-muted">
         {isLogin ? "ليس لديكِ حساب؟ " : "لديكِ حساب بالفعل؟ "}
         <Link
-          href={isLogin ? "/register" : "/login"}
+          href={`${isLogin ? "/register" : "/login"}${
+            nextParam ? `?next=${encodeURIComponent(nextParam)}` : ""
+          }`}
           className="font-bold text-clay-500"
         >
           {isLogin ? "أنشئي حسابًا" : "سجّلي الدخول"}
