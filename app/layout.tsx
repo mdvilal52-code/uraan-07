@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Tajawal, Cormorant_Garamond } from "next/font/google";
 import { Providers } from "@/components/providers/Providers";
+import { DomResilience } from "@/components/DomResilience";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "../styles/luxury.css";
@@ -83,6 +84,10 @@ export default function RootLayout({
       className={`${tajawal.variable} ${cormorant.variable}`}
     >
       <body>
+        {/* Installs the DOM-resilience guard as the initial bundle evaluates,
+            before hydration, so a translation extension reparenting a node
+            can't crash React's next commit. See lib/domResilience. */}
+        <DomResilience />
         <Providers>{children}</Providers>
       </body>
     </html>
