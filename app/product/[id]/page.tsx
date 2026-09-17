@@ -142,8 +142,10 @@ export default async function ProductPage({
           </div>
         )}
 
-        {/* Gold weight — admin-controlled, N/A when unset. Purity is fixed. */}
+        {/* Karat + gold weight — admin-controlled, N/A/21K when unset.
+            Arabic Gold is always shown alongside and is fixed in the component. */}
         <ProductWeightInfo
+          karats={product.karats}
           goldWeight={product.goldWeight}
           totalWeight={product.totalWeight}
         />

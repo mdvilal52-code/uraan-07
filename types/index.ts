@@ -39,9 +39,10 @@ export interface Product {
   newArrival?: boolean;
   rating?: number;
   reviews?: number;
-  /** Legacy per-product purity list. No longer surfaced anywhere — the
-   *  product page shows a fixed "21K + Arabic Gold" purity label for every
-   *  product. Kept optional on the type/DB only for backward compatibility. */
+  /** Admin-set karat badge(s) shown on the product page (e.g. ["21K"] or
+   *  ["21K", "18K"]). Empty/undefined → the product page defaults to 21K.
+   *  The "Arabic Gold" badge shown alongside it is fixed storewide and is
+   *  not part of this field. */
   karats?: string[];
   /** Net gold weight in grams (admin-controlled; undefined → N/A). */
   goldWeight?: number;

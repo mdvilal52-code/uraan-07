@@ -1,20 +1,25 @@
 import { Scale, Gem } from "lucide-react";
 
 /**
- * Weight & karat box on the product page. Weights are admin-controlled
- * (set per product in the admin panel); anything the admin hasn't set is
- * shown as N/A. Purity is fixed storewide — every piece is 21K + Arabic
- * Gold, so it's shown as a static label rather than a per-product choice.
+ * Weight & karat box on the product page. Weights and karat(s) are
+ * admin-controlled (set per product in the admin panel); anything the
+ * admin hasn't set falls back to N/A (weights) or 21K (karat). "Arabic
+ * Gold" is a fixed storewide badge — it's hardcoded below, never sourced
+ * from product data, so it always appears next to the karat badge(s) and
+ * can't be changed or removed by editing a product.
  */
 export function ProductWeightInfo({
+  karats,
   goldWeight,
   totalWeight,
 }: {
+  karats?: string[];
   goldWeight?: number;
   totalWeight?: number;
 }) {
   const grams = (v?: number) =>
     typeof v === "number" && v > 0 ? `${v.toFixed(1)}g` : "N/A";
+  const karatList = karats && karats.length > 0 ? karats : ["21K"];
 
   return (
     <div className="mt-4 rounded-2xl border border-cream-300 bg-cream-50 p-4 space-y-3">
@@ -23,11 +28,19 @@ export function ProductWeightInfo({
         Weight &amp; Purity Details
       </h3>
 
-      {/* Purity — fixed storewide, not admin-configurable */}
-      <div className="flex items-center gap-2">
+      {/* Purity — admin-set karat badge(s) plus the fixed Arabic Gold badge */}
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs font-semibold text-ink-soft">Purity:</span>
-        <span className="rounded-xl bg-forest-600 px-3 py-1.5 text-xs font-bold text-cream-50 shadow-sm">
-          21K + Arabic Gold
+        {karatList.map((k) => (
+          <span
+            key={k}
+            className="rounded-xl bg-forest-600 px-3 py-1.5 text-xs font-bold text-cream-50 shadow-sm"
+          >
+            {k}
+          </span>
+        ))}
+        <span className="rounded-xl bg-gold-gradient px-3 py-1.5 text-xs font-bold text-forest-800 shadow-gold">
+          Arabic Gold
         </span>
       </div>
 

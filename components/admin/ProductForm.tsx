@@ -47,9 +47,12 @@ export function ProductForm({ product }: { product?: Product }) {
       image: fd.get("image") || product?.image,
       bestSeller: fd.get("bestSeller") === "on",
       newArrival: fd.get("newArrival") === "on",
-      // Admin-controlled gold weights. Sent as-is (raw value); the API
-      // normalizes them and stores null when left blank → N/A. Purity is
-      // fixed storewide (21K + Arabic Gold) and isn't admin-configurable.
+      // Admin-controlled karat(s) + gold weights. Sent as-is (raw value);
+      // the API normalizes them — karats accepts a comma-separated list
+      // and falls back to 21K on the product page when left blank; weights
+      // are stored null when left blank → N/A. "Arabic Gold" itself is
+      // fixed storewide and isn't part of this form.
+      karats: fd.get("karats") ?? "",
       goldWeight: fd.get("goldWeight") ?? "",
       totalWeight: fd.get("totalWeight") ?? "",
     };
@@ -152,15 +155,29 @@ export function ProductForm({ product }: { product?: Product }) {
           </div>
         </div>
 
-        {/* Gold weights — control the "Weight & Purity" box on the product
-            page. Leave a field blank to show N/A there. Purity itself is
-            fixed storewide (21K + Arabic Gold), not set per product. */}
+        {/* Karat + gold weights — control the "Weight & Purity" box on the
+            product page. Leave a field blank to show N/A (weights) or the
+            21K default (karat) there. "Arabic Gold" is not set here — it's
+            a fixed badge shown automatically on every product page. */}
         <div className="card space-y-4 p-5">
           <h3 className="text-sm font-bold text-ink">Weight &amp; Purity Details</h3>
           <p className="text-xs text-ink-muted">
-            Purity is fixed storewide as <strong>21K + Arabic Gold</strong> and
-            shown automatically — only the weights below are per product.
+            <strong>Arabic Gold</strong> is shown automatically on every product
+            and can&apos;t be changed here — set the karat and weights below.
           </p>
+          <Field label="Karat">
+            <input
+              name="karats"
+              className={inputCls}
+              defaultValue={product?.karats?.join(", ")}
+              placeholder="21K"
+            />
+            <span className="mt-1 block text-[0.7rem] text-ink-faint">
+              Type the karat as you like, e.g. 21K or 18K. Separate multiple
+              with commas (21K, 18K) to show more than one badge. Leave blank
+              to default to 21K.
+            </span>
+          </Field>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Gold Weight (grams)">
               <input
