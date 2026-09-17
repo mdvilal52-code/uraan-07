@@ -129,3 +129,29 @@ model Coupon {
   expiresAt    DateTime?
   createdAt    DateTime  @default(now())
 }
+
+model Banner {
+  id         String   @id @default(cuid())
+  title      String
+  subtitle   String?
+  buttonText String?
+  link       String?
+  image      String?
+  surface    String   @default("gold") // "gold" | "dark" | "cream" — matches GemSurface
+  status     String   @default("active") // "active" | "scheduled" | "inactive"
+  createdAt  DateTime @default(now())
+}
+
+/// Singleton store configuration row (always id: "default").
+model StoreSettings {
+  id                    String   @id @default("default")
+  storeName             String   @default("Ariana Gems & Jewellery")
+  email                 String   @default("hello@ariana.example")
+  phone                 String   @default("+61 3 9791 1331")
+  currency              String   @default("AUD")
+  freeShippingThreshold Int      @default(500)
+  taxRatePercent        Float    @default(5)
+  notifyNewOrders       Boolean  @default(true)
+  notifyLowStock        Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+}

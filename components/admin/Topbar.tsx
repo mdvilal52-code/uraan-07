@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-import { Search, Bell, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 
 export function Topbar({ title }: { title: string }) {
@@ -21,23 +20,6 @@ export function Topbar({ title }: { title: string }) {
         </button>
 
         <h1 className="flex-1 font-sans text-lg font-bold text-ink">{title}</h1>
-
-        <div className="hidden items-center gap-2 rounded-xl border border-cream-300 bg-cream-100 px-3 py-2 sm:flex">
-          <Search className="h-4 w-4 text-ink-muted" />
-          <input
-            placeholder="Search…"
-            aria-label="Search"
-            className="w-40 bg-transparent text-sm outline-none placeholder:text-ink-faint"
-          />
-        </div>
-
-        <button
-          aria-label="Notifications"
-          className="relative grid h-10 w-10 place-items-center rounded-xl text-ink transition hover:bg-cream-200"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute end-2 top-2 h-2 w-2 rounded-full bg-clay-500" />
-        </button>
 
         <div className="grid h-10 w-10 place-items-center rounded-full bg-gold-gradient font-sans text-sm font-extrabold text-forest-800">
           A

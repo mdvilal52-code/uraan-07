@@ -1,7 +1,10 @@
 import { revenueSeries } from "@/lib/analytics";
+import { formatPrice } from "@/lib/currency";
 
-export function RevenueChart() {
-  const max = Math.max(...revenueSeries.map((d) => d.value));
+export async function RevenueChart() {
+  const series = await revenueSeries();
+  const max = Math.max(1, ...series.map((d) => d.value));
+  const total = series.reduce((s, d) => s + d.value, 0);
 
   return (
     <div className="card p-5">
@@ -10,21 +13,21 @@ export function RevenueChart() {
           <h3 className="font-sans text-base font-bold text-ink">
             Monthly Revenue
           </h3>
-          <p className="text-xs text-ink-muted">Last 7 months (AUD thousands)</p>
+          <p className="text-xs text-ink-muted">Last 7 months</p>
         </div>
         <span className="rounded-full bg-forest-50 px-3 py-1 text-xs font-bold text-forest-600">
-          +12.4%
+          {formatPrice(total)}
         </span>
       </div>
 
       <div className="flex h-44 items-stretch justify-between gap-2">
-        {revenueSeries.map((d) => (
+        {series.map((d) => (
           <div key={d.month} className="flex h-full flex-1 flex-col items-center gap-2">
             <div className="flex w-full flex-1 items-end">
               <div
                 className="w-full rounded-t-lg bg-gold-gradient transition-all"
                 style={{ height: `${(d.value / max) * 100}%` }}
-                title={`${d.value}K`}
+                title={formatPrice(d.value)}
               />
             </div>
             <span className="text-[0.62rem] font-semibold text-ink-muted">

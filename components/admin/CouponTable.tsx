@@ -135,6 +135,7 @@ export function CouponTable() {
   const [busy, setBusy] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState("");
 
   const load = () =>
     fetch("/api/coupons")
@@ -148,8 +149,14 @@ export function CouponTable() {
 
   async function remove(code: string) {
     if (!confirm("Delete this coupon?")) return;
+    setError("");
     setBusy(code);
-    await fetch(`/api/coupons/${code}`, { method: "DELETE" });
+    const res = await fetch(`/api/coupons/${code}`, { method: "DELETE" });
+    if (!res.ok) {
+      setError("Unable to delete this coupon — please try again.");
+      setBusy(null);
+      return;
+    }
     await load();
     setBusy(null);
   }
@@ -182,6 +189,12 @@ export function CouponTable() {
           }}
           onCancel={() => setShowForm(false)}
         />
+      )}
+
+      {error && (
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-600">
+          {error}
+        </p>
       )}
 
       {!coupons ? (

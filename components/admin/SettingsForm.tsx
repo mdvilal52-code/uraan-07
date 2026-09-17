@@ -1,10 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { Save, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Save, CheckCircle2, Loader2 } from "lucide-react";
 
 const inputCls =
   "w-full rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3 text-sm text-ink outline-none transition focus:border-gold-400 placeholder:text-ink-faint";
+
+interface Settings {
+  storeName: string;
+  email: string;
+  phone: string;
+  currency: string;
+  freeShippingThreshold: number;
+  taxRatePercent: number;
+  notifyNewOrders: boolean;
+  notifyLowStock: boolean;
+}
 
 function Card({
   title,
@@ -22,42 +33,89 @@ function Card({
 }
 
 export function SettingsForm() {
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => setSettings(d.settings))
+      .catch(() => setError("Unable to load settings"));
+  }, []);
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setSaving(true);
+    const fd = new FormData(e.currentTarget);
+    const body = {
+      storeName: fd.get("storeName"),
+      email: fd.get("email"),
+      phone: fd.get("phone"),
+      currency: fd.get("currency"),
+      freeShippingThreshold: Number(fd.get("freeShippingThreshold")) || 0,
+      taxRatePercent: Number(fd.get("taxRatePercent")) || 0,
+      notifyNewOrders: fd.get("notifyNewOrders") === "on",
+      notifyLowStock: fd.get("notifyLowStock") === "on",
+    };
+    const res = await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    setSaving(false);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error ?? "Unable to save settings");
+      return;
+    }
+    setSettings(data.settings);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  }
+
+  if (!settings) {
+    return (
+      <div className="card grid place-items-center py-16 text-ink-muted">
+        <Loader2 className="h-6 w-6 animate-spin text-gold-500" />
+      </div>
+    );
+  }
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2500);
-      }}
-      className="space-y-5"
-    >
+    <form onSubmit={submit} className="space-y-5">
+      {/* Store Info + Shipping/Taxes currently only configure the values
+          shown here in the admin panel — checkout's shipping threshold is
+          still the fixed $500 rule in lib/db.ts priceCart(), and store
+          contact details shown to customers still come from
+          data/jewelleryData.ts. Wiring those up is separate follow-up work. */}
       <Card title="Store Information">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
               Store Name
             </span>
-            <input className={inputCls} defaultValue="Ariana Gems & Jewellery" />
+            <input name="storeName" className={inputCls} defaultValue={settings.storeName} />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
               Email Address
             </span>
-            <input className={inputCls} defaultValue="hello@ariana.example" />
+            <input name="email" type="email" className={inputCls} defaultValue={settings.email} />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
               Phone Number
             </span>
-            <input className={inputCls} defaultValue="+61 3 9791 1331" />
+            <input name="phone" className={inputCls} defaultValue={settings.phone} />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
               Currency
             </span>
-            <select className={inputCls} defaultValue="AUD">
+            <select name="currency" defaultValue={settings.currency} className={inputCls}>
               <option value="AUD">Australian Dollar (AUD)</option>
               <option value="AED">UAE Dirham (AED)</option>
               <option value="USD">US Dollar (USD)</option>
@@ -72,13 +130,26 @@ export function SettingsForm() {
             <span className="mb-1 block text-xs font-bold text-ink-soft">
               Free Shipping Threshold (AUD)
             </span>
-            <input type="number" className={inputCls} defaultValue={500} />
+            <input
+              name="freeShippingThreshold"
+              type="number"
+              min={0}
+              className={inputCls}
+              defaultValue={settings.freeShippingThreshold}
+            />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
               Tax Rate (%)
             </span>
-            <input type="number" className={inputCls} defaultValue={5} />
+            <input
+              name="taxRatePercent"
+              type="number"
+              min={0}
+              step="0.1"
+              className={inputCls}
+              defaultValue={settings.taxRatePercent}
+            />
           </label>
         </div>
       </Card>
@@ -88,20 +159,40 @@ export function SettingsForm() {
           <span className="text-sm font-semibold text-ink">
             New Order Notifications
           </span>
-          <input type="checkbox" defaultChecked className="h-4 w-4 accent-forest-600" />
+          <input
+            name="notifyNewOrders"
+            type="checkbox"
+            defaultChecked={settings.notifyNewOrders}
+            className="h-4 w-4 accent-forest-600"
+          />
         </label>
         <label className="flex items-center justify-between">
           <span className="text-sm font-semibold text-ink">
             Low Stock Alerts
           </span>
-          <input type="checkbox" defaultChecked className="h-4 w-4 accent-forest-600" />
+          <input
+            name="notifyLowStock"
+            type="checkbox"
+            defaultChecked={settings.notifyLowStock}
+            className="h-4 w-4 accent-forest-600"
+          />
         </label>
       </Card>
 
-      <button type="submit" className="btn-forest w-full sm:w-auto">
+      {error && (
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-600">
+          {error}
+        </p>
+      )}
+
+      <button type="submit" disabled={saving} className="btn-forest w-full sm:w-auto disabled:opacity-60">
         {saved ? (
           <>
             <CheckCircle2 className="h-4 w-4" /> Saved
+          </>
+        ) : saving ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" /> Saving…
           </>
         ) : (
           <>

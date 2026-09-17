@@ -273,6 +273,31 @@ const SCHEMA_STATEMENTS = [
     "expiresAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+
+  `CREATE TABLE IF NOT EXISTS "Banner" (
+    "id" TEXT PRIMARY KEY,
+    "title" TEXT NOT NULL,
+    "subtitle" TEXT,
+    "buttonText" TEXT,
+    "link" TEXT,
+    "image" TEXT,
+    "surface" TEXT NOT NULL DEFAULT 'gold',
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS "StoreSettings" (
+    "id" TEXT PRIMARY KEY DEFAULT 'default',
+    "storeName" TEXT NOT NULL DEFAULT 'Ariana Gems & Jewellery',
+    "email" TEXT NOT NULL DEFAULT 'hello@ariana.example',
+    "phone" TEXT NOT NULL DEFAULT '+61 3 9791 1331',
+    "currency" TEXT NOT NULL DEFAULT 'AUD',
+    "freeShippingThreshold" INTEGER NOT NULL DEFAULT 500,
+    "taxRatePercent" DOUBLE PRECISION NOT NULL DEFAULT 5,
+    "notifyNewOrders" BOOLEAN NOT NULL DEFAULT true,
+    "notifyLowStock" BOOLEAN NOT NULL DEFAULT true,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
 ];
 
 /** @returns true when the DDL pass ran (memoize), false when skipped

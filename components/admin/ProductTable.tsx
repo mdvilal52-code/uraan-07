@@ -19,6 +19,7 @@ const iconByCategory: Record<string, string> = {
 export function ProductTable() {
   const [items, setItems] = useState<Product[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   const load = () =>
     fetch("/api/products")
@@ -32,8 +33,20 @@ export function ProductTable() {
 
   async function remove(id: string) {
     if (!confirm("Delete this product?")) return;
+    setError("");
     setBusy(id);
-    await fetch(`/api/products/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      // Most common cause: the product has existing orders — the OrderItem
+      // foreign key is ON DELETE RESTRICT so order history can't be
+      // silently orphaned. Surface that instead of a row that just sits
+      // there with no explanation.
+      setError(
+        "Unable to delete this product — it may already be part of a customer order.",
+      );
+      setBusy(null);
+      return;
+    }
     await load();
     setBusy(null);
   }
@@ -47,85 +60,92 @@ export function ProductTable() {
   }
 
   return (
-    <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-start">
-          <thead>
-            <tr className="border-b border-cream-200 text-start text-xs font-bold text-ink-muted">
-              <th className="px-4 py-3 text-start">Product</th>
-              <th className="px-4 py-3 text-start">Category</th>
-              <th className="px-4 py-3 text-start">Price</th>
-              <th className="px-4 py-3 text-start">Status</th>
-              <th className="px-4 py-3 text-start">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((p) => (
-              <tr
-                key={p.id}
-                className={`border-b border-cream-100 text-sm last:border-0 hover:bg-cream-100/60 ${busy === p.id ? "opacity-50" : ""}`}
-              >
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <ProductImage
-                      src={p.image}
-                      surface={p.surface}
-                      icon={iconByCategory[p.category] ?? "gem"}
-                      ratio="square"
-                      rounded="rounded-xl"
-                      className="h-11 w-11 shrink-0"
-                      label={p.name}
-                      sizes="44px"
-                    />
-                    <div>
-                      <p className="font-sans font-bold text-ink">{p.name}</p>
-                      {p.latin && p.latin !== p.name && (
-                        <p className="text-[0.7rem] text-ink-faint">{p.latin}</p>
-                      )}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-ink-soft">
-                  {categoryNameBySlug[p.category]}
-                </td>
-                <td className="px-4 py-3 font-bold text-ink">
-                  {formatPrice(p.price)}
-                </td>
-                <td className="px-4 py-3">
-                  {p.bestSeller ? (
-                    <span className="rounded-full bg-forest-50 px-2.5 py-0.5 text-[0.7rem] font-bold text-forest-600">
-                      Best Seller
-                    </span>
-                  ) : p.newArrival ? (
-                    <span className="rounded-full bg-gold-100 px-2.5 py-0.5 text-[0.7rem] font-bold text-gold-700">
-                      New Arrival
-                    </span>
-                  ) : (
-                    <span className="text-[0.7rem] text-ink-faint">In Stock</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <Link
-                      href={`/admin/products/edit/${p.id}`}
-                      aria-label="Edit"
-                      className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                    <button
-                      onClick={() => remove(p.id)}
-                      aria-label="Delete"
-                      className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
+    <div className="space-y-3">
+      {error && (
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-center text-sm font-semibold text-red-600">
+          {error}
+        </p>
+      )}
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-start">
+            <thead>
+              <tr className="border-b border-cream-200 text-start text-xs font-bold text-ink-muted">
+                <th className="px-4 py-3 text-start">Product</th>
+                <th className="px-4 py-3 text-start">Category</th>
+                <th className="px-4 py-3 text-start">Price</th>
+                <th className="px-4 py-3 text-start">Status</th>
+                <th className="px-4 py-3 text-start">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((p) => (
+                <tr
+                  key={p.id}
+                  className={`border-b border-cream-100 text-sm last:border-0 hover:bg-cream-100/60 ${busy === p.id ? "opacity-50" : ""}`}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <ProductImage
+                        src={p.image}
+                        surface={p.surface}
+                        icon={iconByCategory[p.category] ?? "gem"}
+                        ratio="square"
+                        rounded="rounded-xl"
+                        className="h-11 w-11 shrink-0"
+                        label={p.name}
+                        sizes="44px"
+                      />
+                      <div>
+                        <p className="font-sans font-bold text-ink">{p.name}</p>
+                        {p.latin && p.latin !== p.name && (
+                          <p className="text-[0.7rem] text-ink-faint">{p.latin}</p>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-ink-soft">
+                    {categoryNameBySlug[p.category]}
+                  </td>
+                  <td className="px-4 py-3 font-bold text-ink">
+                    {formatPrice(p.price)}
+                  </td>
+                  <td className="px-4 py-3">
+                    {p.bestSeller ? (
+                      <span className="rounded-full bg-forest-50 px-2.5 py-0.5 text-[0.7rem] font-bold text-forest-600">
+                        Best Seller
+                      </span>
+                    ) : p.newArrival ? (
+                      <span className="rounded-full bg-gold-100 px-2.5 py-0.5 text-[0.7rem] font-bold text-gold-700">
+                        New Arrival
+                      </span>
+                    ) : (
+                      <span className="text-[0.7rem] text-ink-faint">In Stock</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        href={`/admin/products/edit/${p.id}`}
+                        aria-label="Edit"
+                        className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                      <button
+                        onClick={() => remove(p.id)}
+                        aria-label="Delete"
+                        className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

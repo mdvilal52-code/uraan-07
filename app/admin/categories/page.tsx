@@ -1,4 +1,3 @@
-import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Topbar } from "@/components/admin/Topbar";
 import { CategoryIcon } from "@/components/icons/JewelIcons";
 import { categories } from "@/data/jewelleryData";
@@ -6,6 +5,9 @@ import { getAllProducts } from "@/lib/products";
 
 export const dynamic = "force-dynamic";
 
+// Categories are a fixed part of the catalogue structure (data/jewelleryData.ts),
+// not a database table — this page is a read-only overview of what's
+// configured and how many products are in each, not a CRUD screen.
 export default async function AdminCategoriesPage() {
   const all = await getAllProducts();
   const countBy = (slug: string) =>
@@ -15,13 +17,9 @@ export default async function AdminCategoriesPage() {
     <>
       <Topbar title="Categories" />
       <div className="space-y-5 p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-ink-muted">Organize store categories</p>
-          <button className="btn-forest">
-            <Plus className="h-4 w-4" />
-            New Category
-          </button>
-        </div>
+        <p className="text-sm text-ink-muted">
+          Store categories and how many products are in each.
+        </p>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((c) => (
@@ -34,20 +32,6 @@ export default async function AdminCategoriesPage() {
                 <p className="text-xs text-ink-muted">
                   {countBy(c.slug)} product{countBy(c.slug) === 1 ? "" : "s"}
                 </p>
-              </div>
-              <div className="flex gap-1.5">
-                <button
-                  aria-label="Edit"
-                  className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  aria-label="Delete"
-                  className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
               </div>
             </div>
           ))}

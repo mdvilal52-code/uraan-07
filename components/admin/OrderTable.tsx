@@ -1,6 +1,5 @@
-import { Eye } from "lucide-react";
 import { listOrders } from "@/lib/db";
-import { StatusBadge } from "./StatusBadge";
+import { OrderStatusSelect } from "./OrderStatusSelect";
 import { formatPrice } from "@/lib/currency";
 
 export async function OrderTable({ limit }: { limit?: number }) {
@@ -18,7 +17,6 @@ export async function OrderTable({ limit }: { limit?: number }) {
               <th className="px-4 py-3 text-start">Items</th>
               <th className="px-4 py-3 text-start">Total</th>
               <th className="px-4 py-3 text-start">Status</th>
-              <th className="px-4 py-3 text-start"></th>
             </tr>
           </thead>
           <tbody>
@@ -45,15 +43,7 @@ export async function OrderTable({ limit }: { limit?: number }) {
                   {formatPrice(o.total)}
                 </td>
                 <td className="px-4 py-3">
-                  <StatusBadge status={o.status} />
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    aria-label="View"
-                    className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
+                  <OrderStatusSelect id={o.id} status={o.status} />
                 </td>
               </tr>
             ))}

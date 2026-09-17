@@ -442,18 +442,9 @@ export async function validateCoupon(
   return { ok: true, code: row.code, description: row.description, discount };
 }
 
-/** Atomically mark one use of a coupon (best-effort; called right after an order is placed). */
-async function redeemCoupon(code: string): Promise<void> {
-  try {
-    await ensureSchema();
-    await prisma.coupon.update({
-      where: { code },
-      data: { usedCount: { increment: 1 } },
-    });
-  } catch (err) {
-    console.error("[db] redeemCoupon failed:", err);
-  }
-}
+/** Thrown inside the createOrder transaction when a coupon's last use was
+ *  claimed by a concurrent order between validation and redemption. */
+class CouponUnavailableError extends Error {}
 
 export async function listCoupons(): Promise<Coupon[]> {
   try {
@@ -523,6 +514,31 @@ export async function deleteCoupon(code: string): Promise<boolean> {
 
 /* ---------------- Orders ---------------- */
 
+const ORDER_STATUSES = [
+  "pending",
+  "paid",
+  "shipped",
+  "delivered",
+  "cancelled",
+] as const;
+
+export async function updateOrderStatus(
+  id: string,
+  status: string,
+): Promise<{ ok: true; order: Order } | { ok: false; error: string }> {
+  if (!(ORDER_STATUSES as readonly string[]).includes(status)) {
+    return { ok: false, error: "Invalid status" };
+  }
+  try {
+    await ensureSchema();
+    const row = await prisma.order.update({ where: { id }, data: { status } });
+    return { ok: true, order: toOrder(row) };
+  } catch (err) {
+    console.error("[db] updateOrderStatus failed:", err);
+    return { ok: false, error: "Order not found" };
+  }
+}
+
 export async function listOrders(
   opts?: number | { limit?: number; userId?: string },
 ): Promise<Order[]> {
@@ -573,31 +589,76 @@ export async function createOrder(input: {
     const count = await prisma.order.count();
     const id = `AR-${10242 + count}`;
 
-    const row = await prisma.order.create({
-      data: {
-        id,
-        customer: input.customer || "Guest",
-        email: input.email || "guest@example.com",
-        total,
-        status: "paid",
-        date,
-        items: priced.count,
-        couponCode: couponCode ?? null,
-        discount,
-        userId: input.userId ?? null,
-        lines: {
-          create: priced.lines.map((l) => ({
-            productId: l.product.id,
-            name: l.product.name,
-            price: l.product.price,
-            quantity: l.quantity,
-          })),
+    const row = await prisma.$transaction(async (tx) => {
+      // Re-check + redeem the coupon atomically in the same transaction as
+      // the order insert. A single UPDATE...WHERE row-locks the coupon for
+      // the duration of the statement, so two orders racing for a coupon's
+      // last remaining use can't both succeed — unlike the previous
+      // validate-then-increment-afterward flow, where a concurrent order
+      // could slip through between the read and the write and let the
+      // coupon be redeemed past its maxUses cap.
+      if (couponCode) {
+        const redeemed: number = await tx.$executeRaw`
+          UPDATE "Coupon"
+          SET "usedCount" = "usedCount" + 1
+          WHERE "code" = ${couponCode}
+            AND "active" = true
+            AND ("maxUses" IS NULL OR "usedCount" < "maxUses")
+        `;
+        if (redeemed === 0) throw new CouponUnavailableError();
+      }
+
+      // Keep the admin Customers table (and its KPI) live: an account-linked
+      // order upserts that customer's record instead of only ever reflecting
+      // prisma/seed.ts's one-time demo rows. Guest checkouts (no userId)
+      // aren't tracked here, matching how order history already treats them.
+      if (input.userId) {
+        await tx.customer.upsert({
+          where: { id: input.userId },
+          update: { orders: { increment: 1 }, spent: { increment: total } },
+          create: {
+            id: input.userId,
+            name: input.customer || "Guest",
+            email: input.email || "guest@example.com",
+            orders: 1,
+            spent: total,
+            joined: date,
+          },
+        });
+      }
+
+      return tx.order.create({
+        data: {
+          id,
+          customer: input.customer || "Guest",
+          email: input.email || "guest@example.com",
+          total,
+          status: "paid",
+          date,
+          items: priced.count,
+          couponCode: couponCode ?? null,
+          discount,
+          userId: input.userId ?? null,
+          lines: {
+            create: priced.lines.map((l) => ({
+              productId: l.product.id,
+              name: l.product.name,
+              price: l.product.price,
+              quantity: l.quantity,
+            })),
+          },
         },
-      },
+      });
     });
-    if (couponCode) await redeemCoupon(couponCode);
     return { ok: true, order: toOrder(row) };
   } catch (err) {
+    if (err instanceof CouponUnavailableError) {
+      return {
+        ok: false,
+        error:
+          "This discount code just reached its usage limit — remove it and try again.",
+      };
+    }
     console.error("[db] createOrder DB insert failed, returning offline order:", err);
     return {
       ok: true,
@@ -680,6 +741,23 @@ export async function createUser(input: {
         role: "customer",
       },
     });
+    // Best-effort: give every new account a Customer row (0 orders/spent) so
+    // the admin Customers table reflects real signups, not just seed data.
+    // Never let this fail the registration itself.
+    await prisma.customer
+      .upsert({
+        where: { id: user.id },
+        update: {},
+        create: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          orders: 0,
+          spent: 0,
+          joined: new Date().toISOString().slice(0, 10),
+        },
+      })
+      .catch((err) => console.error("[db] customer sync on register failed:", err));
     return { ok: true, user };
   } catch (err) {
     console.error("[db] createUser insert failed:", err);
@@ -828,6 +906,92 @@ export function publicUser(user: AuthUser) {
   };
 }
 
+/* ---------------- Admin: user management ---------------- */
+
+export interface AdminUserRow {
+  id: string;
+  name: string;
+  email: string;
+  role: "customer" | "admin";
+  createdAt: string;
+}
+
+export async function listUsers(): Promise<AdminUserRow[]> {
+  try {
+    await ensureSchema();
+    const rows = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+    });
+    return rows.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role as "customer" | "admin",
+      createdAt: u.createdAt.toISOString(),
+    }));
+  } catch (err) {
+    console.error("[db] listUsers failed:", err);
+    return [];
+  }
+}
+
+/** Guard shared by role changes and deletes: never let an admin action strip
+ *  the panel of its last admin, or act on the acting admin's own account
+ *  (self-demotion/self-deletion must go through another admin). */
+async function guardAdminMutation(
+  actingAdminId: string,
+  targetId: string,
+  demoting: boolean,
+): Promise<string | null> {
+  if (targetId === actingAdminId) {
+    return demoting
+      ? "You can't change your own role here"
+      : "You can't delete your own account here";
+  }
+  if (demoting) {
+    const target = await prisma.user.findUnique({ where: { id: targetId } });
+    if (target?.role === "admin") {
+      const admins = await prisma.user.count({ where: { role: "admin" } });
+      if (admins <= 1) return "Can't remove the last remaining admin";
+    }
+  }
+  return null;
+}
+
+export async function setUserRole(
+  actingAdminId: string,
+  targetId: string,
+  role: "customer" | "admin",
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await ensureSchema();
+    const blocked = await guardAdminMutation(actingAdminId, targetId, role !== "admin");
+    if (blocked) return { ok: false, error: blocked };
+    await prisma.user.update({ where: { id: targetId }, data: { role } });
+    return { ok: true };
+  } catch (err) {
+    console.error("[db] setUserRole failed:", err);
+    return { ok: false, error: "Unable to update this user right now" };
+  }
+}
+
+export async function deleteUserAccount(
+  actingAdminId: string,
+  targetId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await ensureSchema();
+    const blocked = await guardAdminMutation(actingAdminId, targetId, true);
+    if (blocked) return { ok: false, error: blocked };
+    await prisma.user.delete({ where: { id: targetId } });
+    return { ok: true };
+  } catch (err) {
+    console.error("[db] deleteUserAccount failed:", err);
+    return { ok: false, error: "Unable to delete this user right now" };
+  }
+}
+
 /* ---------------- Misc capture ---------------- */
 
 export async function addNewsletter(email: string): Promise<boolean> {
@@ -891,5 +1055,289 @@ export async function analytics(): Promise<{
   } catch (err) {
     console.error("[db] analytics failed:", err);
     return { revenue: 0, orders: 0, customers: 0, products: 0, averageOrderValue: 0 };
+  }
+}
+
+/** Real monthly revenue for the last `months` months — replaces what used to
+ *  be a hardcoded series unrelated to the actual database. */
+export async function monthlyRevenue(
+  months = 7,
+): Promise<{ month: string; value: number }[]> {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+  const labels = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const buckets: { key: string; month: string; value: number }[] = [];
+  for (let i = 0; i < months; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i), 1);
+    buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, month: labels[d.getMonth()]!, value: 0 });
+  }
+  try {
+    await ensureSchema();
+    const orders = await prisma.order.findMany({
+      where: { createdAt: { gte: start }, status: { not: "cancelled" } },
+      select: { createdAt: true, total: true },
+    });
+    const byKey = new Map(buckets.map((b) => [b.key, b]));
+    for (const o of orders) {
+      const key = `${o.createdAt.getFullYear()}-${o.createdAt.getMonth()}`;
+      const bucket = byKey.get(key);
+      if (bucket) bucket.value += o.total;
+    }
+  } catch (err) {
+    console.error("[db] monthlyRevenue failed:", err);
+  }
+  return buckets.map(({ month, value }) => ({ month, value }));
+}
+
+function pctTrend(current: number, previous: number): string {
+  if (previous <= 0) return current > 0 ? "New" : "—";
+  const pct = ((current - previous) / previous) * 100;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`;
+}
+
+/** analytics() plus real month-over-month trend deltas — replaces the
+ *  hardcoded "+12.4%"-style figures the dashboard used to show regardless
+ *  of actual activity. */
+export async function analyticsWithTrends(): Promise<{
+  revenue: number;
+  revenueTrend: string;
+  orders: number;
+  ordersTrend: string;
+  customers: number;
+  customersTrend: string;
+  products: number;
+  productsTrend: string;
+  averageOrderValue: number;
+  newCustomersThisMonth: number;
+  returningCustomerRate: number;
+}> {
+  const base = await analytics();
+  const now = new Date();
+  const startThis = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startLast = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  try {
+    await ensureSchema();
+    const [
+      revThis, revLast, ordThis, ordLast,
+      custThis, custLast, prodThis,
+      totalCustomers, returningCustomers,
+    ] = await Promise.all([
+      prisma.order.aggregate({ _sum: { total: true }, where: { status: { not: "cancelled" }, createdAt: { gte: startThis } } }),
+      prisma.order.aggregate({ _sum: { total: true }, where: { status: { not: "cancelled" }, createdAt: { gte: startLast, lt: startThis } } }),
+      prisma.order.count({ where: { createdAt: { gte: startThis } } }),
+      prisma.order.count({ where: { createdAt: { gte: startLast, lt: startThis } } }),
+      prisma.user.count({ where: { createdAt: { gte: startThis }, role: "customer" } }),
+      prisma.user.count({ where: { createdAt: { gte: startLast, lt: startThis }, role: "customer" } }),
+      prisma.product.count({ where: { createdAt: { gte: startThis } } }),
+      prisma.customer.count(),
+      prisma.customer.count({ where: { orders: { gt: 1 } } }),
+    ]);
+    return {
+      ...base,
+      revenueTrend: pctTrend(revThis._sum.total ?? 0, revLast._sum.total ?? 0),
+      ordersTrend: pctTrend(ordThis, ordLast),
+      customersTrend: pctTrend(custThis, custLast),
+      productsTrend: prodThis > 0 ? `+${prodThis} new` : "—",
+      newCustomersThisMonth: custThis,
+      returningCustomerRate: totalCustomers > 0 ? Math.round((returningCustomers / totalCustomers) * 100) : 0,
+    };
+  } catch (err) {
+    console.error("[db] analyticsWithTrends failed:", err);
+    return {
+      ...base,
+      revenueTrend: "—",
+      ordersTrend: "—",
+      customersTrend: "—",
+      productsTrend: "—",
+      newCustomersThisMonth: 0,
+      returningCustomerRate: 0,
+    };
+  }
+}
+
+/* ---------------- Admin: banners ---------------- */
+
+export interface BannerRow {
+  id: string;
+  title: string;
+  subtitle?: string;
+  buttonText?: string;
+  link?: string;
+  image?: string;
+  surface: string;
+  status: string;
+  createdAt: string;
+}
+
+function toBanner(b: {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  buttonText: string | null;
+  link: string | null;
+  image: string | null;
+  surface: string;
+  status: string;
+  createdAt: Date;
+}): BannerRow {
+  return {
+    id: b.id,
+    title: b.title,
+    subtitle: b.subtitle ?? undefined,
+    buttonText: b.buttonText ?? undefined,
+    link: b.link ?? undefined,
+    image: b.image ?? undefined,
+    surface: b.surface,
+    status: b.status,
+    createdAt: b.createdAt.toISOString(),
+  };
+}
+
+export async function listBanners(): Promise<BannerRow[]> {
+  try {
+    await ensureSchema();
+    const rows = await prisma.banner.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map(toBanner);
+  } catch (err) {
+    console.error("[db] listBanners failed:", err);
+    return [];
+  }
+}
+
+export async function createBanner(input: {
+  title: string;
+  subtitle?: string;
+  buttonText?: string;
+  link?: string;
+  image?: string;
+  surface?: string;
+  status?: string;
+}): Promise<{ ok: true; banner: BannerRow } | { ok: false; error: string }> {
+  const title = (input.title ?? "").trim();
+  if (!title) return { ok: false, error: "Title is required" };
+  try {
+    await ensureSchema();
+    const row = await prisma.banner.create({
+      data: {
+        title,
+        subtitle: input.subtitle?.trim() || null,
+        buttonText: input.buttonText?.trim() || null,
+        link: input.link?.trim() || null,
+        image: input.image?.trim() || null,
+        surface: input.surface || "gold",
+        status: input.status || "active",
+      },
+    });
+    return { ok: true, banner: toBanner(row) };
+  } catch (err) {
+    console.error("[db] createBanner failed:", err);
+    return { ok: false, error: "Unable to create the banner" };
+  }
+}
+
+export async function deleteBanner(id: string): Promise<boolean> {
+  try {
+    await ensureSchema();
+    await prisma.banner.delete({ where: { id } });
+    return true;
+  } catch (err) {
+    console.error("[db] deleteBanner failed:", err);
+    return false;
+  }
+}
+
+/* ---------------- Admin: store settings ---------------- */
+
+export interface StoreSettingsRow {
+  storeName: string;
+  email: string;
+  phone: string;
+  currency: string;
+  freeShippingThreshold: number;
+  taxRatePercent: number;
+  notifyNewOrders: boolean;
+  notifyLowStock: boolean;
+}
+
+const DEFAULT_SETTINGS: StoreSettingsRow = {
+  storeName: "Ariana Gems & Jewellery",
+  email: "hello@ariana.example",
+  phone: "+61 3 9791 1331",
+  currency: "AUD",
+  freeShippingThreshold: 500,
+  taxRatePercent: 5,
+  notifyNewOrders: true,
+  notifyLowStock: true,
+};
+
+export async function getSettings(): Promise<StoreSettingsRow> {
+  try {
+    await ensureSchema();
+    const row = await prisma.storeSettings.upsert({
+      where: { id: "default" },
+      update: {},
+      create: { id: "default" },
+    });
+    return {
+      storeName: row.storeName,
+      email: row.email,
+      phone: row.phone,
+      currency: row.currency,
+      freeShippingThreshold: row.freeShippingThreshold,
+      taxRatePercent: row.taxRatePercent,
+      notifyNewOrders: row.notifyNewOrders,
+      notifyLowStock: row.notifyLowStock,
+    };
+  } catch (err) {
+    console.error("[db] getSettings failed:", err);
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export async function updateSettings(
+  input: Partial<StoreSettingsRow>,
+): Promise<{ ok: true; settings: StoreSettingsRow } | { ok: false; error: string }> {
+  try {
+    await ensureSchema();
+    const data: Record<string, unknown> = {};
+    if (input.storeName !== undefined) data.storeName = input.storeName.trim() || DEFAULT_SETTINGS.storeName;
+    if (input.email !== undefined) data.email = input.email.trim();
+    if (input.phone !== undefined) data.phone = input.phone.trim();
+    if (input.currency !== undefined) data.currency = input.currency.trim() || DEFAULT_SETTINGS.currency;
+    if (input.freeShippingThreshold !== undefined) {
+      const n = Number(input.freeShippingThreshold);
+      data.freeShippingThreshold = Number.isFinite(n) && n >= 0 ? Math.round(n) : DEFAULT_SETTINGS.freeShippingThreshold;
+    }
+    if (input.taxRatePercent !== undefined) {
+      const n = Number(input.taxRatePercent);
+      data.taxRatePercent = Number.isFinite(n) && n >= 0 ? n : DEFAULT_SETTINGS.taxRatePercent;
+    }
+    if (input.notifyNewOrders !== undefined) data.notifyNewOrders = Boolean(input.notifyNewOrders);
+    if (input.notifyLowStock !== undefined) data.notifyLowStock = Boolean(input.notifyLowStock);
+
+    const row = await prisma.storeSettings.upsert({
+      where: { id: "default" },
+      update: data,
+      create: { id: "default", ...data },
+    });
+    return {
+      ok: true,
+      settings: {
+        storeName: row.storeName,
+        email: row.email,
+        phone: row.phone,
+        currency: row.currency,
+        freeShippingThreshold: row.freeShippingThreshold,
+        taxRatePercent: row.taxRatePercent,
+        notifyNewOrders: row.notifyNewOrders,
+        notifyLowStock: row.notifyLowStock,
+      },
+    };
+  } catch (err) {
+    console.error("[db] updateSettings failed:", err);
+    return { ok: false, error: "Unable to save settings right now" };
   }
 }

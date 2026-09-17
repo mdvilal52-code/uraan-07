@@ -2,7 +2,7 @@ import { Topbar } from "@/components/admin/Topbar";
 import { AnalyticsCards } from "@/components/admin/AnalyticsCards";
 import { RevenueChart } from "@/components/admin/RevenueChart";
 import { getProductsGroupedByCategory } from "@/lib/products";
-import { getAverageOrderValue } from "@/lib/analytics";
+import { analyticsWithTrends } from "@/lib/db";
 import { formatPrice } from "@/lib/currency";
 
 
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminAnalyticsPage() {
   const groups = await getProductsGroupedByCategory();
   const totalProducts = groups.reduce((s, g) => s + g.products.length, 0);
-  const avgOrderValue = await getAverageOrderValue();
+  const a = await analyticsWithTrends();
 
   return (
     <>
@@ -54,9 +54,9 @@ export default async function AdminAnalyticsPage() {
 
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { label: "Average Order Value", value: formatPrice(avgOrderValue) },
-            { label: "Conversion Rate", value: "3.8%" },
-            { label: "Returning Customers", value: "62%" },
+            { label: "Average Order Value", value: formatPrice(a.averageOrderValue) },
+            { label: "Returning Customers", value: `${a.returningCustomerRate}%` },
+            { label: "New Customers This Month", value: String(a.newCustomersThisMonth) },
           ].map((s) => (
             <div key={s.label} className="card p-5">
               <p className="font-sans text-2xl font-extrabold text-ink">
