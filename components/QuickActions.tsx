@@ -11,8 +11,8 @@ const iconMap: Record<string, typeof LayoutGrid> = {
 
 export function QuickActions() {
   return (
-    <section className="px-5 py-4">
-      <div className="grid grid-cols-4 gap-2.5" data-reveal-stagger>
+    <section className="px-5 py-4 lg:px-10 lg:py-8">
+      <div className="grid grid-cols-4 gap-2.5 lg:gap-4" data-reveal-stagger>
         {quickActions.map((a) => {
           const Icon = iconMap[a.icon] ?? Sparkles;
           return (

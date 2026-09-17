@@ -6,7 +6,7 @@ import { formatPrice } from "@/lib/currency";
 
 export function ProductOfDay() {
   return (
-    <section className="px-5 pb-2 pt-4">
+    <section className="px-5 pb-2 pt-4 lg:px-10">
       <div className="card flex items-stretch gap-3 p-3" data-reveal>
         <div className="flex flex-1 flex-col py-1 ps-1">
           <span className="text-[0.72rem] font-bold uppercase tracking-wider text-gold-600">

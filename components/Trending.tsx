@@ -11,15 +11,15 @@ export function Trending({
   title?: string;
 }) {
   return (
-    <section className="py-4">
-      <div className="mb-3 flex items-center justify-between px-5">
+    <section className="py-4 lg:py-8">
+      <div className="mb-3 flex items-center justify-between px-5 lg:px-10">
         <h2 className="section-title">{title}</h2>
         <Link href="/collections" className="view-all">
           View All
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5 px-5" data-reveal-stagger>
+      <div className="grid grid-cols-3 gap-2.5 px-5 lg:gap-6 lg:px-10" data-reveal-stagger>
         {trendingCollections.map((c, i) => (
           <Link key={c.id} href="/collections" className="press">
             <ProductImage

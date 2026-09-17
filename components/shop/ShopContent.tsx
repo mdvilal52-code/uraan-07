@@ -123,8 +123,8 @@ export function ShopContent() {
 
       {/* Category sections */}
       {products && (
-        <div className="space-y-7 px-5 pb-6 pt-2">
-          {groups.map((g) => (
+        <div className="space-y-7 px-5 pb-6 pt-2 lg:px-10">
+          {groups.map((g, groupIndex) => (
             <section key={g.slug}>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="section-title">{g.title}</h2>
@@ -132,9 +132,13 @@ export function ShopContent() {
                   View All
                 </Link>
               </div>
-              <div className="grid grid-cols-2 gap-3.5">
-                {g.products.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+              <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-3 lg:gap-6">
+                {g.products.map((p, i) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    priority={groupIndex === 0 && i < 4}
+                  />
                 ))}
               </div>
             </section>

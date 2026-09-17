@@ -17,7 +17,15 @@ const iconByCategory: Record<string, string> = {
   pendants: "pendant",
 };
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: Product;
+  /** Set for the first row of an above-the-fold grid so its image gets a
+   *  priority load hint instead of the default lazy behavior. */
+  priority?: boolean;
+}) {
   const { add } = useCart();
   const { has, toggle } = useWishlist();
   const [added, setAdded] = useState(false);
@@ -34,6 +42,7 @@ export function ProductCard({ product }: { product: Product }) {
             ratio="square"
             rounded="rounded-none"
             label={product.name}
+            priority={priority}
           />
         </Link>
 
