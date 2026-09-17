@@ -18,7 +18,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Bottom navigation"
-      className="sticky bottom-0 z-30 border-t border-cream-300/70 bg-cream-50/95 backdrop-blur-md shadow-nav"
+      className="sticky bottom-0 z-30 border-t border-cream-300/70 bg-cream-50/95 backdrop-blur-md shadow-nav lg:hidden"
     >
       <ul className="flex items-stretch justify-between px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {items.map(({ label, href, icon: Icon }) => {

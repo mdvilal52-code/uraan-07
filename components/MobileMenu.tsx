@@ -4,23 +4,12 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { X, ChevronRight } from "lucide-react";
 import { LotusMark } from "./icons/JewelIcons";
-import { BRAND, categories } from "@/data/jewelleryData";
-
-const primaryLinks = [
-  { label: "Home", href: "/" },
-  { label: "Explore", href: "/explore" },
-  { label: "Collections", href: "/collections" },
-  { label: "Shop", href: "/shop" },
-  { label: "About Us", href: "/about" },
-  { label: "Contact Us", href: "/contact" },
-];
-
-const accountLinks = [
-  { label: "Profile", href: "/profile" },
-  { label: "Wishlist", href: "/wishlist" },
-  { label: "Cart", href: "/cart" },
-  { label: "Login", href: "/login" },
-];
+import {
+  BRAND,
+  categories,
+  primaryNavLinks,
+  accountNavLinks,
+} from "@/data/jewelleryData";
 
 export function MobileMenu({
   open,
@@ -80,7 +69,7 @@ export function MobileMenu({
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
           <nav className="flex flex-col">
-            {primaryLinks.map((l) => (
+            {primaryNavLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
@@ -113,7 +102,7 @@ export function MobileMenu({
             Account
           </p>
           <nav className="flex flex-col">
-            {accountLinks.map((l) => (
+            {accountNavLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}

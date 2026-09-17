@@ -81,7 +81,7 @@ export function ShopContent() {
   return (
     <div>
       {/* Filter pills */}
-      <div className="sticky top-16 z-20 bg-cream-100/95 px-5 py-3 backdrop-blur-md">
+      <div className="sticky top-16 z-20 bg-cream-100/95 px-5 py-3 backdrop-blur-md lg:top-20 lg:px-10">
         <div className="flex items-center gap-2">
           <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
             {pills.map((p) => (
