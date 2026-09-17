@@ -51,12 +51,18 @@ const nextConfig = {
           // Everything else is locked to 'self'/'none': no third-party
           // scripts, fonts, or embeds exist in this app, and there's no
           // dangerouslySetInnerHTML anywhere for the residual inline-script
-          // allowance to expose.
+          // allowance to expose. 'unsafe-eval' is added to script-src only
+          // in development: Next's dev-mode Fast Refresh/HMR client uses
+          // eval() internally, and without it the whole client bundle throws
+          // on load (breaking hydration on every page) — production builds
+          // don't need or get it.
           {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
+              `script-src 'self' 'unsafe-inline'${
+                process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"
+              }`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data:",
               "font-src 'self' data:",
