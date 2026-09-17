@@ -5,8 +5,8 @@ import { WishlistView } from "@/components/wishlist/WishlistView";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "المفضّلة",
-  description: "قطعك المفضّلة المحفوظة في مكان واحد.",
+  title: "Wishlist",
+  description: "Your favorite pieces, saved in one place.",
 };
 
 export default function WishlistPage() {
@@ -14,8 +14,8 @@ export default function WishlistPage() {
     <AppShell>
       <header className="flex items-center gap-2 px-5 pb-3 pt-5">
         <Heart className="h-6 w-6 text-clay-500" fill="currentColor" />
-        <h1 className="font-arabic text-[1.7rem] font-extrabold text-ink">
-          المفضّلة
+        <h1 className="font-sans text-[1.7rem] font-extrabold text-ink">
+          Wishlist
         </h1>
       </header>
       <WishlistView />

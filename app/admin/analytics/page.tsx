@@ -15,7 +15,7 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <>
-      <Topbar title="التحليلات" />
+      <Topbar title="Analytics" />
       <div className="space-y-6 p-4 sm:p-6">
         <AnalyticsCards />
 
@@ -25,8 +25,8 @@ export default async function AdminAnalyticsPage() {
           </div>
 
           <div className="card p-5">
-            <h3 className="mb-4 font-arabic text-base font-bold text-ink">
-              التوزيع حسب الفئة
+            <h3 className="mb-4 font-sans text-base font-bold text-ink">
+              Distribution by Category
             </h3>
             <div className="space-y-3">
               {groups.map((g) => {
@@ -54,12 +54,12 @@ export default async function AdminAnalyticsPage() {
 
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            { label: "متوسط قيمة الطلب", value: formatPrice(avgOrderValue) },
-            { label: "معدّل التحويل", value: "3.8%" },
-            { label: "العملاء العائدون", value: "62%" },
+            { label: "Average Order Value", value: formatPrice(avgOrderValue) },
+            { label: "Conversion Rate", value: "3.8%" },
+            { label: "Returning Customers", value: "62%" },
           ].map((s) => (
             <div key={s.label} className="card p-5">
-              <p className="font-arabic text-2xl font-extrabold text-ink">
+              <p className="font-sans text-2xl font-extrabold text-ink">
                 {s.value}
               </p>
               <p className="mt-1 text-xs text-ink-muted">{s.label}</p>

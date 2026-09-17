@@ -13,13 +13,13 @@ export default async function AdminCategoriesPage() {
 
   return (
     <>
-      <Topbar title="الفئات" />
+      <Topbar title="Categories" />
       <div className="space-y-5 p-4 sm:p-6">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-ink-muted">تنظيم فئات المتجر</p>
+          <p className="text-sm text-ink-muted">Organize store categories</p>
           <button className="btn-forest">
             <Plus className="h-4 w-4" />
-            فئة جديدة
+            New Category
           </button>
         </div>
 
@@ -30,20 +30,20 @@ export default async function AdminCategoriesPage() {
                 <CategoryIcon name={c.icon} className="h-6 w-6" />
               </span>
               <div className="flex-1">
-                <p className="font-arabic font-bold text-ink">{c.name}</p>
+                <p className="font-sans font-bold text-ink">{c.name}</p>
                 <p className="text-xs text-ink-muted">
-                  {countBy(c.slug)} منتج
+                  {countBy(c.slug)} product{countBy(c.slug) === 1 ? "" : "s"}
                 </p>
               </div>
               <div className="flex gap-1.5">
                 <button
-                  aria-label="تعديل"
+                  aria-label="Edit"
                   className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
                 >
                   <Pencil className="h-4 w-4" />
                 </button>
                 <button
-                  aria-label="حذف"
+                  aria-label="Delete"
                   className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
                 >
                   <Trash2 className="h-4 w-4" />

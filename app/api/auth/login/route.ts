@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   if (!email || !password) {
     return NextResponse.json(
-      { error: "يرجى إدخال البريد وكلمة المرور" },
+      { error: "Please enter your email and password" },
       { status: 400 },
     );
   }
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(key, LOGIN_LIMIT);
   if (!rl.ok) {
     return NextResponse.json(
-      { error: "محاولات كثيرة جدًا. حاول مرة أخرى لاحقًا." },
+      { error: "Too many attempts. Please try again later." },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
     );
   }
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     if (!user) {
       // Generic message — never reveal whether the email exists (anti-enumeration).
       return NextResponse.json(
-        { error: "بريد إلكتروني أو كلمة مرور غير صحيحة" },
+        { error: "Incorrect email or password" },
         { status: 401 },
       );
     }
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[api] login failed:", err);
     return NextResponse.json(
-      { error: "تعذّر تسجيل الدخول حاليًا، حاول لاحقًا." },
+      { error: "Unable to sign in right now, please try again." },
       { status: 500 },
     );
   }

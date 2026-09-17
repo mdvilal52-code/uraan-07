@@ -5,21 +5,21 @@ import { BRAND, CONTACT } from "@/data/jewelleryData";
 
 const columns = [
   {
-    title: "تسوّق",
+    title: "Shop",
     links: [
-      { label: "القلائد", href: "/shop?category=necklaces" },
-      { label: "الأقراط", href: "/shop?category=earrings" },
-      { label: "الخواتم", href: "/shop?category=rings" },
-      { label: "الأساور", href: "/shop?category=bracelets" },
+      { label: "Necklaces", href: "/shop?category=necklaces" },
+      { label: "Earrings", href: "/shop?category=earrings" },
+      { label: "Rings", href: "/shop?category=rings" },
+      { label: "Bracelets", href: "/shop?category=bracelets" },
     ],
   },
   {
-    title: "الشركة",
+    title: "Company",
     links: [
-      { label: "من نحن", href: "/about" },
-      { label: "المجموعات", href: "/collections" },
-      { label: "تواصل معنا", href: "/contact" },
-      { label: "المتجر", href: "/shop" },
+      { label: "About Us", href: "/about" },
+      { label: "Collections", href: "/collections" },
+      { label: "Contact Us", href: "/contact" },
+      { label: "Shop", href: "/shop" },
     ],
   },
 ];
@@ -39,13 +39,13 @@ export function Footer() {
         </span>
       </div>
       <p className="mt-3 max-w-xs text-sm leading-relaxed text-cream-200/80">
-        أحجار كريمة ومجوهرات فاخرة مصنوعة بعناية — تألّقي للأبد، بريقٌ لا ينتهي.
+        Exquisite Arabic gold and gemstone jewellery, handcrafted with care — shine forever, brilliance without end.
       </p>
 
       <div className="mt-8 grid grid-cols-2 gap-6">
         {columns.map((col) => (
           <div key={col.title}>
-            <h3 className="mb-3 font-arabic text-sm font-bold text-gold-200">
+            <h3 className="mb-3 font-sans text-sm font-bold text-gold-200">
               {col.title}
             </h3>
             <ul className="space-y-2">
@@ -72,13 +72,13 @@ export function Footer() {
           className="flex items-start gap-2"
         >
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gold-200" />
-          <span dir="ltr" className="text-start">
+          <span className="text-start">
             {CONTACT.address}
           </span>
         </a>
         <a href={CONTACT.phoneHref} className="flex items-center gap-2">
           <Phone className="h-4 w-4 text-gold-200" />
-          <span dir="ltr">{CONTACT.phoneIntl}</span>
+          <span>{CONTACT.phoneIntl}</span>
         </a>
         <a
           href={`mailto:${CONTACT.email}`}
@@ -90,8 +90,8 @@ export function Footer() {
 
       <div className="mt-6 flex gap-3">
         {[
-          { Icon: Instagram, href: CONTACT.social.instagram, label: "إنستغرام" },
-          { Icon: Facebook, href: CONTACT.social.facebook, label: "فيسبوك" },
+          { Icon: Instagram, href: CONTACT.social.instagram, label: "Instagram" },
+          { Icon: Facebook, href: CONTACT.social.facebook, label: "Facebook" },
         ].map(({ Icon, href, label }) => (
           <a
             key={label}
@@ -108,7 +108,7 @@ export function Footer() {
 
       <hr className="my-6 border-forest-500/40" />
       <p className="text-center text-xs text-cream-200/70">
-        © {new Date().getFullYear()} {BRAND.name} Gems &amp; Jewellery. جميع الحقوق محفوظة.
+        © {new Date().getFullYear()} {BRAND.name} Gems &amp; Jewellery. All rights reserved.
       </p>
     </footer>
   );

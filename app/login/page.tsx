@@ -3,8 +3,8 @@ import { AppShell } from "@/components/AppShell";
 import { AuthForm } from "@/components/auth/AuthForm";
 
 export const metadata: Metadata = {
-  title: "تسجيل الدخول",
-  description: "سجّلي الدخول إلى حسابك في أريانا.",
+  title: "Login",
+  description: "Login to your Ariana account.",
 };
 
 export default function LoginPage() {

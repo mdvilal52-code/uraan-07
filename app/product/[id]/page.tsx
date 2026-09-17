@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Star, ShieldCheck, Truck, RefreshCw, ChevronLeft } from "lucide-react";
+import { Star, ShieldCheck, Truck, RefreshCw, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProductImage } from "@/components/ProductImage";
 import { ProductCard } from "@/components/ProductCard";
@@ -77,9 +77,9 @@ export default async function ProductPage({
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 px-5 pt-4 text-xs text-ink-muted">
         <Link href="/shop" className="hover:text-clay-500">
-          المتجر
+          Shop
         </Link>
-        <ChevronLeft className="h-3.5 w-3.5" />
+        <ChevronRight className="h-3.5 w-3.5" />
         <Link
           href={`/shop?category=${product.category}`}
           className="hover:text-clay-500"
@@ -93,12 +93,12 @@ export default async function ProductPage({
 
       {/* Info */}
       <section className="px-5 pt-5" data-reveal>
-        <h1 className="font-arabic text-2xl font-extrabold leading-tight text-ink">
+        <h1 className="font-sans text-2xl font-extrabold leading-tight text-ink">
           {product.name}
         </h1>
 
         <div className="mt-2 flex items-center gap-2">
-          <span className="flex gap-0.5" aria-label={`${product.rating} من 5`}>
+          <span className="flex gap-0.5" aria-label={`${product.rating} out of 5`}>
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
@@ -112,7 +112,7 @@ export default async function ProductPage({
             ))}
           </span>
           <span className="text-xs text-ink-muted">
-            {product.rating?.toFixed(1)} ({product.reviews} تقييم)
+            {product.rating?.toFixed(1)} ({product.reviews} review{product.reviews === 1 ? "" : "s"})
           </span>
         </div>
 
@@ -155,9 +155,9 @@ export default async function ProductPage({
         {/* Trust row */}
         <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-cream-50 p-3 shadow-card-soft">
           {[
-            { icon: RefreshCw, label: "إرجاع سهل" },
-            { icon: Truck, label: "شحن آمن" },
-            { icon: ShieldCheck, label: "ضمان أصلي" },
+            { icon: RefreshCw, label: "Easy Returns" },
+            { icon: Truck, label: "Secure Shipping" },
+            { icon: ShieldCheck, label: "Certificate of Authenticity" },
           ].map((f) => (
             <div key={f.label} className="flex flex-col items-center gap-1 text-center">
               <f.icon className="h-5 w-5 text-gold-500" />
@@ -172,7 +172,7 @@ export default async function ProductPage({
       {/* Related */}
       {related.length > 0 && (
         <section className="px-5 py-6">
-          <h2 className="section-title mb-3">قد يعجبكِ أيضًا</h2>
+          <h2 className="section-title mb-3">You May Also Like</h2>
           <div className="grid grid-cols-2 gap-3.5">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} />

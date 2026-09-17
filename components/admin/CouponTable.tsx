@@ -47,7 +47,7 @@ function CouponForm({
     setSaving(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "تعذّر إنشاء الكوبون");
+      setError(d.error ?? "Unable to create the coupon");
       return;
     }
     onDone();
@@ -57,7 +57,7 @@ function CouponForm({
     <form onSubmit={submit} className="card space-y-4 p-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-xs font-bold text-ink-soft">الكود</span>
+          <span className="mb-1 block text-xs font-bold text-ink-soft">Code</span>
           <input
             name="code"
             required
@@ -66,23 +66,23 @@ function CouponForm({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-bold text-ink-soft">الوصف</span>
+          <span className="mb-1 block text-xs font-bold text-ink-soft">Description</span>
           <input
             name="description"
             required
-            placeholder="خصم 30% على المجموعة الصيفية"
+            placeholder="30% off the summer collection"
             className={inputCls}
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-bold text-ink-soft">نوع الخصم</span>
+          <span className="mb-1 block text-xs font-bold text-ink-soft">Discount Type</span>
           <select name="discountType" defaultValue="percent" className={inputCls}>
-            <option value="percent">نسبة مئوية %</option>
-            <option value="fixed">مبلغ ثابت (AUD)</option>
+            <option value="percent">Percentage (%)</option>
+            <option value="fixed">Fixed Amount (AUD)</option>
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-bold text-ink-soft">القيمة</span>
+          <span className="mb-1 block text-xs font-bold text-ink-soft">Value</span>
           <input
             name="value"
             type="number"
@@ -94,19 +94,19 @@ function CouponForm({
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-bold text-ink-soft">
-            الحد الأدنى للطلب (AUD)
+            Minimum Order (AUD)
           </span>
           <input name="minSubtotal" type="number" min={0} placeholder="0" className={inputCls} />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-bold text-ink-soft">
-            الحد الأقصى للاستخدام
+            Maximum Uses
           </span>
-          <input name="maxUses" type="number" min={1} placeholder="بلا حدود" className={inputCls} />
+          <input name="maxUses" type="number" min={1} placeholder="Unlimited" className={inputCls} />
         </label>
         <label className="block sm:col-span-2">
           <span className="mb-1 block text-xs font-bold text-ink-soft">
-            تاريخ الانتهاء (اختياري)
+            Expiry Date (optional)
           </span>
           <input name="expiresAt" type="date" className={inputCls} />
         </label>
@@ -120,10 +120,10 @@ function CouponForm({
 
       <div className="flex gap-2">
         <button type="submit" disabled={saving} className="btn-forest flex-1 disabled:opacity-60">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء الكوبون"}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Coupon"}
         </button>
         <button type="button" onClick={onCancel} className="btn-outline flex-1">
-          إلغاء
+          Cancel
         </button>
       </div>
     </form>
@@ -147,7 +147,7 @@ export function CouponTable() {
   }, []);
 
   async function remove(code: string) {
-    if (!confirm("حذف هذا الكوبون؟")) return;
+    if (!confirm("Delete this coupon?")) return;
     setBusy(code);
     await fetch(`/api/coupons/${code}`, { method: "DELETE" });
     await load();
@@ -167,10 +167,10 @@ export function CouponTable() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-ink-muted">إدارة كوبونات الخصم</p>
+        <p className="text-sm text-ink-muted">Manage discount coupons</p>
         <button className="btn-forest" onClick={() => setShowForm((s) => !s)}>
           {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {showForm ? "إغلاق" : "كوبون جديد"}
+          {showForm ? "Close" : "New Coupon"}
         </button>
       </div>
 
@@ -191,7 +191,7 @@ export function CouponTable() {
       ) : coupons.length === 0 ? (
         <div className="card grid place-items-center py-16 text-center text-ink-muted">
           <Ticket className="h-8 w-8 text-cream-400" />
-          <p className="mt-3 text-sm">لا توجد كوبونات بعد.</p>
+          <p className="mt-3 text-sm">No coupons yet.</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
@@ -217,24 +217,24 @@ export function CouponTable() {
                           : "bg-red-50 text-red-500"
                       }`}
                     >
-                      {active ? "نشط" : "منتهٍ"}
+                      {active ? "Active" : "Expired"}
                     </span>
                   </div>
                   <p className="text-xs text-ink-muted">{c.description}</p>
                   <p className="mt-0.5 text-[0.7rem] text-ink-faint">
-                    الاستخدام: {c.usedCount}/{c.maxUses ?? "∞"} ·{" "}
+                    Usage: {c.usedCount}/{c.maxUses ?? "∞"} ·{" "}
                     {c.discountType === "fixed"
                       ? formatPrice(c.value)
                       : `${c.value}%`}
                     {c.minSubtotal > 0
-                      ? ` · حد أدنى ${formatPrice(c.minSubtotal)}`
+                      ? ` · Min ${formatPrice(c.minSubtotal)}`
                       : ""}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <button
                     onClick={() => copy(c.code)}
-                    aria-label="نسخ"
+                    aria-label="Copy"
                     className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
                   >
                     {copied === c.code ? (
@@ -245,7 +245,7 @@ export function CouponTable() {
                   </button>
                   <button
                     onClick={() => remove(c.code)}
-                    aria-label="حذف"
+                    aria-label="Delete"
                     className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
                   >
                     <Trash2 className="h-4 w-4" />

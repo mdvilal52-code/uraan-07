@@ -6,20 +6,20 @@ import { Footer } from "@/components/Footer";
 import { Loader } from "@/components/Loader";
 
 export const metadata: Metadata = {
-  title: "المتجر",
+  title: "Shop",
   description:
-    "تسوّق أجمل المجوهرات والأحجار الكريمة لجميع المناسبات — القلائد والأقراط والخواتم والأساور بأسعار AUD تنافسية.",
+    "Shop the finest Arabic gold and gemstone jewellery for every occasion — necklaces, earrings, rings and bracelets at competitive AUD prices.",
 };
 
 export default function ShopPage() {
   return (
     <AppShell>
       <header className="px-5 pb-1 pt-5">
-        <h1 className="font-arabic text-[1.7rem] font-extrabold text-ink">
-          المتجر
+        <h1 className="font-sans text-[1.7rem] font-extrabold text-ink">
+          Shop
         </h1>
         <p className="section-sub mt-1 max-w-xs">
-          تسوّق أجمل المجوهرات والأحجار الكريمة لجميع المناسبات.
+          Shop the finest Arabic gold and gemstone jewellery for every occasion.
         </p>
       </header>
 

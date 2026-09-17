@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 import { Home, Compass, Flower, Store, User } from "lucide-react";
 
 const items = [
-  { label: "الرئيسية", href: "/", icon: Home },
-  { label: "استكشف", href: "/explore", icon: Compass },
-  { label: "المجموعات", href: "/collections", icon: Flower },
-  { label: "المتجر", href: "/shop", icon: Store },
-  { label: "حسابي", href: "/profile", icon: User },
+  { label: "Home", href: "/", icon: Home },
+  { label: "Explore", href: "/explore", icon: Compass },
+  { label: "Collections", href: "/collections", icon: Flower },
+  { label: "Shop", href: "/shop", icon: Store },
+  { label: "Profile", href: "/profile", icon: User },
 ];
 
 export function BottomNav() {
@@ -17,7 +17,7 @@ export function BottomNav() {
 
   return (
     <nav
-      aria-label="التنقّل السفلي"
+      aria-label="Bottom navigation"
       className="sticky bottom-0 z-30 border-t border-cream-300/70 bg-cream-50/95 backdrop-blur-md shadow-nav"
     >
       <ul className="flex items-stretch justify-between px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">

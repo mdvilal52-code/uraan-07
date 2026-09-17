@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
+  ChevronRight,
   ShieldCheck,
   UserCircle,
   Loader2,
@@ -96,18 +97,18 @@ export function ProfileView() {
     return (
       <div className="grid place-items-center px-5 py-20 text-center">
         <UserCircle className="h-16 w-16 text-cream-400" />
-        <h2 className="mt-4 font-arabic text-lg font-bold text-ink">
-          مرحبًا بكِ في أريانا
+        <h2 className="mt-4 font-sans text-lg font-bold text-ink">
+          Welcome to Ariana
         </h2>
         <p className="mt-1 max-w-xs text-sm text-ink-muted">
-          سجّلي الدخول أو أنشئي حسابًا لمتابعة طلباتك وتفضيلاتك.
+          Login or create an account to track your orders and preferences.
         </p>
         <div className="mt-6 flex w-full max-w-xs flex-col gap-2">
           <Link href="/login" className="btn-forest w-full">
-            تسجيل الدخول
+            Login
           </Link>
           <Link href="/register" className="btn-outline w-full">
-            إنشاء حساب
+            Create Account
           </Link>
         </div>
       </div>
@@ -122,14 +123,14 @@ export function ProfileView() {
             onClick={() => setSection("main")}
             className="grid h-9 w-9 place-items-center rounded-xl bg-cream-100 text-ink"
           >
-            <ChevronLeft className="h-4 w-4 rotate-180" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
-          <h2 className="font-arabic text-lg font-bold text-ink">
-            {section === "orders" && "طلباتي"}
-            {section === "addresses" && "عناويني"}
-            {section === "payment" && "طرق الدفع"}
-            {section === "notifications" && "الإشعارات"}
-            {section === "settings" && "الإعدادات"}
+          <h2 className="font-sans text-lg font-bold text-ink">
+            {section === "orders" && "My Orders"}
+            {section === "addresses" && "My Addresses"}
+            {section === "payment" && "Payment Methods"}
+            {section === "notifications" && "Notifications"}
+            {section === "settings" && "Settings"}
           </h2>
         </div>
 
@@ -170,12 +171,12 @@ export function ProfileView() {
   }
 
   const menu = [
-    { icon: Package, label: "طلباتي", key: "orders" as Section },
-    { icon: Heart, label: "المفضّلة", key: "wishlist" as const },
-    { icon: MapPin, label: "عناويني", key: "addresses" as Section },
-    { icon: CreditCard, label: "طرق الدفع", key: "payment" as Section },
-    { icon: Bell, label: "الإشعارات", key: "notifications" as Section },
-    { icon: Settings, label: "الإعدادات", key: "settings" as Section },
+    { icon: Package, label: "My Orders", key: "orders" as Section },
+    { icon: Heart, label: "Wishlist", key: "wishlist" as const },
+    { icon: MapPin, label: "My Addresses", key: "addresses" as Section },
+    { icon: CreditCard, label: "Payment Methods", key: "payment" as Section },
+    { icon: Bell, label: "Notifications", key: "notifications" as Section },
+    { icon: Settings, label: "Settings", key: "settings" as Section },
   ];
 
   return (
@@ -183,28 +184,28 @@ export function ProfileView() {
       <section className="px-5 pb-2 pt-5">
         <div className="overflow-hidden rounded-3xl bg-forest-gradient p-5 text-cream-50">
           <div className="flex items-center gap-4">
-            <div className="grid h-16 w-16 place-items-center rounded-full bg-gold-gradient font-arabic text-2xl font-extrabold text-forest-800">
-              {(user.name || user.email || "؟").charAt(0)}
+            <div className="grid h-16 w-16 place-items-center rounded-full bg-gold-gradient font-sans text-2xl font-extrabold text-forest-800">
+              {(user.name || user.email || "?").charAt(0)}
             </div>
             <div>
-              <h1 className="font-arabic text-xl font-bold text-cream-50">
+              <h1 className="font-sans text-xl font-bold text-cream-50">
                 {user.name}
               </h1>
               <p className="text-sm text-cream-200/80">{user.email}</p>
               <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-forest-600/70 px-2 py-0.5 text-[0.65rem] font-bold text-gold-200">
-                <ShieldCheck className="h-3 w-3" /> عضوة أريانا
+                <ShieldCheck className="h-3 w-3" /> Ariana Member
               </span>
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             {[
-              { label: "الطلبات", value: String(orders.length || "0") },
-              { label: "المفضّلة", value: String(wishCount) },
-              { label: "العناوين", value: String(addresses.length) },
+              { label: "Orders", value: String(orders.length || "0") },
+              { label: "Wishlist", value: String(wishCount) },
+              { label: "Addresses", value: String(addresses.length) },
             ].map((s) => (
               <div key={s.label} className="rounded-2xl bg-forest-600/40 py-2">
-                <p className="font-arabic text-base font-extrabold text-gold-200">
+                <p className="font-sans text-base font-extrabold text-gold-200">
                   {s.value}
                 </p>
                 <p className="text-[0.66rem] text-cream-200/80">{s.label}</p>
@@ -232,10 +233,10 @@ export function ProfileView() {
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-cream-100 text-gold-500">
                 <m.icon className="h-5 w-5" />
               </span>
-              <span className="flex-1 text-start font-arabic text-sm font-bold text-ink">
+              <span className="flex-1 text-start font-sans text-sm font-bold text-ink">
                 {m.label}
               </span>
-              <ChevronLeft className="h-4 w-4 text-ink-faint" />
+              <ChevronRight className="h-4 w-4 text-ink-faint" />
             </button>
           ))}
         </div>
@@ -248,7 +249,7 @@ export function ProfileView() {
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 py-3.5 text-sm font-bold text-clay-500 shadow-card-soft"
         >
           <LogOut className="h-4 w-4" />
-          تسجيل الخروج
+          Logout
         </button>
       </section>
     </>
@@ -270,20 +271,20 @@ function OrdersSection({ orders, loading }: { orders: Order[]; loading: boolean 
     return (
       <div className="grid place-items-center py-12 text-center">
         <Package className="h-12 w-12 text-cream-400" />
-        <p className="mt-3 text-sm text-ink-muted">لا توجد طلبات حتى الآن.</p>
+        <p className="mt-3 text-sm text-ink-muted">No orders yet.</p>
         <Link href="/shop" className="btn-forest mt-4">
-          تصفّح المتجر
+          Continue Shopping
         </Link>
       </div>
     );
   }
 
   const statusLabel: Record<string, string> = {
-    pending: "قيد الانتظار",
-    paid: "مدفوع",
-    shipped: "تم الشحن",
-    delivered: "تم التوصيل",
-    cancelled: "ملغي",
+    pending: "Pending",
+    paid: "Paid",
+    shipped: "Shipped",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
   };
   const statusColor: Record<string, string> = {
     pending: "bg-gold-100 text-gold-700",
@@ -298,16 +299,16 @@ function OrdersSection({ orders, loading }: { orders: Order[]; loading: boolean 
       {orders.map((o) => (
         <div key={o.id} className="card p-4 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-ink" dir="ltr">{o.id}</span>
+            <span className="text-sm font-bold text-ink">{o.id}</span>
             <span className={`rounded-full px-2.5 py-0.5 text-[0.65rem] font-bold ${statusColor[o.status] ?? "bg-cream-200 text-ink-muted"}`}>
               {statusLabel[o.status] ?? o.status}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm text-ink-muted">
-            <span>{o.items} قطعة</span>
+            <span>{o.items} item{o.items === 1 ? "" : "s"}</span>
             <span className="price text-sm">{formatPrice(o.total)}</span>
           </div>
-          <p className="text-xs text-ink-faint" dir="ltr">{o.date}</p>
+          <p className="text-xs text-ink-faint">{o.date}</p>
         </div>
       ))}
     </div>
@@ -328,7 +329,7 @@ function AddressesSection({
     if (!form.line.trim()) return;
     const addr: Address = {
       id: `addr-${Date.now()}`,
-      label: form.label.trim() || "المنزل",
+      label: form.label.trim() || "Home",
       line: form.line.trim(),
       city: form.city.trim(),
       postcode: form.postcode.trim(),
@@ -361,26 +362,26 @@ function AddressesSection({
       {adding ? (
         <div className="card space-y-3 p-4">
           <input
-            placeholder="التسمية (مثلاً: المنزل)"
+            placeholder="Label (e.g., Home)"
             value={form.label}
             onChange={(e) => setForm({ ...form, label: e.target.value })}
             className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-gold-400"
           />
           <input
-            placeholder="العنوان"
+            placeholder="Address"
             value={form.line}
             onChange={(e) => setForm({ ...form, line: e.target.value })}
             className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-gold-400"
           />
           <div className="grid grid-cols-2 gap-2">
             <input
-              placeholder="المدينة"
+              placeholder="City"
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
               className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-gold-400"
             />
             <input
-              placeholder="الرمز البريدي"
+              placeholder="Postcode"
               value={form.postcode}
               onChange={(e) => setForm({ ...form, postcode: e.target.value })}
               className="w-full rounded-xl border border-cream-300 bg-cream-50 px-3 py-2 text-sm outline-none focus:border-gold-400"
@@ -388,10 +389,10 @@ function AddressesSection({
           </div>
           <div className="flex gap-2">
             <button onClick={handleAdd} className="btn-forest flex-1 py-2 text-sm">
-              <Check className="h-4 w-4" /> حفظ
+              <Check className="h-4 w-4" /> Save
             </button>
             <button onClick={() => setAdding(false)} className="btn-outline flex-1 py-2 text-sm">
-              <X className="h-4 w-4" /> إلغاء
+              <X className="h-4 w-4" /> Cancel
             </button>
           </div>
         </div>
@@ -400,7 +401,7 @@ function AddressesSection({
           onClick={() => setAdding(true)}
           className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-cream-300 py-4 text-sm font-bold text-ink-muted hover:border-gold-400 hover:text-gold-600"
         >
-          <Plus className="h-4 w-4" /> إضافة عنوان جديد
+          <Plus className="h-4 w-4" /> Add New Address
         </button>
       )}
     </div>
@@ -427,25 +428,25 @@ function PaymentSection() {
         <div className="grid place-items-center py-12 text-center">
           <CreditCard className="h-12 w-12 text-cream-400" />
           <p className="mt-3 text-sm text-ink-muted">
-            لم تضِف أي طريقة دفع بعد. ستُحفظ بياناتك تلقائيًا عند إتمام أول طلب.
+            You haven&apos;t added a payment method yet. Your details will be saved automatically when you complete your first order.
           </p>
         </div>
       )}
 
       <div className="card p-4 space-y-2">
-        <h3 className="text-sm font-bold text-ink">طرق الدفع المتاحة</h3>
+        <h3 className="text-sm font-bold text-ink">Available Payment Methods</h3>
         <div className="space-y-2 text-sm text-ink-muted">
           <div className="flex items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100">
               <CreditCard className="h-4 w-4 text-gold-500" />
             </span>
-            بطاقة ائتمان / خصم
+            Credit / Debit Card
           </div>
           <div className="flex items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100">
               <span className="text-xs font-bold text-gold-500">$</span>
             </span>
-            الدفع عند الاستلام
+            Cash on Delivery
           </div>
         </div>
       </div>
@@ -463,9 +464,9 @@ function NotificationsSection({
   return (
     <div className="space-y-3">
       {[
-        { label: "تحديثات الطلبات", desc: "إشعارات عند تغيّر حالة طلبك" },
-        { label: "العروض والخصومات", desc: "كوني أول من يعلم بالعروض الحصرية" },
-        { label: "وصل حديثًا", desc: "إشعارات عند إضافة قطع جديدة" },
+        { label: "Order Updates", desc: "Notifications when your order status changes" },
+        { label: "Offers & Discounts", desc: "Be the first to know about exclusive offers" },
+        { label: "New Arrivals", desc: "Notifications when new pieces are added" },
       ].map((n) => (
         <div key={n.label} className="card flex items-center justify-between p-4">
           <div>
@@ -515,11 +516,11 @@ function SettingsSection({
   return (
     <div className="space-y-3">
       <div className="card p-4 space-y-3">
-        <h3 className="text-sm font-bold text-ink">معلومات الحساب</h3>
+        <h3 className="text-sm font-bold text-ink">Account Information</h3>
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-ink-muted">الاسم</p>
+            <p className="text-xs text-ink-muted">Name</p>
             {editingName ? (
               <input
                 value={nameEdit}
@@ -543,7 +544,7 @@ function SettingsSection({
             }}
             className="text-xs font-bold text-clay-500 disabled:opacity-60"
           >
-            {editingName ? (saving ? "جارٍ الحفظ…" : "حفظ") : "تعديل"}
+            {editingName ? (saving ? "Saving…" : "Save") : "Edit"}
           </button>
         </div>
         {error && (
@@ -551,19 +552,19 @@ function SettingsSection({
         )}
 
         <div>
-          <p className="text-xs text-ink-muted">البريد الإلكتروني</p>
-          <p className="text-sm font-bold text-ink" dir="ltr">{user.email}</p>
+          <p className="text-xs text-ink-muted">Email Address</p>
+          <p className="text-sm font-bold text-ink">{user.email}</p>
         </div>
       </div>
 
       <div className="card p-4 space-y-3">
-        <h3 className="text-sm font-bold text-ink">التفضيلات</h3>
+        <h3 className="text-sm font-bold text-ink">Preferences</h3>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-ink-muted">اللغة</span>
-          <span className="text-sm font-bold text-ink">العربية</span>
+          <span className="text-sm text-ink-muted">Language</span>
+          <span className="text-sm font-bold text-ink">English</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-ink-muted">العملة</span>
+          <span className="text-sm text-ink-muted">Currency</span>
           <span className="text-sm font-bold text-ink">AUD</span>
         </div>
       </div>

@@ -4,8 +4,8 @@ import { Sidebar } from "@/components/admin/Sidebar";
 import { getAdminUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "لوحة الإدارة",
-  description: "لوحة تحكّم أريانا لإدارة المنتجات والطلبات والعملاء.",
+  title: "Admin Dashboard",
+  description: "The Ariana admin dashboard for managing products, orders and customers.",
   robots: { index: false, follow: false },
 };
 

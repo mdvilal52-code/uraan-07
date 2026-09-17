@@ -13,10 +13,10 @@ export function FeaturedProduct() {
       >
         <div className="flex items-start justify-between">
           <span className="rounded-full bg-forest-600/70 px-3 py-1 text-[0.68rem] font-bold text-gold-200">
-            منتج مميّز
+            Featured
           </span>
           <button
-            aria-label="إضافة إلى المفضّلة"
+            aria-label="Add to Wishlist"
             className="grid h-9 w-9 place-items-center rounded-full bg-forest-600/60 text-cream-100 transition hover:text-clay-400"
           >
             <Heart className="h-[1.1rem] w-[1.1rem]" />
@@ -25,7 +25,7 @@ export function FeaturedProduct() {
 
         <div className="mt-4 flex items-end gap-3">
           <div className="flex-1">
-            <h2 className="font-arabic text-[1.55rem] font-extrabold leading-tight text-cream-50">
+            <h2 className="font-sans text-[1.55rem] font-extrabold leading-tight text-cream-50">
               {featuredProduct.name}
             </h2>
             <p className="mt-2 max-w-[13rem] text-[0.82rem] leading-relaxed text-cream-200/85">
@@ -46,7 +46,7 @@ export function FeaturedProduct() {
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-3">
-          <span className="font-arabic text-2xl font-extrabold text-gold-200">
+          <span className="font-sans text-2xl font-extrabold text-gold-200">
             {formatPrice(featuredProduct.price)}
           </span>
           <AddToCartButton

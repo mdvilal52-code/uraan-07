@@ -7,10 +7,10 @@ export function RevenueChart() {
     <div className="card p-5">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="font-arabic text-base font-bold text-ink">
-            الإيرادات الشهرية
+          <h3 className="font-sans text-base font-bold text-ink">
+            Monthly Revenue
           </h3>
-          <p className="text-xs text-ink-muted">آخر 7 أشهر (بالآلاف AUD)</p>
+          <p className="text-xs text-ink-muted">Last 7 months (AUD thousands)</p>
         </div>
         <span className="rounded-full bg-forest-50 px-3 py-1 text-xs font-bold text-forest-600">
           +12.4%

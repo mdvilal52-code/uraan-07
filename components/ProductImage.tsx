@@ -55,12 +55,12 @@ export function ProductImage({
     <div
       className={`relative overflow-hidden ${rounded} ${ratioClass} ${surfaceClass} ${className}`}
       role="img"
-      aria-label={label ? `${label}` : "صورة مجوهرات"}
+      aria-label={label ? `${label}` : "Jewellery image"}
     >
       {src ? (
         <Image
           src={src}
-          alt={label ?? "مجوهرات"}
+          alt={label ?? "Jewellery"}
           fill
           sizes={sizes}
           priority={priority}

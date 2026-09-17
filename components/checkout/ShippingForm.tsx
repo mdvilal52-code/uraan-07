@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, ArrowLeft } from "lucide-react";
+import { ShoppingBag, ArrowRight } from "lucide-react";
 import { formatPrice } from "@/lib/currency";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -70,9 +70,9 @@ export function ShippingForm() {
     return (
       <div className="grid place-items-center px-5 py-20 text-center">
         <ShoppingBag className="h-14 w-14 text-cream-400" />
-        <p className="mt-4 text-ink-muted">سلّتك فارغة، أضِف بعض القطع أولًا.</p>
+        <p className="mt-4 text-ink-muted">Your cart is empty — add some pieces first.</p>
         <Link href="/shop" className="btn-forest mt-5">
-          تصفّح المتجر
+          Continue Shopping
         </Link>
       </div>
     );
@@ -83,10 +83,10 @@ export function ShippingForm() {
       <div className="grid place-items-center px-5 py-20 text-center">
         <ShoppingBag className="h-14 w-14 text-cream-400" />
         <p className="mt-4 text-ink-muted">
-          لم تختاري أي منتج للشراء. عودي إلى السلة واختاري منتجًا واحدًا على الأقل.
+          You haven&apos;t selected any item to purchase. Go back to your cart and select at least one.
         </p>
         <Link href="/cart" className="btn-forest mt-5">
-          العودة إلى السلة
+          Back to Cart
         </Link>
       </div>
     );
@@ -97,17 +97,17 @@ export function ShippingForm() {
       <CheckoutStepper step={1} />
       <form onSubmit={submit} className="space-y-6 px-5 pb-6 pt-3">
         <section className="space-y-3">
-          <h2 className="section-title text-lg">معلومات التواصل</h2>
+          <h2 className="section-title text-lg">Contact Information</h2>
           <Field
-            label="الاسم الكامل"
-            placeholder="نورة القحطاني"
+            label="Full Name"
+            placeholder="Noura Al Qahtani"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <div className="grid grid-cols-2 gap-3">
             <Field
-              label="البريد الإلكتروني"
+              label="Email Address"
               type="email"
               placeholder="you@example.com"
               required
@@ -115,7 +115,7 @@ export function ShippingForm() {
               onChange={(e) => setEmail(e.target.value)}
             />
             <Field
-              label="رقم الجوّال"
+              label="Mobile Number"
               type="tel"
               placeholder="+61 4xx xxx xxx"
               required
@@ -126,24 +126,24 @@ export function ShippingForm() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="section-title text-lg">عنوان الشحن</h2>
+          <h2 className="section-title text-lg">Shipping Address</h2>
           <Field
-            label="العنوان"
-            placeholder="الشارع، المبنى، الشقة"
+            label="Address"
+            placeholder="Street, building, apartment"
             required
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
           <div className="grid grid-cols-2 gap-3">
             <Field
-              label="المدينة"
-              placeholder="ملبورن"
+              label="City"
+              placeholder="Melbourne"
               required
               value={city}
               onChange={(e) => setCity(e.target.value)}
             />
             <Field
-              label="الرمز البريدي"
+              label="Postcode"
               placeholder="3175"
               value={postcode}
               onChange={(e) => setPostcode(e.target.value)}
@@ -153,25 +153,25 @@ export function ShippingForm() {
 
         <div className="card space-y-2 p-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-ink-muted">المجموع الفرعي</span>
+            <span className="text-ink-muted">Subtotal</span>
             <span className="font-semibold text-ink">{formatPrice(subtotal)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-ink-muted">الشحن</span>
+            <span className="text-ink-muted">Shipping</span>
             <span className="font-semibold text-ink">
-              {shipping === 0 ? "مجّاني" : formatPrice(shipping)}
+              {shipping === 0 ? "Free" : formatPrice(shipping)}
             </span>
           </div>
           <div className="hr-gold my-1" />
           <div className="flex items-center justify-between">
-            <span className="font-arabic font-bold text-ink">الإجمالي</span>
+            <span className="font-sans font-bold text-ink">Total</span>
             <span className="price text-xl">{formatPrice(total)}</span>
           </div>
         </div>
 
         <button type="submit" className="btn-forest w-full">
-          المتابعة إلى الدفع
-          <ArrowLeft className="h-4 w-4" />
+          Continue to Payment
+          <ArrowRight className="h-4 w-4" />
         </button>
       </form>
     </>

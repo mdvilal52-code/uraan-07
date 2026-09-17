@@ -4,8 +4,8 @@ import { ProfileView } from "@/components/profile/ProfileView";
 import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "حسابي",
-  description: "إدارة حسابك وطلباتك وتفضيلاتك.",
+  title: "Profile",
+  description: "Manage your account, orders and preferences.",
 };
 
 export default function ProfilePage() {

@@ -6,7 +6,7 @@ import { formatPrice } from "@/lib/currency";
 const icons = ["necklace", "ring", "earring"];
 
 export function Trending({
-  title = "المجموعات الرائجة",
+  title = "Trending Collections",
 }: {
   title?: string;
 }) {
@@ -15,7 +15,7 @@ export function Trending({
       <div className="mb-3 flex items-center justify-between px-5">
         <h2 className="section-title">{title}</h2>
         <Link href="/collections" className="view-all">
-          عرض الكل
+          View All
         </Link>
       </div>
 
@@ -30,7 +30,7 @@ export function Trending({
               rounded="rounded-2xl"
               label={c.name}
             />
-            <h3 className="mt-2 text-center font-arabic text-[0.82rem] font-bold leading-tight text-ink">
+            <h3 className="mt-2 text-center font-sans text-[0.82rem] font-bold leading-tight text-ink">
               {c.name}
             </h3>
             <span className="price block text-center text-[0.82rem]">

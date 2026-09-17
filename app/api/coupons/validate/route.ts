@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const subtotal = Number(body.subtotal);
 
   if (!Number.isFinite(subtotal) || subtotal < 0) {
-    return NextResponse.json({ ok: false, error: "سلّة غير صالحة" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Invalid cart" }, { status: 400 });
   }
 
   const result = await validateCoupon(code, subtotal);

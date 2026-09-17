@@ -75,14 +75,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) return { error: data.error ?? "تعذّر تسجيل الدخول" };
+      if (!res.ok) return { error: data.error ?? "Unable to sign in" };
       if (id === requestIdRef.current) {
         setUser(data.user);
         setLoading(false);
       }
       return {};
     } catch {
-      return { error: "تعذّر الاتصال بالخادم، تحقّقي من الإنترنت." };
+      return { error: "Unable to reach the server — please check your connection." };
     }
   }, []);
 
@@ -96,14 +96,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ name, email, password }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) return { error: data.error ?? "تعذّر إنشاء الحساب" };
+        if (!res.ok) return { error: data.error ?? "Unable to create the account" };
         if (id === requestIdRef.current) {
           setUser(data.user);
           setLoading(false);
         }
         return {};
       } catch {
-        return { error: "تعذّر الاتصال بالخادم، تحقّقي من الإنترنت." };
+        return { error: "Unable to reach the server — please check your connection." };
       }
     },
     [],
@@ -137,11 +137,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ name }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) return { error: data.error ?? "تعذّر تحديث الاسم" };
+      if (!res.ok) return { error: data.error ?? "Unable to update the name" };
       if (id === requestIdRef.current) setUser(data.user);
       return {};
     } catch {
-      return { error: "تعذّر الاتصال بالخادم، تحقّقي من الإنترنت." };
+      return { error: "Unable to reach the server — please check your connection." };
     }
   }, []);
 

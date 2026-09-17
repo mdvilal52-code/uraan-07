@@ -8,9 +8,10 @@ import "../styles/animations.css";
 
 // Only the weights the UI actually uses are loaded (body 400, bold 700,
 // extrabold 800 — `font-semibold` resolves to 700, Tajawal has no 600).
-// Fewer weights = fewer preloaded font files = faster first paint.
+// Fewer weights = fewer preloaded font files = faster first paint. The
+// storefront is English-only, so only the Latin subset is loaded.
 const tajawal = Tajawal({
-  subsets: ["arabic", "latin"],
+  subsets: ["latin"],
   weight: ["400", "700", "800"],
   variable: "--font-tajawal",
   display: "swap",
@@ -27,39 +28,37 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "أريانا للأحجار الكريمة والمجوهرات | Ariana Gems & Jewellery",
-    template: "%s | أريانا",
+    default: "Ariana Gems & Jewellery | Arabic Gold Jewellery Online",
+    template: "%s | Ariana Gems & Jewellery",
   },
   description:
-    "أريانا — أحجار كريمة ومجوهرات فاخرة مصنوعة بعناية. تسوّق القلائد والأقراط والخواتم والأساور بأجود الخامات وأسعار تنافسية.",
+    "Ariana — exquisite Arabic and Gulf-inspired gold jewellery, handcrafted with care. Shop gold necklaces, earrings, rings and bracelets in the finest materials at competitive prices.",
   keywords: [
-    "مجوهرات",
-    "أحجار كريمة",
-    "قلائد",
-    "خواتم",
-    "أقراط",
-    "أساور",
-    "ذهب",
-    "ألماس",
+    "Arabic gold jewellery",
+    "Gulf gold jewellery",
+    "gold necklaces",
+    "gold rings",
+    "gold earrings",
+    "gold bracelets",
     "jewellery",
-    "gems",
+    "gemstones",
     "gold",
     "diamond",
   ],
   authors: [{ name: "Ariana Gems & Jewellery" }],
   openGraph: {
-    title: "أريانا للأحجار الكريمة والمجوهرات",
+    title: "Ariana Gems & Jewellery | Arabic Gold Jewellery Online",
     description:
-      "أحجار كريمة ومجوهرات فاخرة مصنوعة بعناية — تألّقي للأبد، بريقٌ لا ينتهي.",
+      "Exquisite Arabic and Gulf-inspired gold jewellery, handcrafted with care — shine forever, brilliance without end.",
     type: "website",
-    locale: "ar_AE",
+    locale: "en_AU",
     siteName: "Ariana Gems & Jewellery",
   },
   twitter: {
     card: "summary_large_image",
-    title: "أريانا للأحجار الكريمة والمجوهرات",
+    title: "Ariana Gems & Jewellery | Arabic Gold Jewellery Online",
     description:
-      "أحجار كريمة ومجوهرات فاخرة مصنوعة بعناية — تألّقي للأبد، بريقٌ لا ينتهي.",
+      "Exquisite Arabic and Gulf-inspired gold jewellery, handcrafted with care — shine forever, brilliance without end.",
   },
   robots: { index: true, follow: true },
 };
@@ -78,8 +77,8 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="ar"
-      dir="rtl"
+      lang="en"
+      dir="ltr"
       className={`${tajawal.variable} ${cormorant.variable}`}
     >
       <body>

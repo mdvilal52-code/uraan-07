@@ -15,7 +15,7 @@ export default async function EditProductPage({
 
   return (
     <>
-      <Topbar title="تعديل المنتج" />
+      <Topbar title="Edit Product" />
       <div className="p-4 sm:p-6">
         <ProductForm product={product} />
       </div>

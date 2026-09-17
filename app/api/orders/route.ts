@@ -19,13 +19,13 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const items: CartLine[] = Array.isArray(body.items) ? body.items : [];
   if (items.length === 0) {
-    return NextResponse.json({ error: "السلة فارغة" }, { status: 400 });
+    return NextResponse.json({ error: "Your cart is empty" }, { status: 400 });
   }
 
   try {
     const user = await getUserByToken(cookies().get(SESSION_COOKIE)?.value);
     const result = await createOrder({
-      customer: body.customer || user?.name || "زائر",
+      customer: body.customer || user?.name || "Guest",
       email: body.email || user?.email || "guest@example.com",
       lines: items,
       couponCode: typeof body.couponCode === "string" ? body.couponCode : undefined,
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[api] create order failed:", err);
     return NextResponse.json(
-      { error: "تعذّر إتمام الطلب حاليًا، حاول لاحقًا." },
+      { error: "Unable to complete the order right now, please try again." },
       { status: 500 },
     );
   }

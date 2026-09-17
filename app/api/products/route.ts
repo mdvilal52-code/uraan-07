@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   if (!body.name) {
-    return NextResponse.json({ error: "الاسم مطلوب" }, { status: 400 });
+    return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
   const product = await createProduct(body);
   // Product pages + home are ISR-cached — refresh them so the new product

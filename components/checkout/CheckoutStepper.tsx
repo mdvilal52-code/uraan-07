@@ -1,6 +1,6 @@
 const steps = [
-  { n: 1, label: "الشحن" },
-  { n: 2, label: "الدفع" },
+  { n: 1, label: "Shipping" },
+  { n: 2, label: "Payment" },
 ] as const;
 
 export function CheckoutStepper({ step }: { step: 1 | 2 }) {

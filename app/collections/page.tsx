@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ProductImage } from "@/components/ProductImage";
 import { Footer } from "@/components/Footer";
@@ -8,9 +8,9 @@ import { collections } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
 
 export const metadata: Metadata = {
-  title: "المجموعات",
+  title: "Collections",
   description:
-    "مجموعات الأحجار الكريمة والمجوهرات، مختارة بعناية لكل مناسبة — التراث الملكي، خيار العروس، أناقة الألماس والمزيد.",
+    "Gemstone and gold jewellery collections, curated for every occasion — Royal Heritage, Bridal Choice, Diamond Elegance and more.",
 };
 
 const icons = ["necklace", "necklace", "pendant", "ring", "earring"];
@@ -19,10 +19,10 @@ export default function CollectionsPage() {
   return (
     <AppShell>
       <header className="px-5 pb-2 pt-5" data-reveal>
-        <h1 className="font-arabic text-[1.7rem] font-extrabold leading-tight text-ink text-balance">
-          مجموعات الأحجار الكريمة والمجوهرات
+        <h1 className="font-sans text-[1.7rem] font-extrabold leading-tight text-ink text-balance">
+          Gemstone &amp; Gold Jewellery Collections
         </h1>
-        <p className="section-sub mt-1">مختارة بعناية لكل مناسبة.</p>
+        <p className="section-sub mt-1">Curated with care for every occasion.</p>
       </header>
 
       <div className="space-y-3.5 px-5 py-3" data-reveal-stagger>
@@ -32,7 +32,7 @@ export default function CollectionsPage() {
             className="card flex items-stretch gap-3 p-3"
           >
             <div className="flex flex-1 flex-col justify-center py-1 ps-1">
-              <h2 className="font-arabic text-[1.15rem] font-bold leading-snug text-ink">
+              <h2 className="font-sans text-[1.15rem] font-bold leading-snug text-ink">
                 {c.name}
               </h2>
               <p className="mt-1 text-[0.82rem] leading-relaxed text-ink-muted">
@@ -43,8 +43,8 @@ export default function CollectionsPage() {
                 href={`/shop`}
                 className="btn-ghost-gold mt-2 self-start"
               >
-                <ArrowLeft className="h-4 w-4" />
-                تسوّق الآن
+                <ArrowRight className="h-4 w-4" />
+                Shop Now
               </Link>
             </div>
 

@@ -20,26 +20,26 @@ export function BannerForm() {
     >
       <label className="block">
         <span className="mb-1 block text-xs font-bold text-ink-soft">
-          عنوان البانر
+          Banner Title
         </span>
-        <input className={inputCls} placeholder="تألّقي للأبد" required />
+        <input className={inputCls} placeholder="Shine Forever" required />
       </label>
       <label className="block">
         <span className="mb-1 block text-xs font-bold text-ink-soft">
-          النص الفرعي
+          Subtitle
         </span>
-        <input className={inputCls} placeholder="بريقٌ لا ينتهي" />
+        <input className={inputCls} placeholder="Brilliance Without End" />
       </label>
       <div className="grid grid-cols-2 gap-4">
         <label className="block">
           <span className="mb-1 block text-xs font-bold text-ink-soft">
-            نص الزر
+            Button Text
           </span>
-          <input className={inputCls} placeholder="تسوّقي الآن" />
+          <input className={inputCls} placeholder="Shop Now" />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-bold text-ink-soft">
-            الرابط
+            Link
           </span>
           <input className={inputCls} placeholder="/shop" />
         </label>
@@ -47,12 +47,12 @@ export function BannerForm() {
 
       <div>
         <span className="mb-1 block text-xs font-bold text-ink-soft">
-          صورة الخلفية
+          Background Image
         </span>
         <div className="grid h-40 place-items-center rounded-2xl border-2 border-dashed border-cream-300 bg-cream-100 text-ink-muted">
           <div className="flex flex-col items-center gap-2">
             <ImagePlus className="h-8 w-8" />
-            <span className="text-xs">ارفع صورة البانر (1600×900)</span>
+            <span className="text-xs">Upload banner image (1600×900)</span>
           </div>
         </div>
       </div>
@@ -60,11 +60,11 @@ export function BannerForm() {
       <button type="submit" className="btn-forest w-full sm:w-auto">
         {saved ? (
           <>
-            <CheckCircle2 className="h-4 w-4" /> تم الحفظ
+            <CheckCircle2 className="h-4 w-4" /> Saved
           </>
         ) : (
           <>
-            <Save className="h-4 w-4" /> حفظ البانر
+            <Save className="h-4 w-4" /> Save Banner
           </>
         )}
       </button>

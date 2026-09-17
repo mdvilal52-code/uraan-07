@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`register:${clientIp(req)}`, REGISTER_LIMIT);
   if (!rl.ok) {
     return NextResponse.json(
-      { error: "محاولات كثيرة جدًا. حاول مرة أخرى لاحقًا." },
+      { error: "Too many attempts. Please try again later." },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
     );
   }
@@ -24,13 +24,13 @@ export async function POST(req: NextRequest) {
   const { name, email, password } = await req.json().catch(() => ({}));
   if (!email || !password) {
     return NextResponse.json(
-      { error: "يرجى إدخال البريد وكلمة المرور" },
+      { error: "Please enter your email and password" },
       { status: 400 },
     );
   }
   if (typeof password !== "string" || password.length < 8) {
     return NextResponse.json(
-      { error: "كلمة المرور يجب ألا تقل عن 8 أحرف" },
+      { error: "Password must be at least 8 characters" },
       { status: 400 },
     );
   }
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[api] register failed:", err);
     return NextResponse.json(
-      { error: "تعذّر إنشاء الحساب حاليًا، حاول لاحقًا." },
+      { error: "Unable to create the account right now, please try again." },
       { status: 500 },
     );
   }

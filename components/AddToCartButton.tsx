@@ -8,7 +8,7 @@ export function AddToCartButton({
   productId,
   className = "",
   variant = "forest",
-  label = "أضف إلى السلة",
+  label = "Add to Cart",
 }: {
   productId: string;
   className?: string;
@@ -35,7 +35,7 @@ export function AddToCartButton({
     >
       {added ? (
         <>
-          <Check className="h-4 w-4" /> تمّت الإضافة
+          <Check className="h-4 w-4" /> Added
         </>
       ) : (
         <>

@@ -18,11 +18,10 @@
   }
 
   body {
-    @apply bg-cream-200 text-ink font-arabic antialiased;
+    @apply bg-cream-200 text-ink font-sans antialiased;
     text-rendering: optimizeLegibility;
   }
 
-  /* Arabic numerals feel right-aligned in RTL price rows */
   input,
   textarea,
   select,
@@ -43,7 +42,7 @@
   }
 
   .section-title {
-    @apply font-arabic text-[1.35rem] font-bold text-ink leading-tight;
+    @apply font-sans text-[1.35rem] font-bold text-ink leading-tight;
   }
 
   .section-sub {
@@ -90,7 +89,7 @@
   }
 
   .price {
-    @apply font-arabic font-extrabold text-ink tracking-tight;
+    @apply font-sans font-extrabold text-ink tracking-tight;
   }
 }
 

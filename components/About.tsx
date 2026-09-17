@@ -1,9 +1,9 @@
 import { Gem, ShieldCheck, Truck } from "lucide-react";
 
 const points = [
-  { icon: Gem, title: "خامات فاخرة", text: "ذهب وأحجار كريمة معتمدة الجودة." },
-  { icon: ShieldCheck, title: "ضمان أصلي", text: "شهادة أصالة مع كل قطعة." },
-  { icon: Truck, title: "شحن آمن", text: "توصيل مؤمّن إلى باب منزلك." },
+  { icon: Gem, title: "Premium Materials", text: "Certified quality gold and gemstones." },
+  { icon: ShieldCheck, title: "Certificate of Authenticity", text: "A certificate of authenticity with every piece." },
+  { icon: Truck, title: "Secure Shipping", text: "Insured delivery to your door." },
 ];
 
 export function About() {

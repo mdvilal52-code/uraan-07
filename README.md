@@ -1,9 +1,9 @@
-# Ariana — Gems & Jewellery (أريانا)
+# Ariana — Gems & Jewellery
 
-A luxury **Arabic (RTL)** jewellery storefront built to be pixel-faithful to
-the reference design: warm cream, gold and deep-forest-green palette, elegant
-Arabic typography, mobile-first with a sticky bottom navigation, and a full
-admin dashboard.
+A luxury **Arabic Gold Jewellery** storefront (English, LTR) built to be
+pixel-faithful to the reference design: warm cream, gold and deep-forest-green
+palette, elegant typography, mobile-first with a sticky bottom navigation, and
+a full admin dashboard.
 
 Built with **Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS · Prisma · PostgreSQL**.
 
@@ -25,17 +25,21 @@ Built with **Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS �
   (`npm run gen:images`) rendered via `next/image`.
 - **Mobile-first**, centered phone-width canvas that scales cleanly to tablet
   and desktop without changing the design.
-- **Full RTL** support (`dir="rtl"`, logical `ms-/me-/ps-/pe-` utilities).
-- **Professional Gulf Arabic** copy throughout (no machine translation).
+- **English, LTR** storefront (`dir="ltr"`, logical `ms-/me-/ps-/pe-`
+  utilities keep spacing/alignment correct without hardcoded left/right).
+- **Arabic Gold Jewellery** positioning and copy throughout — Gulf-inspired
+  gold and gemstone collections, written in natural English for an
+  international audience.
 - Prices in **AUD** (`AUD 2,450`) via a single `lib/currency.ts` helper.
 - **Storefront**: Home, Explore, Collections, Shop (with live category
   filter), Product detail, Cart, Wishlist, Checkout, Search, Auth, Profile,
   About, Contact.
 - **Admin dashboard**: analytics, products (live list / add / edit / delete),
   orders, customers, categories, banners, reviews, coupons, users, settings.
-- **SEO** metadata, Open Graph, Arabic locale, semantic HTML, ARIA labels.
-- **Performance**: `next/font` (Tajawal + Cormorant + Amiri), scroll-reveal
-  animations with `prefers-reduced-motion` support, no layout shift.
+- **SEO** metadata, Open Graph, English locale, semantic HTML, ARIA labels.
+- **Performance**: `next/font` (Tajawal + Cormorant, Latin subset only),
+  scroll-reveal animations with `prefers-reduced-motion` support, no layout
+  shift.
 
 ## 🔌 API
 
@@ -164,7 +168,7 @@ Defined in `tailwind.config.ts`:
 - **cream** — warm neutral backgrounds
 - **gold** — brand accent / logo / prices
 - **forest** — deep green for primary buttons & featured cards
-- **clay** — terracotta accent (`تسوّق الآن` links)
+- **clay** — terracotta accent (`Shop Now` links)
 - **ink** — text scale
 
 ## 🖼️ Adding real product photos

@@ -40,7 +40,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           onClick={() => toggle(product.id)}
-          aria-label={wished ? "إزالة من المفضّلة" : "إضافة إلى المفضّلة"}
+          aria-label={wished ? "Remove from Wishlist" : "Add to Wishlist"}
           aria-pressed={wished}
           className="absolute end-2.5 top-2.5 grid h-9 w-9 place-items-center rounded-full bg-cream-50/90 text-ink shadow-card-soft backdrop-blur transition active:scale-90"
         >
@@ -52,14 +52,14 @@ export function ProductCard({ product }: { product: Product }) {
 
         {product.newArrival && (
           <span className="absolute start-2.5 top-2.5 rounded-full bg-gold-gradient px-2.5 py-1 text-[0.62rem] font-extrabold text-forest-800 shadow-gold">
-            وصل حديثًا
+            New
           </span>
         )}
       </div>
 
       <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5">
         <Link href={`/product/${product.id}`}>
-          <h3 className="font-arabic text-[0.95rem] font-bold leading-snug text-ink">
+          <h3 className="font-sans text-[0.95rem] font-bold leading-snug text-ink">
             {product.name}
           </h3>
         </Link>
@@ -80,12 +80,12 @@ export function ProductCard({ product }: { product: Product }) {
         >
           {added ? (
             <>
-              <Check className="h-3.5 w-3.5" /> تمّت الإضافة
+              <Check className="h-3.5 w-3.5" /> Added
             </>
           ) : (
             <>
               <ShoppingCart className="h-3.5 w-3.5" />
-              أضف إلى السلة
+              Add to Cart
             </>
           )}
         </button>

@@ -4,7 +4,7 @@ import type { Coupon } from "@/types";
 export const coupons: Coupon[] = [
   {
     code: "ARIANA15",
-    description: "خصم 15% على كل الطلبات",
+    description: "15% off all orders",
     discountType: "percent",
     value: 15,
     minSubtotal: 0,
@@ -14,7 +14,7 @@ export const coupons: Coupon[] = [
   },
   {
     code: "BRIDE20",
-    description: "خصم 20% على مجموعة الزفاف",
+    description: "20% off the bridal collection",
     discountType: "percent",
     value: 20,
     minSubtotal: 0,
@@ -24,7 +24,7 @@ export const coupons: Coupon[] = [
   },
   {
     code: "WELCOME10",
-    description: "خصم 10% للعملاء الجدد",
+    description: "10% off for new customers",
     discountType: "percent",
     value: 10,
     minSubtotal: 0,
@@ -33,7 +33,7 @@ export const coupons: Coupon[] = [
   },
   {
     code: "EID25",
-    description: "خصم 25% بمناسبة العيد",
+    description: "25% off for Eid",
     discountType: "percent",
     value: 25,
     minSubtotal: 0,

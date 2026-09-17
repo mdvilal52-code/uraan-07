@@ -18,7 +18,7 @@ export async function GET(
 ) {
   const product = await getProduct(params.id);
   if (!product)
-    return NextResponse.json({ error: "غير موجود" }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ product });
 }
 
@@ -32,7 +32,7 @@ export async function PUT(
   const body = await req.json().catch(() => ({}));
   const product = await updateProduct(params.id, body);
   if (!product)
-    return NextResponse.json({ error: "غير موجود" }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   revalidateProduct(params.id);
   return NextResponse.json({ product });
 }

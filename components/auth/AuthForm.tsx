@@ -43,7 +43,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       // login()/register() resolve to { error } rather than throwing, but guard
       // anyway so an unexpected exception can never leave the button spinning
       // or surface as an unhandled rejection in the console.
-      setError("تعذّر إتمام العملية، حاولي مرة أخرى.");
+      setError("Unable to complete the request, please try again.");
     } finally {
       setLoading(false);
     }
@@ -53,13 +53,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     <div className="px-5 py-6">
       <div className="mb-6 flex flex-col items-center text-center">
         <LotusMark className="h-14 w-14" />
-        <h1 className="mt-3 font-arabic text-2xl font-extrabold text-ink">
-          {isLogin ? "أهلًا بعودتكِ" : "إنشاء حساب جديد"}
+        <h1 className="mt-3 font-sans text-2xl font-extrabold text-ink">
+          {isLogin ? "Welcome Back" : "Create a New Account"}
         </h1>
         <p className="mt-1 text-sm text-ink-muted">
           {isLogin
-            ? "سجّلي الدخول لمتابعة التسوّق."
-            : "انضمّي إلى عائلة أريانا واستمتعي بمزايا حصرية."}
+            ? "Sign in to continue shopping."
+            : "Join the Ariana family and enjoy exclusive benefits."}
         </p>
       </div>
 
@@ -67,8 +67,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         {!isLogin && (
           <IconField
             icon={User}
-            label="الاسم الكامل"
-            placeholder="نورة القحطاني"
+            label="Full Name"
+            placeholder="Noura Al Qahtani"
             name="name"
             autoComplete="name"
             value={name}
@@ -77,7 +77,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         )}
         <IconField
           icon={Mail}
-          label="البريد الإلكتروني"
+          label="Email Address"
           type="email"
           placeholder="you@example.com"
           name="email"
@@ -89,7 +89,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <div>
           <label className="block">
             <span className="mb-1 block text-xs font-semibold text-ink-soft">
-              كلمة المرور
+              Password
             </span>
             <div className="flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3">
               <Lock className="h-4 w-4 text-ink-muted" />
@@ -107,7 +107,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               <button
                 type="button"
                 onClick={() => setShow((s) => !s)}
-                aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                aria-label={show ? "Hide password" : "Show password"}
               >
                 {show ? (
                   <EyeOff className="h-4 w-4 text-ink-muted" />
@@ -119,7 +119,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           </label>
           {!isLogin && (
             <span className="mt-1 block text-xs text-ink-faint">
-              8 أحرف على الأقل
+              At least 8 characters
             </span>
           )}
         </div>
@@ -127,7 +127,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         {isLogin && (
           <div className="flex justify-end">
             <Link href="#" className="text-xs font-semibold text-clay-500">
-              نسيتِ كلمة المرور؟
+              Forgot your password?
             </Link>
           </div>
         )}
@@ -144,27 +144,27 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           className="btn-forest w-full disabled:opacity-60"
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-          {isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
+          {isLogin ? "Login" : "Create Account"}
         </button>
       </form>
 
       <div className="my-5 flex items-center gap-3">
         <span className="hr-gold flex-1" />
-        <span className="text-xs text-ink-muted">أو</span>
+        <span className="text-xs text-ink-muted">or</span>
         <span className="hr-gold flex-1" />
       </div>
 
       <Link href="/shop" className="btn-outline w-full">
-        المتابعة كضيف
+        Continue as Guest
       </Link>
 
       <p className="mt-6 text-center text-sm text-ink-muted">
-        {isLogin ? "ليس لديكِ حساب؟ " : "لديكِ حساب بالفعل؟ "}
+        {isLogin ? "Don't have an account? " : "Already have an account? "}
         <Link
           href={isLogin ? "/register" : "/login"}
           className="font-bold text-clay-500"
         >
-          {isLogin ? "أنشئي حسابًا" : "سجّلي الدخول"}
+          {isLogin ? "Create one" : "Login"}
         </Link>
       </p>
     </div>

@@ -22,7 +22,7 @@ export async function AnalyticsCards() {
                 {k.trend}
               </span>
             </div>
-            <p className="mt-3 font-arabic text-2xl font-extrabold text-ink">
+            <p className="mt-3 font-sans text-2xl font-extrabold text-ink">
               {k.prefix ? `${k.prefix} ` : ""}
               {formatAmount(k.value)}
             </p>

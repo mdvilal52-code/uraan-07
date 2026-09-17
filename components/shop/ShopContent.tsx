@@ -11,7 +11,7 @@ import type { CategorySlug, Product } from "@/types";
 type Filter = "all" | CategorySlug;
 
 const pills: { key: Filter; label: string }[] = [
-  { key: "all", label: "الكل" },
+  { key: "all", label: "All" },
   ...categories.map((c) => ({ key: c.slug as Filter, label: c.name })),
 ];
 
@@ -60,7 +60,7 @@ export function ShopContent() {
           </div>
           <button
             type="button"
-            aria-label="تصفية"
+            aria-label="Filter"
             className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-cream-300 bg-cream-50 text-ink shadow-card-soft"
           >
             <SlidersHorizontal className="h-[1.15rem] w-[1.15rem]" />
@@ -83,7 +83,7 @@ export function ShopContent() {
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="section-title">{g.title}</h2>
                 <Link href={`/shop?category=${g.slug}`} className="view-all">
-                  عرض الكل
+                  View All
                 </Link>
               </div>
               <div className="grid grid-cols-2 gap-3.5">
@@ -96,7 +96,7 @@ export function ShopContent() {
 
           {groups.every((g) => g.products.length === 0) && (
             <p className="py-16 text-center text-ink-muted">
-              لا توجد منتجات في هذه الفئة حاليًا.
+              No products in this category yet.
             </p>
           )}
         </div>

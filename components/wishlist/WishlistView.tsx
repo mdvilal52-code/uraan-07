@@ -32,9 +32,9 @@ export function WishlistView() {
     return (
       <div className="grid place-items-center px-5 py-20 text-center">
         <Heart className="h-14 w-14 text-cream-400" />
-        <p className="mt-4 text-ink-muted">لا توجد عناصر في المفضّلة بعد.</p>
+        <p className="mt-4 text-ink-muted">No items in your wishlist yet.</p>
         <Link href="/shop" className="btn-forest mt-5">
-          تصفّح المتجر
+          Continue Shopping
         </Link>
       </div>
     );

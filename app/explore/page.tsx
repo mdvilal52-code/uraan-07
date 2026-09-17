@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Play, CalendarDays } from "lucide-react";
+import { ArrowRight, Play, CalendarDays } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Categories } from "@/components/Categories";
 import { Trending } from "@/components/Trending";
@@ -14,9 +14,9 @@ import {
 import { formatPrice } from "@/lib/currency";
 
 export const metadata: Metadata = {
-  title: "استكشف",
+  title: "Explore",
   description:
-    "اكتشف عالمًا من أجود الأحجار الكريمة والمجوهرات — المجموعات الرائجة والأحجار الكريمة والمعارض القادمة.",
+    "Discover a world of the finest gemstones and gold jewellery — trending collections, gemstones, and upcoming exhibitions.",
 };
 
 function SectionHeader({ title, href }: { title: string; href: string }) {
@@ -24,7 +24,7 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
     <div className="mb-3 flex items-center justify-between px-5">
       <h2 className="section-title">{title}</h2>
       <Link href={href} className="view-all">
-        عرض الكل
+        View All
       </Link>
     </div>
   );
@@ -37,11 +37,11 @@ export default function ExplorePage() {
     <AppShell>
       {/* Page intro */}
       <header className="px-5 pb-1 pt-5" data-reveal>
-        <h1 className="font-arabic text-[1.7rem] font-extrabold text-ink">
-          استكشف
+        <h1 className="font-sans text-[1.7rem] font-extrabold text-ink">
+          Explore
         </h1>
         <p className="section-sub mt-1 max-w-xs">
-          اكتشف عالمًا من أجود الأحجار الكريمة والمجوهرات
+          Discover a world of the finest gemstones and gold jewellery
         </p>
       </header>
 
@@ -53,7 +53,7 @@ export default function ExplorePage() {
 
       {/* Gemstone feature */}
       <section className="py-4">
-        <SectionHeader title="مجموعة الأحجار الكريمة" href="/shop" />
+        <SectionHeader title="Gemstone Collection" href="/shop" />
         <div className="px-5" data-reveal>
           <div className="card flex items-stretch gap-3 p-3">
             <div className="w-[40%] shrink-0">
@@ -67,7 +67,7 @@ export default function ExplorePage() {
               />
             </div>
             <div className="flex flex-1 flex-col py-1">
-              <h3 className="font-arabic text-[1.1rem] font-bold text-ink">
+              <h3 className="font-sans text-[1.1rem] font-bold text-ink">
                 {gemstoneFeature.title}
               </h3>
               <p className="mt-1 text-[0.8rem] leading-relaxed text-ink-muted">
@@ -77,8 +77,8 @@ export default function ExplorePage() {
                 {formatPrice(gemstoneFeature.price)}
               </span>
               <Link href="/shop" className="btn-ghost-gold mt-2">
-                <ArrowLeft className="h-4 w-4" />
-                تسوّق الآن
+                <ArrowRight className="h-4 w-4" />
+                Shop Now
               </Link>
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function ExplorePage() {
 
       {/* Editorial / jewellery knowledge */}
       <section className="py-4">
-        <SectionHeader title="معلومات عن المجوهرات" href="/about" />
+        <SectionHeader title="Jewellery Guide" href="/about" />
         <div className="px-5" data-reveal>
           <div className="card flex items-stretch gap-3 p-3">
             <div className="relative w-[40%] shrink-0">
@@ -106,14 +106,14 @@ export default function ExplorePage() {
               </span>
             </div>
             <div className="flex flex-1 flex-col py-1">
-              <h3 className="font-arabic text-[1.1rem] font-bold text-ink">
+              <h3 className="font-sans text-[1.1rem] font-bold text-ink">
                 {editorialFeature.title}
               </h3>
               <p className="mt-1 text-[0.8rem] leading-relaxed text-ink-muted">
                 {editorialFeature.description}
               </p>
               <Link href="/about" className="btn-ghost-gold mt-2">
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4" />
                 {editorialFeature.cta}
               </Link>
             </div>
@@ -123,19 +123,19 @@ export default function ExplorePage() {
 
       {/* Upcoming exhibitions */}
       <section className="py-4">
-        <SectionHeader title="المعارض القادمة" href="/contact" />
+        <SectionHeader title="Upcoming Exhibitions" href="/contact" />
         <div className="px-5" data-reveal>
           <div className="card flex items-center gap-3 p-3">
             <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-forest-gradient text-cream-50">
               <span className="text-[0.62rem] font-semibold text-gold-200">
                 {ex.month}
               </span>
-              <span className="-mt-0.5 font-arabic text-2xl font-extrabold leading-none">
+              <span className="-mt-0.5 font-sans text-2xl font-extrabold leading-none">
                 {ex.day}
               </span>
             </div>
             <div className="flex-1">
-              <h3 className="font-arabic text-[1.02rem] font-bold text-ink">
+              <h3 className="font-sans text-[1.02rem] font-bold text-ink">
                 {ex.title}
               </h3>
               <p className="mt-0.5 flex items-center gap-1.5 text-[0.72rem] text-ink-muted">
@@ -148,7 +148,7 @@ export default function ExplorePage() {
               href="/contact"
               className="shrink-0 rounded-xl bg-forest-600 px-3.5 py-2 text-[0.72rem] font-bold text-cream-50"
             >
-              احجز الآن
+              Book Now
             </Link>
           </div>
         </div>

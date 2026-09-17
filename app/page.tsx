@@ -30,7 +30,7 @@ export default function HomePage() {
       <QuickActions />
       <FeaturedProduct />
       <Bestseller />
-      <Categories title="تسوّق حسب الفئة" />
+      <Categories title="Shop by Category" />
       <About />
       <Testimonials />
       <Newsletter />

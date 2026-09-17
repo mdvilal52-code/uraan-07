@@ -12,9 +12,9 @@ export type GemSurface = "gold" | "dark" | "cream";
 
 export interface Category {
   slug: CategorySlug;
-  /** Arabic display name */
+  /** Display name shown in the UI */
   name: string;
-  /** short Latin label (for admin/alt text) */
+  /** short label (for admin/alt text) */
   latin: string;
   /** lucide-style icon key resolved in the UI */
   icon: string;
@@ -24,12 +24,12 @@ export interface Category {
 
 export interface Product {
   id: string;
-  name: string; // Arabic
-  latin: string; // Latin (alt text / admin)
+  name: string; // Display name
+  latin: string; // Short/alt name (alt text / admin)
   category: CategorySlug;
   price: number; // AUD
   compareAt?: number; // AUD — original/strike price
-  description: string; // Arabic
+  description: string;
   /** placeholder tint until a real photo is dropped in public/images */
   surface: GemSurface;
   /** expected image path (drop real HD photo here) */
@@ -50,9 +50,9 @@ export interface Product {
 
 export interface Collection {
   id: string;
-  name: string; // Arabic
+  name: string;
   latin: string;
-  description: string; // Arabic
+  description: string;
   price: number; // AUD (starting)
   surface: GemSurface;
   image: string;
@@ -60,16 +60,16 @@ export interface Collection {
 
 export interface Exhibition {
   id: string;
-  title: string; // Arabic
-  dateLabel: string; // Arabic day label e.g. "السبت، 15 يونيو"
-  timeLabel: string; // Arabic e.g. "10:00 صباحًا"
+  title: string;
+  dateLabel: string; // e.g. "Saturday, June 15"
+  timeLabel: string; // e.g. "10:00 AM"
   venue: string;
   day: string; // "15"
-  month: string; // "يونيو"
+  month: string; // "June"
 }
 
 export interface QuickAction {
-  label: string; // Arabic
+  label: string;
   icon: string;
   href: string;
 }

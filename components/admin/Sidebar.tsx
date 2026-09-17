@@ -20,17 +20,17 @@ import { LotusMark } from "@/components/icons/JewelIcons";
 import { BRAND } from "@/data/jewelleryData";
 
 const links = [
-  { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard, exact: true },
-  { href: "/admin/products", label: "المنتجات", icon: Package },
-  { href: "/admin/orders", label: "الطلبات", icon: ShoppingCart },
-  { href: "/admin/customers", label: "العملاء", icon: Users },
-  { href: "/admin/analytics", label: "التحليلات", icon: BarChart3 },
-  { href: "/admin/categories", label: "الفئات", icon: FolderTree },
-  { href: "/admin/banners", label: "البانرات", icon: ImageIcon },
-  { href: "/admin/reviews", label: "التقييمات", icon: Star },
-  { href: "/admin/coupons", label: "الكوبونات", icon: Ticket },
-  { href: "/admin/users", label: "المستخدمون", icon: UserCog },
-  { href: "/admin/settings", label: "الإعدادات", icon: Settings },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/products", label: "Products", icon: Package },
+  { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/customers", label: "Customers", icon: Users },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/categories", label: "Categories", icon: FolderTree },
+  { href: "/admin/banners", label: "Banners", icon: ImageIcon },
+  { href: "/admin/reviews", label: "Reviews", icon: Star },
+  { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+  { href: "/admin/users", label: "Users", icon: UserCog },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar({ variant = "desktop" }: { variant?: "desktop" | "drawer" }) {
@@ -49,7 +49,7 @@ export function Sidebar({ variant = "desktop" }: { variant?: "desktop" | "drawer
             {BRAND.name}
           </span>
           <span className="text-[0.5rem] font-semibold uppercase tracking-[0.2em] text-gold-200">
-            لوحة الإدارة
+            Admin Panel
           </span>
         </div>
       </div>
@@ -82,7 +82,7 @@ export function Sidebar({ variant = "desktop" }: { variant?: "desktop" | "drawer
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-cream-200/80 transition hover:bg-forest-600/50 hover:text-cream-50"
         >
           <Store className="h-[1.15rem] w-[1.15rem]" />
-          العودة للمتجر
+          Back to Store
         </Link>
       </div>
     </aside>

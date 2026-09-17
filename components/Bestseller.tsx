@@ -12,7 +12,7 @@ const iconByCategory: Record<string, string> = {
 };
 
 export async function Bestseller({
-  title = "الأكثر مبيعًا",
+  title = "Best Sellers",
 }: {
   title?: string;
 }) {
@@ -23,7 +23,7 @@ export async function Bestseller({
       <div className="mb-3 flex items-center justify-between px-5">
         <h2 className="section-title">{title}</h2>
         <Link href="/shop" className="view-all">
-          عرض الكل
+          View All
         </Link>
       </div>
 
@@ -42,7 +42,7 @@ export async function Bestseller({
               rounded="rounded-2xl"
               label={p.name}
             />
-            <h3 className="mt-2 font-arabic text-sm font-bold leading-snug text-ink">
+            <h3 className="mt-2 font-sans text-sm font-bold leading-snug text-ink">
               {p.name}
             </h3>
             <span className="price text-sm">{formatPrice(p.price)}</span>

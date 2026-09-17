@@ -63,7 +63,7 @@ export function ProductForm({ product }: { product?: Product }) {
     setSaving(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "تعذّر الحفظ");
+      setError(d.error ?? "Unable to save");
       return;
     }
     router.push("/admin/products");
@@ -74,37 +74,37 @@ export function ProductForm({ product }: { product?: Product }) {
     <form onSubmit={submit} className="grid gap-5 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         <div className="card space-y-4 p-5">
-          <Field label="اسم المنتج (عربي)">
+          <Field label="Product Name">
             <input
               name="name"
               className={inputCls}
               defaultValue={product?.name}
-              placeholder="قلادة ماس ألماسي"
+              placeholder="Diamond Statement Necklace"
               required
             />
           </Field>
-          <Field label="الاسم بالإنجليزية">
+          <Field label="Short / Alternate Name (optional)">
             <input
               name="latin"
               className={inputCls}
               defaultValue={product?.latin}
-              placeholder="Diamond Maas Necklace"
+              placeholder="Diamond Statement Necklace"
             />
           </Field>
-          <Field label="الوصف">
+          <Field label="Description">
             <textarea
               name="description"
               rows={4}
               className={`${inputCls} resize-none`}
               defaultValue={product?.description}
-              placeholder="وصف المنتج…"
+              placeholder="Product description…"
             />
           </Field>
         </div>
 
         <div className="card space-y-4 p-5">
           <div className="grid grid-cols-2 gap-4">
-            <Field label="السعر (AUD)">
+            <Field label="Price (AUD)">
               <input
                 name="price"
                 type="number"
@@ -114,7 +114,7 @@ export function ProductForm({ product }: { product?: Product }) {
                 required
               />
             </Field>
-            <Field label="سعر المقارنة (AUD)">
+            <Field label="Compare-at Price (AUD)">
               <input
                 name="compareAt"
                 type="number"
@@ -125,7 +125,7 @@ export function ProductForm({ product }: { product?: Product }) {
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="الفئة">
+            <Field label="Category">
               <select
                 name="category"
                 className={inputCls}
@@ -138,7 +138,7 @@ export function ProductForm({ product }: { product?: Product }) {
                 ))}
               </select>
             </Field>
-            <Field label="مسار الصورة">
+            <Field label="Image Path">
               <input
                 name="image"
                 className={inputCls}
@@ -149,11 +149,11 @@ export function ProductForm({ product }: { product?: Product }) {
           </div>
         </div>
 
-        {/* Gold specs — control the "الوزن والعيار" box on the product page.
+        {/* Gold specs — control the "Weight & Purity" box on the product page.
             Leave any field blank to show N/A there. */}
         <div className="card space-y-4 p-5">
-          <h3 className="text-sm font-bold text-ink">تفاصيل الوزن والعيار</h3>
-          <Field label="الأعيرة المتاحة (افصلي بفاصلة، مثال: 18K, 22K, 24K)">
+          <h3 className="text-sm font-bold text-ink">Weight &amp; Purity Details</h3>
+          <Field label="Available Karats (comma-separated, e.g.: 18K, 22K, 24K)">
             <input
               name="karats"
               className={inputCls}
@@ -162,7 +162,7 @@ export function ProductForm({ product }: { product?: Product }) {
             />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="وزن الذهب (غرام)">
+            <Field label="Gold Weight (grams)">
               <input
                 name="goldWeight"
                 type="number"
@@ -173,7 +173,7 @@ export function ProductForm({ product }: { product?: Product }) {
                 placeholder="—"
               />
             </Field>
-            <Field label="الوزن الإجمالي (غرام)">
+            <Field label="Total Weight (grams)">
               <input
                 name="totalWeight"
                 type="number"
@@ -191,19 +191,19 @@ export function ProductForm({ product }: { product?: Product }) {
       <div className="space-y-4">
         <div className="card p-5">
           <span className="mb-2 block text-xs font-bold text-ink-soft">
-            صورة المنتج
+            Product Image
           </span>
           <div className="grid aspect-square place-items-center rounded-2xl border-2 border-dashed border-cream-300 bg-cream-100 text-ink-muted">
             <div className="flex flex-col items-center gap-2">
               <ImagePlus className="h-8 w-8" />
-              <span className="text-xs">اسحب الصورة أو انقر للرفع</span>
+              <span className="text-xs">Drag an image or click to upload</span>
             </div>
           </div>
         </div>
 
         <div className="card space-y-3 p-5">
           <label className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-ink">الأكثر مبيعًا</span>
+            <span className="text-sm font-semibold text-ink">Best Seller</span>
             <input
               name="bestSeller"
               type="checkbox"
@@ -212,7 +212,7 @@ export function ProductForm({ product }: { product?: Product }) {
             />
           </label>
           <label className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-ink">وصل حديثًا</span>
+            <span className="text-sm font-semibold text-ink">New Arrival</span>
             <input
               name="newArrival"
               type="checkbox"
@@ -231,16 +231,16 @@ export function ProductForm({ product }: { product?: Product }) {
         <button type="submit" disabled={saving} className="btn-forest w-full disabled:opacity-60">
           {saving ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin" /> جارٍ الحفظ…
+              <Loader2 className="h-4 w-4 animate-spin" /> Saving…
             </>
           ) : (
             <>
-              <Save className="h-4 w-4" /> حفظ المنتج
+              <Save className="h-4 w-4" /> Save Product
             </>
           )}
         </button>
         <Link href="/admin/products" className="btn-outline w-full">
-          إلغاء
+          Cancel
         </Link>
       </div>
     </form>

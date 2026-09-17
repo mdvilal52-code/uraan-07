@@ -19,15 +19,13 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-cream-300/60 bg-cream-100/90 backdrop-blur-md">
-        {/* Force the visual LTR arrangement (menu left, actions right) to
-            match the reference, while page content stays RTL. */}
-        <div dir="ltr" className="flex h-16 items-center justify-between px-4">
+        <div className="flex h-16 items-center justify-between px-4">
           {/* Left: menu + brand */}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
-              aria-label="القائمة"
+              aria-label="Menu"
               className="grid h-10 w-10 place-items-center rounded-xl text-ink transition active:scale-95 hover:bg-cream-200"
             >
               <Menu className="h-6 w-6" strokeWidth={2} />
@@ -47,17 +45,17 @@ export function Navbar() {
           </div>
 
           {/* Right: actions */}
-          <nav className="flex items-center gap-1.5" aria-label="إجراءات سريعة">
+          <nav className="flex items-center gap-1.5" aria-label="Quick actions">
             <Link
               href="/search"
-              aria-label="بحث"
+              aria-label="Search"
               className="grid h-10 w-10 place-items-center rounded-xl text-ink transition active:scale-95 hover:bg-cream-200"
             >
               <Search className="h-[1.35rem] w-[1.35rem]" strokeWidth={2} />
             </Link>
             <Link
               href="/wishlist"
-              aria-label="المفضّلة"
+              aria-label="Wishlist"
               className="relative grid h-10 w-10 place-items-center rounded-xl text-ink transition active:scale-95 hover:bg-cream-200"
             >
               <Heart className="h-[1.35rem] w-[1.35rem]" strokeWidth={2} />
@@ -70,7 +68,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              aria-label="حقيبة التسوّق"
+              aria-label="Shopping cart"
               className="relative grid h-10 w-10 place-items-center rounded-xl bg-forest-600 text-cream-50 shadow-card-soft transition active:scale-95 hover:bg-forest-700"
             >
               <ShoppingBag className="h-[1.3rem] w-[1.3rem]" strokeWidth={2} />

@@ -270,7 +270,7 @@ export async function createProduct(
   const row = await prisma.product.create({
     data: {
       id: input.id?.trim() || `prd-${randomUUID().slice(0, 8)}`,
-      name: input.name ?? "منتج جديد",
+      name: input.name ?? "New Product",
       latin: input.latin ?? "New Product",
       category: (input.category as string) ?? "necklaces",
       price: Number(input.price) || 0,
@@ -407,7 +407,7 @@ export async function validateCoupon(
   subtotal: number,
 ): Promise<CouponCheck> {
   const code = (rawCode ?? "").trim().toUpperCase();
-  if (!code) return { ok: false, error: "أدخلي كود الخصم" };
+  if (!code) return { ok: false, error: "Enter a discount code" };
 
   let row;
   try {
@@ -415,22 +415,22 @@ export async function validateCoupon(
     row = await prisma.coupon.findUnique({ where: { code } });
   } catch (err) {
     console.error("[db] validateCoupon lookup failed:", err);
-    return { ok: false, error: "تعذّر التحقق من الكود حاليًا، حاول لاحقًا." };
+    return { ok: false, error: "Unable to verify the code right now — please try again." };
   }
 
   if (!row || !row.active) {
-    return { ok: false, error: "كود الخصم غير صالح" };
+    return { ok: false, error: "Invalid discount code" };
   }
   if (row.expiresAt && row.expiresAt.getTime() < Date.now()) {
-    return { ok: false, error: "انتهت صلاحية كود الخصم" };
+    return { ok: false, error: "This discount code has expired" };
   }
   if (row.maxUses != null && row.usedCount >= row.maxUses) {
-    return { ok: false, error: "تم استخدام هذا الكود بالكامل" };
+    return { ok: false, error: "This code has reached its usage limit" };
   }
   if (subtotal < row.minSubtotal) {
     return {
       ok: false,
-      error: `هذا الكود يتطلب حدًا أدنى للطلب قدره ${formatPrice(row.minSubtotal)}`,
+      error: `This code requires a minimum order of ${formatPrice(row.minSubtotal)}`,
     };
   }
 
@@ -476,15 +476,15 @@ export async function createCoupon(input: {
   expiresAt?: string | null;
 }): Promise<{ ok: true; coupon: Coupon } | { ok: false; error: string }> {
   const code = (input.code ?? "").trim().toUpperCase();
-  if (!code) return { ok: false, error: "كود الكوبون مطلوب" };
-  if (!input.description?.trim()) return { ok: false, error: "الوصف مطلوب" };
+  if (!code) return { ok: false, error: "Coupon code is required" };
+  if (!input.description?.trim()) return { ok: false, error: "Description is required" };
   const value = Number(input.value);
   if (!Number.isFinite(value) || value <= 0) {
-    return { ok: false, error: "قيمة الخصم غير صالحة" };
+    return { ok: false, error: "Invalid discount value" };
   }
   const discountType = input.discountType === "fixed" ? "fixed" : "percent";
   if (discountType === "percent" && value > 100) {
-    return { ok: false, error: "نسبة الخصم يجب ألا تتجاوز 100%" };
+    return { ok: false, error: "Discount percentage must not exceed 100%" };
   }
 
   await ensureSchema();
@@ -506,7 +506,7 @@ export async function createCoupon(input: {
     return { ok: true, coupon: toCoupon(row) };
   } catch (err) {
     console.error("[db] createCoupon failed:", err);
-    return { ok: false, error: "هذا الكود مستخدم مسبقًا" };
+    return { ok: false, error: "This code is already in use" };
   }
 }
 
@@ -552,7 +552,7 @@ export async function createOrder(input: {
 }): Promise<{ ok: true; order: Order } | { ok: false; error: string }> {
   const priced = await priceCart(input.lines);
   if (priced.lines.length === 0) {
-    return { ok: false, error: "السلة فارغة" };
+    return { ok: false, error: "Your cart is empty" };
   }
 
   let discount = 0;
@@ -560,7 +560,7 @@ export async function createOrder(input: {
   if (input.couponCode) {
     const check = await validateCoupon(input.couponCode, priced.subtotal);
     if (!check.ok) {
-      return { ok: false, error: check.error ?? "كود الخصم غير صالح" };
+      return { ok: false, error: check.error ?? "Invalid discount code" };
     }
     discount = check.discount ?? 0;
     couponCode = check.code;
@@ -576,7 +576,7 @@ export async function createOrder(input: {
     const row = await prisma.order.create({
       data: {
         id,
-        customer: input.customer || "زائر",
+        customer: input.customer || "Guest",
         email: input.email || "guest@example.com",
         total,
         status: "paid",
@@ -603,7 +603,7 @@ export async function createOrder(input: {
       ok: true,
       order: {
         id: `AR-${10242 + Math.floor(Math.random() * 900)}`,
-        customer: input.customer || "زائر",
+        customer: input.customer || "Guest",
         email: input.email || "guest@example.com",
         total,
         status: "paid",
@@ -655,7 +655,7 @@ export async function createUser(input: {
   password: string;
 }): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
   const email = (input.email ?? "").trim().toLowerCase();
-  if (!email || !input.password) return { ok: false, error: "بيانات ناقصة" };
+  if (!email || !input.password) return { ok: false, error: "Missing required information" };
 
   await ensureSchema();
 
@@ -664,16 +664,16 @@ export async function createUser(input: {
     existing = await prisma.user.findUnique({ where: { email } });
   } catch (err) {
     console.error("[db] createUser lookup failed:", err);
-    return { ok: false, error: "تعذّر الاتصال بقاعدة البيانات، حاول لاحقًا." };
+    return { ok: false, error: "Unable to connect to the database — please try again later." };
   }
-  if (existing) return { ok: false, error: "هذا البريد مسجّل مسبقًا" };
+  if (existing) return { ok: false, error: "This email is already registered" };
 
   const salt = randomBytes(16).toString("hex");
   try {
     const user = await prisma.user.create({
       data: {
         id: `usr-${randomUUID().slice(0, 8)}-${randomUUID().slice(0, 4)}`,
-        name: (input.name ?? "").trim() || "عميلة",
+        name: (input.name ?? "").trim() || "Customer",
         email,
         salt,
         hash: hashPassword(input.password, salt),
@@ -683,7 +683,7 @@ export async function createUser(input: {
     return { ok: true, user };
   } catch (err) {
     console.error("[db] createUser insert failed:", err);
-    return { ok: false, error: "تعذّر إنشاء الحساب حاليًا، حاول لاحقًا." };
+    return { ok: false, error: "Unable to create the account right now — please try again." };
   }
 }
 

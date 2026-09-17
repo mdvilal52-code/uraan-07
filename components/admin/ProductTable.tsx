@@ -31,7 +31,7 @@ export function ProductTable() {
   }, []);
 
   async function remove(id: string) {
-    if (!confirm("حذف هذا المنتج؟")) return;
+    if (!confirm("Delete this product?")) return;
     setBusy(id);
     await fetch(`/api/products/${id}`, { method: "DELETE" });
     await load();
@@ -52,11 +52,11 @@ export function ProductTable() {
         <table className="w-full min-w-[640px] text-start">
           <thead>
             <tr className="border-b border-cream-200 text-start text-xs font-bold text-ink-muted">
-              <th className="px-4 py-3 text-start">المنتج</th>
-              <th className="px-4 py-3 text-start">الفئة</th>
-              <th className="px-4 py-3 text-start">السعر</th>
-              <th className="px-4 py-3 text-start">الحالة</th>
-              <th className="px-4 py-3 text-start">إجراءات</th>
+              <th className="px-4 py-3 text-start">Product</th>
+              <th className="px-4 py-3 text-start">Category</th>
+              <th className="px-4 py-3 text-start">Price</th>
+              <th className="px-4 py-3 text-start">Status</th>
+              <th className="px-4 py-3 text-start">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -78,8 +78,10 @@ export function ProductTable() {
                       sizes="44px"
                     />
                     <div>
-                      <p className="font-arabic font-bold text-ink">{p.name}</p>
-                      <p className="text-[0.7rem] text-ink-faint">{p.latin}</p>
+                      <p className="font-sans font-bold text-ink">{p.name}</p>
+                      {p.latin && p.latin !== p.name && (
+                        <p className="text-[0.7rem] text-ink-faint">{p.latin}</p>
+                      )}
                     </div>
                   </div>
                 </td>
@@ -92,28 +94,28 @@ export function ProductTable() {
                 <td className="px-4 py-3">
                   {p.bestSeller ? (
                     <span className="rounded-full bg-forest-50 px-2.5 py-0.5 text-[0.7rem] font-bold text-forest-600">
-                      الأكثر مبيعًا
+                      Best Seller
                     </span>
                   ) : p.newArrival ? (
                     <span className="rounded-full bg-gold-100 px-2.5 py-0.5 text-[0.7rem] font-bold text-gold-700">
-                      وصل حديثًا
+                      New Arrival
                     </span>
                   ) : (
-                    <span className="text-[0.7rem] text-ink-faint">متاح</span>
+                    <span className="text-[0.7rem] text-ink-faint">In Stock</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <Link
                       href={`/admin/products/edit/${p.id}`}
-                      aria-label="تعديل"
+                      aria-label="Edit"
                       className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
                     >
                       <Pencil className="h-4 w-4" />
                     </Link>
                     <button
                       onClick={() => remove(p.id)}
-                      aria-label="حذف"
+                      aria-label="Delete"
                       className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
                     >
                       <Trash2 className="h-4 w-4" />

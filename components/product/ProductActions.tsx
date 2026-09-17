@@ -37,13 +37,13 @@ export function ProductActions({ productId }: { productId: string }) {
           ) : (
             <Zap className="h-4 w-4" />
           )}
-          اشتري الآن
+          Buy Now
         </button>
         <button
           type="button"
           onClick={() => toggle(productId)}
           aria-pressed={wished}
-          aria-label={wished ? "إزالة من المفضّلة" : "إضافة إلى المفضّلة"}
+          aria-label={wished ? "Remove from Wishlist" : "Add to Wishlist"}
           className={`grid h-[3.1rem] w-[3.1rem] shrink-0 place-items-center rounded-2xl border shadow-card-soft transition active:scale-90 ${
             wished
               ? "border-clay-300 bg-clay-50 text-clay-500"
@@ -69,11 +69,11 @@ export function ProductActions({ productId }: { productId: string }) {
       >
         {added ? (
           <>
-            <Check className="h-4 w-4" /> تمّت الإضافة
+            <Check className="h-4 w-4" /> Added
           </>
         ) : (
           <>
-            أضف إلى السلة
+            Add to Cart
             <ShoppingCart className="h-4 w-4" />
           </>
         )}

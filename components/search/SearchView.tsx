@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { categories } from "@/data/jewelleryData";
 import type { Product } from "@/types";
 
-const suggestions = ["ألماس", "ذهب", "قلادة", "خاتم", "زفاف", "زمرّد"];
+const suggestions = ["Diamond", "Gold", "Necklace", "Ring", "Bridal", "Emerald"];
 
 export function SearchView() {
   const [q, setQ] = useState("");
@@ -49,13 +49,13 @@ export function SearchView() {
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="ابحث عن المجوهرات والأحجار…"
-          aria-label="بحث"
+          placeholder="Search for jewellery and gemstones…"
+          aria-label="Search"
           className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
         />
         {loading && <Loader2 className="h-4 w-4 animate-spin text-gold-500" />}
         {q && !loading && (
-          <button onClick={() => setQ("")} aria-label="مسح">
+          <button onClick={() => setQ("")} aria-label="Clear">
             <X className="h-4 w-4 text-ink-muted" />
           </button>
         )}
@@ -65,7 +65,7 @@ export function SearchView() {
         <>
           <div className="mt-5">
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-gold-600">
-              بحث شائع
+              Popular Searches
             </p>
             <div className="flex flex-wrap gap-2">
               {suggestions.map((s) => (
@@ -82,7 +82,7 @@ export function SearchView() {
 
           <div className="mt-5">
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-gold-600">
-              تصفّح الفئات
+              Browse Categories
             </p>
             <div className="flex flex-wrap gap-2">
               {categories.map((c) => (
@@ -99,8 +99,8 @@ export function SearchView() {
 
           {featured.length > 0 && (
             <div className="mt-6">
-              <p className="mb-3 font-arabic text-lg font-bold text-ink">
-                الأكثر مبيعًا
+              <p className="mb-3 font-sans text-lg font-bold text-ink">
+                Best Sellers
               </p>
               <div className="grid grid-cols-2 gap-3.5">
                 {featured.map((p) => (
@@ -115,7 +115,9 @@ export function SearchView() {
       {trimmed && (
         <div className="mt-5">
           <p className="mb-3 text-sm text-ink-muted">
-            {loading ? "جارٍ البحث…" : `${results.length} نتيجة عن «${trimmed}»`}
+            {loading
+              ? "Searching…"
+              : `${results.length} result${results.length === 1 ? "" : "s"} for "${trimmed}"`}
           </p>
           {!loading && results.length > 0 && (
             <div className="grid grid-cols-2 gap-3.5">
@@ -126,7 +128,7 @@ export function SearchView() {
           )}
           {!loading && results.length === 0 && (
             <p className="py-16 text-center text-ink-muted">
-              لا توجد نتائج مطابقة. جرّب كلمة أخرى.
+              No matching results. Try a different search term.
             </p>
           )}
         </div>

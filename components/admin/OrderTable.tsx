@@ -12,12 +12,12 @@ export async function OrderTable({ limit }: { limit?: number }) {
         <table className="w-full min-w-[640px]">
           <thead>
             <tr className="border-b border-cream-200 text-xs font-bold text-ink-muted">
-              <th className="px-4 py-3 text-start">رقم الطلب</th>
-              <th className="px-4 py-3 text-start">العميل</th>
-              <th className="px-4 py-3 text-start">التاريخ</th>
-              <th className="px-4 py-3 text-start">العناصر</th>
-              <th className="px-4 py-3 text-start">الإجمالي</th>
-              <th className="px-4 py-3 text-start">الحالة</th>
+              <th className="px-4 py-3 text-start">Order ID</th>
+              <th className="px-4 py-3 text-start">Customer</th>
+              <th className="px-4 py-3 text-start">Date</th>
+              <th className="px-4 py-3 text-start">Items</th>
+              <th className="px-4 py-3 text-start">Total</th>
+              <th className="px-4 py-3 text-start">Status</th>
               <th className="px-4 py-3 text-start"></th>
             </tr>
           </thead>
@@ -36,7 +36,7 @@ export async function OrderTable({ limit }: { limit?: number }) {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <p className="font-arabic font-semibold text-ink">{o.customer}</p>
+                  <p className="font-sans font-semibold text-ink">{o.customer}</p>
                   <p className="text-[0.7rem] text-ink-faint">{o.email}</p>
                 </td>
                 <td className="px-4 py-3 text-ink-soft">{o.date}</td>
@@ -49,7 +49,7 @@ export async function OrderTable({ limit }: { limit?: number }) {
                 </td>
                 <td className="px-4 py-3">
                   <button
-                    aria-label="عرض"
+                    aria-label="View"
                     className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
                   >
                     <Eye className="h-4 w-4" />

@@ -8,14 +8,14 @@ import type {
 
 /* ============================================================
    Central content source for Ariana Gems & Jewellery.
-   All Arabic copy is written in natural, professional Gulf Arabic.
+   An Arabic / Gulf-inspired gold jewellery storefront, written in
+   natural English for an international, English-speaking customer.
    Prices are in AUD.
    ============================================================ */
 
 export const BRAND = {
   name: "Ariana",
   tagline: "GEMS & JEWELLERY PVT",
-  arabicName: "أريانا",
 } as const;
 
 /** Store contact details (single source of truth for footer + contact page). */
@@ -25,7 +25,7 @@ export const CONTACT = {
   phoneLocal: "(03) 9791 1331",
   phoneHref: "tel:+61397911331",
   email: "hello@ariana.example",
-  hours: "يوميًا · 10 ص – 10 م",
+  hours: "Daily · 10 AM – 10 PM",
   mapsUrl:
     "https://www.google.com/maps/search/?api=1&query=27C+Langhorne+St+Dandenong+VIC+3175+Australia",
   social: {
@@ -38,25 +38,25 @@ export const CONTACT = {
 export const categories: Category[] = [
   {
     slug: "gems",
-    name: "أحجار كريمة",
+    name: "Gemstones",
     latin: "Gems",
     icon: "gem",
     image: "/images/gemstones.jpg",
   },
-  { slug: "necklaces", name: "قلائد", latin: "Necklaces", icon: "necklace" },
-  { slug: "earrings", name: "أقراط", latin: "Earrings", icon: "earring" },
-  { slug: "rings", name: "خواتم", latin: "Rings", icon: "ring" },
-  { slug: "bracelets", name: "أساور", latin: "Bracelets", icon: "bracelet" },
-  { slug: "pendants", name: "معلّقات", latin: "Pendants", icon: "pendant" },
+  { slug: "necklaces", name: "Necklaces", latin: "Necklaces", icon: "necklace" },
+  { slug: "earrings", name: "Earrings", latin: "Earrings", icon: "earring" },
+  { slug: "rings", name: "Rings", latin: "Rings", icon: "ring" },
+  { slug: "bracelets", name: "Bracelets", latin: "Bracelets", icon: "bracelet" },
+  { slug: "pendants", name: "Pendants", latin: "Pendants", icon: "pendant" },
 ];
 
 export const categoryNameBySlug: Record<string, string> = {
-  necklaces: "القلائد",
-  earrings: "الأقراط",
-  rings: "الخواتم",
-  bracelets: "الأساور",
-  pendants: "المعلّقات",
-  gems: "الأحجار الكريمة",
+  necklaces: "Necklaces",
+  earrings: "Earrings",
+  rings: "Rings",
+  bracelets: "Bracelets",
+  pendants: "Pendants",
+  gems: "Gemstones",
 };
 
 /** Default gold purities offered on catalogue pieces. Admin can override
@@ -64,215 +64,225 @@ export const categoryNameBySlug: Record<string, string> = {
 const DEFAULT_KARATS = ["18K", "22K", "24K"];
 
 export const products: Product[] = [
-  // القلائد — Necklaces
+  // Necklaces
   {
     id: "nk-diamond-maas",
-    name: "قلادة ماس ألماسي",
-    latin: "Diamond Maas Necklace",
+    name: "Diamond Statement Necklace",
+    latin: "Diamond Statement Necklace",
     category: "necklaces",
     price: 2450,
-    description: "قلادة ماسية بتصميم كلاسيكي راقٍ يليق بأرقى المناسبات.",
+    description:
+      "A diamond-set gold necklace with a refined, classic silhouette — an elegant choice for weddings and the most special occasions.",
     surface: "gold",
     image: "/images/necklace.jpg",
     bestSeller: true,
     newArrival: true,
     rating: 4.9,
     reviews: 128,
-    tags: ["ألماس", "زفاف"],
+    tags: ["Diamond", "Bridal"],
     karats: DEFAULT_KARATS,
     goldWeight: 16.3,
     totalWeight: 17.8,
   },
   {
     id: "nk-polki",
-    name: "قلادة بولكي",
-    latin: "Polki Necklace",
+    name: "Heritage Gold Necklace",
+    latin: "Heritage Gold Necklace",
     category: "necklaces",
     price: 1650,
-    description: "قلادة بولكي مستوحاة من التراث الملكي بلمسة عصرية.",
+    description:
+      "A gold necklace inspired by royal heritage design, reimagined with a modern touch.",
     surface: "gold",
     image: "/images/necklace-2.jpg",
     bestSeller: true,
     rating: 4.8,
     reviews: 94,
-    tags: ["تراث", "ذهب"],
+    tags: ["Heritage", "Gold"],
     karats: DEFAULT_KARATS,
     goldWeight: 11.2,
     totalWeight: 12.5,
   },
-  // الأقراط — Earrings
+  // Earrings
   {
     id: "er-maas",
-    name: "أقراط ماس",
-    latin: "Maas Earrings",
+    name: "Diamond Drop Earrings",
+    latin: "Diamond Drop Earrings",
     category: "earrings",
     price: 760,
-    description: "أقراط ماسية لامعة تمنح إطلالتك بريقًا لا يُقاوم.",
+    description:
+      "Brilliant diamond earrings that add radiant sparkle to any look.",
     surface: "cream",
     image: "/images/earrings.jpg",
     newArrival: true,
     rating: 4.9,
     reviews: 76,
-    tags: ["ألماس"],
+    tags: ["Diamond"],
     karats: DEFAULT_KARATS,
     goldWeight: 4.8,
     totalWeight: 5.2,
   },
   {
     id: "er-jhumka",
-    name: "أقراط جومكا",
-    latin: "Jhumka Earrings",
+    name: "Ornate Gold Earrings",
+    latin: "Ornate Gold Earrings",
     category: "earrings",
     price: 565,
-    description: "أقراط جومكا ذهبية بتفاصيل يدوية دقيقة وأناقة أصيلة.",
+    description:
+      "Gold earrings with fine handcrafted detail and timeless, authentic elegance.",
     surface: "gold",
     image: "/images/earrings-2.jpg",
     rating: 4.7,
     reviews: 58,
-    tags: ["ذهب", "تراث"],
+    tags: ["Gold", "Heritage"],
     karats: DEFAULT_KARATS,
     goldWeight: 6.1,
     totalWeight: 6.4,
   },
-  // الخواتم — Rings
+  // Rings
   {
     id: "rg-solitaire",
-    name: "خاتم سوليتير",
-    latin: "Solitaire Ring",
+    name: "Solitaire Diamond Ring",
+    latin: "Solitaire Diamond Ring",
     category: "rings",
     price: 1100,
-    description: "خاتم سوليتير بحجر ماس مركزي يخطف الأنظار من أول نظرة.",
+    description:
+      "A solitaire ring with a center diamond that captures every glance from the first moment.",
     surface: "cream",
     image: "/images/ring.jpg",
     bestSeller: true,
     rating: 5.0,
     reviews: 210,
-    tags: ["ألماس", "خطوبة"],
+    tags: ["Diamond", "Engagement"],
     karats: DEFAULT_KARATS,
     goldWeight: 5.4,
     totalWeight: 5.9,
   },
   {
     id: "rg-gemstone",
-    name: "خاتم أحجار كريمة",
-    latin: "Gemstone Ring",
+    name: "Emerald Gemstone Ring",
+    latin: "Emerald Gemstone Ring",
     category: "rings",
     price: 925,
-    description: "خاتم مرصّع بأحجار كريمة زمرّدية تحيط بها حبّات الألماس.",
+    description:
+      "A ring set with a vivid emerald gemstone, encircled by brilliant diamonds.",
     surface: "gold",
     image: "/images/ring-2.jpg",
     rating: 4.8,
     reviews: 63,
-    tags: ["زمرّد", "أحجار كريمة"],
+    tags: ["Emerald", "Gemstone"],
     karats: DEFAULT_KARATS,
     goldWeight: 4.9,
     totalWeight: 6.1,
   },
-  // الأساور — Bracelets
+  // Bracelets
   {
     id: "br-diamond",
-    name: "سوار ألماسي",
-    latin: "Diamond Bracelet",
+    name: "Diamond Tennis Bracelet",
+    latin: "Diamond Tennis Bracelet",
     category: "bracelets",
     price: 2250,
-    description: "سوار ألماسي رفيع يلتفّ حول معصمك ببريقٍ متواصل.",
+    description:
+      "A slender diamond bracelet that wraps the wrist in continuous brilliance.",
     surface: "cream",
     image: "/images/bracelet.jpg",
     bestSeller: true,
     rating: 4.9,
     reviews: 88,
-    tags: ["ألماس"],
+    tags: ["Diamond"],
     karats: DEFAULT_KARATS,
     goldWeight: 14.2,
     totalWeight: 15.6,
   },
   {
     id: "br-gold",
-    name: "سوار من الذهب",
-    latin: "Gold Bracelet",
+    name: "Emerald Gold Bracelet",
+    latin: "Emerald Gold Bracelet",
     category: "bracelets",
     price: 1580,
-    description: "سوار ذهبي مرصّع بأحجار الزمرّد لإطلالة ملكية أنيقة.",
+    description:
+      "A gold bracelet set with emerald stones for a refined, regal look.",
     surface: "gold",
     image: "/images/bracelet-2.jpg",
     newArrival: true,
     rating: 4.7,
     reviews: 41,
-    tags: ["ذهب", "زمرّد"],
+    tags: ["Gold", "Emerald"],
     karats: DEFAULT_KARATS,
     goldWeight: 18.5,
     totalWeight: 19.8,
   },
-  // المعلّقات — Pendants
+  // Pendants
   {
     id: "pd-heart-diamond",
-    name: "قلادة حب الماسية",
-    latin: "Diamond Love Pendant",
+    name: "Diamond Heart Pendant",
+    latin: "Diamond Heart Pendant",
     category: "pendants",
     price: 3250,
     description:
-      "رمزٌ للحب، مصنوعة من الذهب ومرصّعة بالماس الحقيقي لتبقى ذكرى خالدة.",
+      "A symbol of love, crafted in gold and set with genuine diamonds to last as an eternal keepsake.",
     surface: "dark",
     image: "/images/heart-pendant.jpg",
     bestSeller: true,
     newArrival: true,
     rating: 5.0,
     reviews: 156,
-    tags: ["ألماس", "ذهب", "هدية"],
+    tags: ["Diamond", "Gold", "Gift"],
     karats: DEFAULT_KARATS,
     goldWeight: 6.8,
     totalWeight: 8.0,
   },
   {
     id: "pd-solitaire",
-    name: "قلادة سوليتير ماسية",
+    name: "Solitaire Diamond Pendant",
     latin: "Solitaire Diamond Pendant",
     category: "pendants",
     price: 1450,
-    description: "جمالٌ في كل بريق — قلادة سوليتير ماسية أنيقة وخالدة.",
+    description:
+      "Beauty in every sparkle — an elegant, timeless solitaire diamond pendant.",
     surface: "cream",
     image: "/images/pendant.jpg",
     newArrival: true,
     rating: 4.9,
     reviews: 73,
-    tags: ["ألماس"],
+    tags: ["Diamond"],
     karats: DEFAULT_KARATS,
     goldWeight: 3.9,
     totalWeight: 4.6,
   },
-  // الأحجار الكريمة — Gems
+  // Gemstones
   {
     id: "gem-emerald-suite",
-    name: "طقم زمرّد فاخر",
+    name: "Emerald Luxe Suite",
     latin: "Emerald Luxe Suite",
     category: "gems",
     price: 3850,
     description:
-      "طقم زمرّد فاخر مرصّع بالألماس، أحجار كريمة طبيعية بلونٍ أخضر آسر.",
+      "A luxurious emerald suite set with diamonds — natural gemstones in a captivating green that commands attention.",
     surface: "gold",
     image: "/images/gemstones.jpg",
     bestSeller: true,
     newArrival: true,
     rating: 5.0,
     reviews: 64,
-    tags: ["زمرّد", "أحجار كريمة", "زفاف"],
+    tags: ["Emerald", "Gemstone", "Bridal"],
     karats: DEFAULT_KARATS,
     goldWeight: 22.4,
     totalWeight: 26.1,
   },
   {
     id: "gem-emerald-ring",
-    name: "خاتم زمرّد ملكي",
+    name: "Royal Emerald Ring",
     latin: "Royal Emerald Ring",
     category: "gems",
     price: 1320,
-    description: "خاتم زمرّد ملكي محاط بالألماس، حجرٌ كريم يليق بالمناسبات.",
+    description:
+      "A royal emerald ring encircled by diamonds — a gemstone fit for special occasions.",
     surface: "gold",
     image: "/images/ring-2.jpg",
     newArrival: true,
     rating: 4.9,
     reviews: 37,
-    tags: ["زمرّد", "أحجار كريمة"],
+    tags: ["Emerald", "Gemstone"],
     karats: DEFAULT_KARATS,
     goldWeight: 5.6,
     totalWeight: 7.2,
@@ -286,37 +296,37 @@ export const productOfDay = products.find((p) => p.id === "pd-solitaire")!;
 export const featuredProduct = products.find((p) => p.id === "pd-heart-diamond")!;
 
 export const quickActions: QuickAction[] = [
-  { label: "تسوّق حسب الفئة", icon: "grid", href: "/shop" },
-  { label: "دليل المجوهرات", icon: "book", href: "/explore" },
-  { label: "احجز موعدًا", icon: "calendar", href: "/contact" },
-  { label: "وصل حديثًا", icon: "sparkles", href: "/collections" },
+  { label: "Shop by Category", icon: "grid", href: "/shop" },
+  { label: "Jewellery Guide", icon: "book", href: "/explore" },
+  { label: "Book an Appointment", icon: "calendar", href: "/contact" },
+  { label: "New Arrivals", icon: "sparkles", href: "/collections" },
 ];
 
 /** Trending collections (Explore screen — dark tiles). */
 export const trendingCollections: Collection[] = [
   {
     id: "col-royal",
-    name: "تراث ملكي",
+    name: "Royal Heritage",
     latin: "Royal Heritage",
-    description: "مجوهرات بولكي مستوحاة من تراثنا الغني.",
+    description: "Gold jewellery inspired by our rich heritage.",
     price: 1200,
     surface: "dark",
     image: "/images/collection-royal.jpg",
   },
   {
     id: "col-modern",
-    name: "موزون عصري",
+    name: "Modern Balance",
     latin: "Modern Balance",
-    description: "تصاميم عصرية متوازنة لكل يوم.",
+    description: "Balanced, modern designs for everyday elegance.",
     price: 950,
     surface: "dark",
     image: "/images/collection-modern.jpg",
   },
   {
     id: "col-bridal",
-    name: "خيار العروس",
+    name: "Bridal Choice",
     latin: "Bridal Choice",
-    description: "لأجمل لحظاتك في يوم العمر.",
+    description: "For your most beautiful moments, on the day of a lifetime.",
     price: 1800,
     surface: "dark",
     image: "/images/collection-bridal.jpg",
@@ -327,45 +337,46 @@ export const trendingCollections: Collection[] = [
 export const collections: Collection[] = [
   {
     id: "royal-heritage",
-    name: "التراث الملكي",
+    name: "The Royal Heritage",
     latin: "The Royal Heritage",
-    description: "مجوهرات بولكي مستوحاة من تراثنا الغني.",
+    description: "Gold jewellery inspired by our rich heritage.",
     price: 2450,
     surface: "dark",
     image: "/images/collection-1.jpg",
   },
   {
     id: "precious-luxe",
-    name: "أحجار ثمينة فاخرة",
+    name: "Precious Luxe",
     latin: "Precious Luxe",
-    description: "مجوهرات أحجار فاخرة تدوم لأجيال.",
+    description: "Luxurious gemstone jewellery made to last for generations.",
     price: 3250,
     surface: "dark",
     image: "/images/collection-2.jpg",
   },
   {
     id: "bridal-choice",
-    name: "خيار العروس",
+    name: "The Bridal Choice",
     latin: "The Bridal Choice",
-    description: "لأجمل لحظاتك، صُمّمت لتبقى ذكرى مدى الحياة.",
+    description:
+      "For your most beautiful moments — designed to remain a lifelong memory.",
     price: 2750,
     surface: "dark",
     image: "/images/collection-3.jpg",
   },
   {
     id: "diamond-elegance",
-    name: "أناقة الألماس",
+    name: "Diamond Elegance",
     latin: "Diamond Elegance",
-    description: "ألماس كلاسيكي مصنوع بإتقانٍ وشغف.",
+    description: "Classic diamonds, crafted with mastery and passion.",
     price: 1650,
     surface: "cream",
     image: "/images/collection-4.jpg",
   },
   {
     id: "men-collection",
-    name: "مجموعة الرجال",
+    name: "The Men's Collection",
     latin: "The Men's Collection",
-    description: "تصاميم جريئة وأنيقة للرجل العصري.",
+    description: "Bold, elegant designs for the modern man.",
     price: 950,
     surface: "dark",
     image: "/images/collection-5.jpg",
@@ -374,9 +385,9 @@ export const collections: Collection[] = [
 
 /** Gemstone highlight (Explore screen). */
 export const gemstoneFeature = {
-  title: "جمال الطبيعة",
+  title: "Nature's Beauty",
   description:
-    "اكتشف أجود الأحجار الكريمة التي تُضيف لونًا لكل لحظة مميّزة.",
+    "Discover the finest gemstones, adding color to every special moment.",
   price: 2500,
   surface: "gold" as const,
   image: "/images/gemstones.jpg",
@@ -384,10 +395,10 @@ export const gemstoneFeature = {
 
 /** Editorial / info block (Explore screen). */
 export const editorialFeature = {
-  eyebrow: "معلومات عن المجوهرات",
-  title: "فنّ صناعة المجوهرات",
-  description: "تعرّف على الحِرفية، والعيارات، والأحجار الكريمة، والمزيد.",
-  cta: "اقرأ المزيد",
+  eyebrow: "Jewellery Guide",
+  title: "The Art of Fine Jewellery",
+  description: "Learn about craftsmanship, gold purity, gemstones, and more.",
+  cta: "Read More",
   surface: "dark" as const,
   image: "/images/editorial.jpg",
 };
@@ -395,32 +406,32 @@ export const editorialFeature = {
 export const exhibitions: Exhibition[] = [
   {
     id: "ex-bridal",
-    title: "معرض مجوهرات الزفاف",
-    dateLabel: "السبت، 15 يونيو",
-    timeLabel: "10:00 صباحًا",
+    title: "Bridal Jewellery Exhibition",
+    dateLabel: "Saturday, June 15",
+    timeLabel: "10:00 AM",
     venue: "Ariana Gems & Jewellery Studio",
     day: "15",
-    month: "يونيو",
+    month: "June",
   },
 ];
 
 export const testimonials = [
   {
     id: "t1",
-    name: "نورة القحطاني",
-    text: "قطعٌ فاخرة وجودة استثنائية، تجربة تسوّق لا تُنسى.",
+    name: "Noura Al Qahtani",
+    text: "Luxurious pieces and exceptional quality — an unforgettable shopping experience.",
     rating: 5,
   },
   {
     id: "t2",
-    name: "سارة المنصوري",
-    text: "الألماس نظيف والتصميم أنيق جدًا. أنصح به بشدّة.",
+    name: "Sara Al Mansouri",
+    text: "The diamonds are flawless and the design is beautifully elegant. Highly recommended.",
     rating: 5,
   },
   {
     id: "t3",
-    name: "ريم الشامسي",
-    text: "خدمة راقية وتغليف فخم، وصلني الطلب أسرع مما توقّعت.",
+    name: "Reem Al Shamsi",
+    text: "Refined service and luxurious packaging — my order arrived faster than I expected.",
     rating: 5,
   },
 ];

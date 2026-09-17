@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Topbar } from "@/components/admin/Topbar";
 import { AnalyticsCards } from "@/components/admin/AnalyticsCards";
 import { RevenueChart } from "@/components/admin/RevenueChart";
@@ -24,7 +24,7 @@ export default async function AdminDashboard() {
 
   return (
     <>
-      <Topbar title="لوحة التحكم" />
+      <Topbar title="Dashboard" />
       <div className="space-y-6 p-4 sm:p-6">
         <AnalyticsCards />
 
@@ -33,8 +33,8 @@ export default async function AdminDashboard() {
             <RevenueChart />
           </div>
           <div className="card p-5">
-            <h3 className="mb-4 font-arabic text-base font-bold text-ink">
-              الأكثر مبيعًا
+            <h3 className="mb-4 font-sans text-base font-bold text-ink">
+              Best Sellers
             </h3>
             <div className="space-y-3">
               {top.map((p) => (
@@ -49,7 +49,7 @@ export default async function AdminDashboard() {
                     label={p.name}
                     sizes="40px"
                   />
-                  <span className="flex-1 truncate font-arabic text-sm font-semibold text-ink">
+                  <span className="flex-1 truncate font-sans text-sm font-semibold text-ink">
                     {p.name}
                   </span>
                   <span className="text-sm font-bold text-ink">
@@ -63,11 +63,11 @@ export default async function AdminDashboard() {
 
         <div>
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-arabic text-base font-bold text-ink">
-              أحدث الطلبات
+            <h3 className="font-sans text-base font-bold text-ink">
+              Recent Orders
             </h3>
             <Link href="/admin/orders" className="view-all inline-flex items-center gap-1">
-              عرض الكل <ArrowLeft className="h-3.5 w-3.5" />
+              View All <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <OrderTable limit={5} />

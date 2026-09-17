@@ -15,16 +15,16 @@ export async function PATCH(req: NextRequest) {
   const token = cookies().get(SESSION_COOKIE)?.value;
   const user = await getUserByToken(token);
   if (!user) {
-    return NextResponse.json({ error: "يرجى تسجيل الدخول" }, { status: 401 });
+    return NextResponse.json({ error: "Please sign in" }, { status: 401 });
   }
   const { name } = await req.json().catch(() => ({}));
   if (typeof name !== "string" || !name.trim()) {
-    return NextResponse.json({ error: "يرجى إدخال اسم صالح" }, { status: 400 });
+    return NextResponse.json({ error: "Please enter a valid name" }, { status: 400 });
   }
   const updated = await updateUserName(user.id, name);
   if (!updated) {
     return NextResponse.json(
-      { error: "تعذّر تحديث الاسم حاليًا، حاول لاحقًا." },
+      { error: "Unable to update the name right now, please try again." },
       { status: 500 },
     );
   }

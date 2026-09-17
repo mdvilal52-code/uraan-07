@@ -47,13 +47,13 @@ export async function requireAdmin(): Promise<SessionUser | NextResponse> {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json(
-      { error: "يجب تسجيل الدخول" },
+      { error: "You must be signed in" },
       { status: 401 },
     );
   }
   if (user.role !== "admin") {
     return NextResponse.json(
-      { error: "غير مصرّح لك بالوصول" },
+      { error: "You are not authorized to access this" },
       { status: 403 },
     );
   }

@@ -14,33 +14,33 @@ export function Topbar({ title }: { title: string }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="القائمة"
+          aria-label="Menu"
           className="grid h-10 w-10 place-items-center rounded-xl text-ink transition hover:bg-cream-200 md:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
 
-        <h1 className="flex-1 font-arabic text-lg font-bold text-ink">{title}</h1>
+        <h1 className="flex-1 font-sans text-lg font-bold text-ink">{title}</h1>
 
         <div className="hidden items-center gap-2 rounded-xl border border-cream-300 bg-cream-100 px-3 py-2 sm:flex">
           <Search className="h-4 w-4 text-ink-muted" />
           <input
-            placeholder="بحث…"
-            aria-label="بحث"
+            placeholder="Search…"
+            aria-label="Search"
             className="w-40 bg-transparent text-sm outline-none placeholder:text-ink-faint"
           />
         </div>
 
         <button
-          aria-label="الإشعارات"
+          aria-label="Notifications"
           className="relative grid h-10 w-10 place-items-center rounded-xl text-ink transition hover:bg-cream-200"
         >
           <Bell className="h-5 w-5" />
           <span className="absolute end-2 top-2 h-2 w-2 rounded-full bg-clay-500" />
         </button>
 
-        <div className="grid h-10 w-10 place-items-center rounded-full bg-gold-gradient font-arabic text-sm font-extrabold text-forest-800">
-          أ
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-gold-gradient font-sans text-sm font-extrabold text-forest-800">
+          A
         </div>
       </header>
 
@@ -56,7 +56,7 @@ export function Topbar({ title }: { title: string }) {
               <Sidebar variant="drawer" />
               <button
                 onClick={() => setOpen(false)}
-                aria-label="إغلاق"
+                aria-label="Close"
                 className="absolute -end-12 top-3 grid h-10 w-10 place-items-center rounded-xl bg-cream-50 text-ink"
               >
                 <X className="h-5 w-5" />

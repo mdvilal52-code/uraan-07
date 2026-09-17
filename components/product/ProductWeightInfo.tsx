@@ -27,12 +27,12 @@ export function ProductWeightInfo({
     <div className="mt-4 rounded-2xl border border-cream-300 bg-cream-50 p-4 space-y-3">
       <h3 className="flex items-center gap-2 text-sm font-bold text-ink">
         <Scale className="h-4 w-4 text-gold-500" />
-        تفاصيل الوزن والعيار
+        Weight &amp; Purity Details
       </h3>
 
       {/* Karat selection (admin-controlled list) */}
       <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-ink-soft">العيار:</span>
+        <span className="text-xs font-semibold text-ink-soft">Purity:</span>
         {options.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {options.map((k) => (
@@ -51,7 +51,7 @@ export function ProductWeightInfo({
             ))}
           </div>
         ) : (
-          <span className="text-xs font-bold text-ink-faint" dir="ltr">
+          <span className="text-xs font-bold text-ink-faint">
             N/A
           </span>
         )}
@@ -62,18 +62,18 @@ export function ProductWeightInfo({
         <div className="rounded-xl bg-cream-100 p-3 text-center">
           <Gem className="mx-auto h-4 w-4 text-gold-500" />
           <p className="mt-1 text-[0.65rem] font-semibold text-ink-muted">
-            وزن الذهب
+            Gold Weight
           </p>
-          <p className="text-sm font-extrabold text-ink" dir="ltr">
+          <p className="text-sm font-extrabold text-ink">
             {grams(goldWeight)}
           </p>
         </div>
         <div className="rounded-xl bg-cream-100 p-3 text-center">
           <Scale className="mx-auto h-4 w-4 text-gold-500" />
           <p className="mt-1 text-[0.65rem] font-semibold text-ink-muted">
-            الوزن الإجمالي
+            Total Weight
           </p>
-          <p className="text-sm font-extrabold text-ink" dir="ltr">
+          <p className="text-sm font-extrabold text-ink">
             {grams(totalWeight)}
           </p>
         </div>

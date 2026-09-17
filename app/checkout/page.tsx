@@ -3,16 +3,16 @@ import { AppShell } from "@/components/AppShell";
 import { ShippingForm } from "@/components/checkout/ShippingForm";
 
 export const metadata: Metadata = {
-  title: "الشحن والتواصل",
-  description: "أدخلي عنوان الشحن ومعلومات التواصل لإتمام الطلب.",
+  title: "Shipping & Contact",
+  description: "Enter your shipping address and contact details to complete your order.",
 };
 
 export default function CheckoutPage() {
   return (
     <AppShell>
       <header className="px-5 pb-1 pt-5">
-        <h1 className="font-arabic text-[1.7rem] font-extrabold text-ink">
-          إتمام الشراء
+        <h1 className="font-sans text-[1.7rem] font-extrabold text-ink">
+          Checkout
         </h1>
       </header>
       <ShippingForm />

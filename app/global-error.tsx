@@ -14,7 +14,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="en" dir="ltr">
       <body
         style={{
           margin: 0,
@@ -29,13 +29,13 @@ export default function GlobalError({
       >
         <div style={{ maxWidth: "24rem" }}>
           <h1 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#1f2a24" }}>
-            حدث خطأ غير متوقع
+            Something went wrong
           </h1>
           <p style={{ marginTop: "0.5rem", fontSize: "0.9rem", color: "#6b6155" }}>
-            نعتذر عن الإزعاج. حاولي إعادة تحميل الصفحة.
+            We&apos;re sorry for the inconvenience. Please try reloading the page.
           </p>
           {error.digest && (
-            <p style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#948a7c" }} dir="ltr">
+            <p style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "#948a7c" }}>
               ref: {error.digest}
             </p>
           )}
@@ -54,7 +54,7 @@ export default function GlobalError({
               cursor: "pointer",
             }}
           >
-            أعد المحاولة
+            Try Again
           </button>
         </div>
       </body>

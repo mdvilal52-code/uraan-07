@@ -15,7 +15,7 @@ function Card({
 }) {
   return (
     <div className="card space-y-4 p-5">
-      <h3 className="font-arabic text-base font-bold text-ink">{title}</h3>
+      <h3 className="font-sans text-base font-bold text-ink">{title}</h3>
       {children}
     </div>
   );
@@ -33,66 +33,66 @@ export function SettingsForm() {
       }}
       className="space-y-5"
     >
-      <Card title="معلومات المتجر">
+      <Card title="Store Information">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
-              اسم المتجر
+              Store Name
             </span>
             <input className={inputCls} defaultValue="Ariana Gems & Jewellery" />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
-              البريد الإلكتروني
+              Email Address
             </span>
             <input className={inputCls} defaultValue="hello@ariana.example" />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
-              رقم الهاتف
+              Phone Number
             </span>
-            <input className={inputCls} defaultValue="+61 3 9791 1331" dir="ltr" />
+            <input className={inputCls} defaultValue="+61 3 9791 1331" />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
-              العملة
+              Currency
             </span>
             <select className={inputCls} defaultValue="AUD">
-              <option value="AUD">دولار أسترالي (AUD)</option>
-              <option value="AED">درهم إماراتي (AED)</option>
-              <option value="USD">دولار أمريكي (USD)</option>
+              <option value="AUD">Australian Dollar (AUD)</option>
+              <option value="AED">UAE Dirham (AED)</option>
+              <option value="USD">US Dollar (USD)</option>
             </select>
           </label>
         </div>
       </Card>
 
-      <Card title="الشحن والضرائب">
+      <Card title="Shipping & Taxes">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
-              حدّ الشحن المجّاني (AUD)
+              Free Shipping Threshold (AUD)
             </span>
             <input type="number" className={inputCls} defaultValue={500} />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
-              نسبة الضريبة (%)
+              Tax Rate (%)
             </span>
             <input type="number" className={inputCls} defaultValue={5} />
           </label>
         </div>
       </Card>
 
-      <Card title="الإشعارات">
+      <Card title="Notifications">
         <label className="flex items-center justify-between">
           <span className="text-sm font-semibold text-ink">
-            إشعارات الطلبات الجديدة
+            New Order Notifications
           </span>
           <input type="checkbox" defaultChecked className="h-4 w-4 accent-forest-600" />
         </label>
         <label className="flex items-center justify-between">
           <span className="text-sm font-semibold text-ink">
-            تنبيه انخفاض المخزون
+            Low Stock Alerts
           </span>
           <input type="checkbox" defaultChecked className="h-4 w-4 accent-forest-600" />
         </label>
@@ -101,11 +101,11 @@ export function SettingsForm() {
       <button type="submit" className="btn-forest w-full sm:w-auto">
         {saved ? (
           <>
-            <CheckCircle2 className="h-4 w-4" /> تم الحفظ
+            <CheckCircle2 className="h-4 w-4" /> Saved
           </>
         ) : (
           <>
-            <Save className="h-4 w-4" /> حفظ الإعدادات
+            <Save className="h-4 w-4" /> Save Settings
           </>
         )}
       </button>

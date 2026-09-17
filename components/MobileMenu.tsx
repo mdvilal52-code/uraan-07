@@ -2,24 +2,24 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { X, ChevronLeft } from "lucide-react";
+import { X, ChevronRight } from "lucide-react";
 import { LotusMark } from "./icons/JewelIcons";
 import { BRAND, categories } from "@/data/jewelleryData";
 
 const primaryLinks = [
-  { label: "الرئيسية", href: "/" },
-  { label: "استكشف", href: "/explore" },
-  { label: "المجموعات", href: "/collections" },
-  { label: "المتجر", href: "/shop" },
-  { label: "من نحن", href: "/about" },
-  { label: "تواصل معنا", href: "/contact" },
+  { label: "Home", href: "/" },
+  { label: "Explore", href: "/explore" },
+  { label: "Collections", href: "/collections" },
+  { label: "Shop", href: "/shop" },
+  { label: "About Us", href: "/about" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 const accountLinks = [
-  { label: "حسابي", href: "/profile" },
-  { label: "المفضّلة", href: "/wishlist" },
-  { label: "السلة", href: "/cart" },
-  { label: "تسجيل الدخول", href: "/login" },
+  { label: "Profile", href: "/profile" },
+  { label: "Wishlist", href: "/wishlist" },
+  { label: "Cart", href: "/cart" },
+  { label: "Login", href: "/login" },
 ];
 
 export function MobileMenu({
@@ -53,13 +53,13 @@ export function MobileMenu({
         }`}
       />
 
-      {/* panel (slides in from the start/right in RTL) */}
+      {/* panel (slides in from the start/left) */}
       <aside
         className={`absolute inset-y-0 start-0 flex w-[84%] max-w-[340px] flex-col bg-cream-100 shadow-2xl transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"
+          open ? "translate-x-0" : "-translate-x-full"
         }`}
         role="dialog"
-        aria-label="القائمة الرئيسية"
+        aria-label="Main menu"
       >
         <div className="flex items-center justify-between border-b border-cream-300 px-5 py-4">
           <Link href="/" onClick={onClose} className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export function MobileMenu({
           <button
             type="button"
             onClick={onClose}
-            aria-label="إغلاق"
+            aria-label="Close"
             className="grid h-9 w-9 place-items-center rounded-xl text-ink transition hover:bg-cream-200"
           >
             <X className="h-5 w-5" />
@@ -88,13 +88,13 @@ export function MobileMenu({
                 className="flex items-center justify-between border-b border-cream-200 py-3.5 text-[1.05rem] font-bold text-ink transition hover:text-clay-500"
               >
                 {l.label}
-                <ChevronLeft className="h-4 w-4 text-ink-faint" />
+                <ChevronRight className="h-4 w-4 text-ink-faint" />
               </Link>
             ))}
           </nav>
 
           <p className="mt-6 mb-3 text-xs font-bold uppercase tracking-widest text-gold-600">
-            الفئات
+            Categories
           </p>
           <div className="flex flex-wrap gap-2">
             {categories.map((c) => (
@@ -110,7 +110,7 @@ export function MobileMenu({
           </div>
 
           <p className="mt-6 mb-3 text-xs font-bold uppercase tracking-widest text-gold-600">
-            الحساب
+            Account
           </p>
           <nav className="flex flex-col">
             {accountLinks.map((l) => (
@@ -127,8 +127,8 @@ export function MobileMenu({
         </div>
 
         <div className="border-t border-cream-300 px-5 py-4 text-center">
-          <p className="font-arabic text-sm text-ink-muted">
-            تألّقي للأبد، بريقٌ لا ينتهي
+          <p className="font-sans text-sm text-ink-muted">
+            Shine forever, brilliance without end
           </p>
         </div>
       </aside>

@@ -48,17 +48,17 @@ export function CartDrawer({
       />
       <aside
         className={`absolute inset-y-0 end-0 flex w-[88%] max-w-[380px] flex-col bg-cream-100 shadow-2xl transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full rtl:-translate-x-full"
+          open ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
-        aria-label="حقيبة التسوّق"
+        aria-label="Shopping Cart"
       >
         <div className="flex items-center justify-between border-b border-cream-300 px-5 py-4">
-          <h2 className="font-arabic text-lg font-bold text-ink">حقيبة التسوّق</h2>
+          <h2 className="font-sans text-lg font-bold text-ink">Shopping Cart</h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="إغلاق"
+            aria-label="Close"
             className="grid h-9 w-9 place-items-center rounded-xl text-ink transition hover:bg-cream-200"
           >
             <X className="h-5 w-5" />
@@ -68,9 +68,9 @@ export function CartDrawer({
         {lines.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
             <ShoppingBag className="h-12 w-12 text-cream-400" />
-            <p className="font-arabic text-ink-muted">حقيبتك فارغة حاليًا.</p>
+            <p className="font-sans text-ink-muted">Your cart is empty.</p>
             <Link href="/shop" onClick={onClose} className="btn-forest mt-1">
-              تصفّح المتجر
+              Continue Shopping
             </Link>
           </div>
         ) : (
@@ -84,7 +84,7 @@ export function CartDrawer({
                     type="button"
                     onClick={() => toggleSelected(product.id)}
                     aria-pressed={checked}
-                    aria-label={checked ? "إلغاء اختيار المنتج" : "اختيار المنتج للشراء"}
+                    aria-label={checked ? "Deselect item" : "Select item for purchase"}
                     className={`mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-lg border-2 transition ${
                       checked
                         ? "border-forest-600 bg-forest-600 text-cream-50"
@@ -105,12 +105,12 @@ export function CartDrawer({
                   />
                   <div className="flex flex-1 flex-col">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-arabic text-sm font-bold text-ink">
+                      <h3 className="font-sans text-sm font-bold text-ink">
                         {product.name}
                       </h3>
                       <button
                         onClick={() => remove(product.id)}
-                        aria-label="حذف"
+                        aria-label="Remove"
                         className="text-ink-faint transition hover:text-clay-500"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -123,7 +123,7 @@ export function CartDrawer({
                       <div className="flex items-center gap-3 rounded-xl border border-cream-300 bg-cream-50 px-2 py-1">
                         <button
                           onClick={() => setQty(product.id, quantity - 1)}
-                          aria-label="نقص"
+                          aria-label="Decrease quantity"
                           className="text-ink-muted"
                         >
                           <Minus className="h-3.5 w-3.5" />
@@ -133,7 +133,7 @@ export function CartDrawer({
                         </span>
                         <button
                           onClick={() => setQty(product.id, quantity + 1)}
-                          aria-label="زيادة"
+                          aria-label="Increase quantity"
                           className="text-ink-muted"
                         >
                           <Plus className="h-3.5 w-3.5" />
@@ -148,8 +148,8 @@ export function CartDrawer({
 
             <div className="border-t border-cream-300 px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
-                <span className="font-arabic text-sm text-ink-muted">
-                  المجموع الفرعي {selectedCount > 0 && `(${selectedCount})`}
+                <span className="font-sans text-sm text-ink-muted">
+                  Subtotal {selectedCount > 0 && `(${selectedCount})`}
                 </span>
                 <span className="price text-lg">
                   {formatPrice(selectedPriced?.subtotal ?? 0)}
@@ -157,23 +157,23 @@ export function CartDrawer({
               </div>
               {selectedCount === 0 && (
                 <p className="mb-2 text-center text-xs font-semibold text-clay-500">
-                  اختاري منتجًا واحدًا على الأقل للمتابعة
+                  Select at least one item to continue
                 </p>
               )}
               {selectedCount > 0 ? (
                 <Link href="/checkout" onClick={onClose} className="btn-forest w-full">
-                  إتمام الشراء
+                  Proceed to Checkout
                 </Link>
               ) : (
                 <span className="btn-forest w-full cursor-not-allowed opacity-50">
-                  إتمام الشراء
+                  Proceed to Checkout
                 </span>
               )}
               <button
                 onClick={onClose}
                 className="mt-2 w-full py-2 text-center text-sm font-semibold text-ink-muted transition hover:text-ink"
               >
-                متابعة التسوّق
+                Continue Shopping
               </button>
             </div>
           </>

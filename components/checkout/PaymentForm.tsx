@@ -34,9 +34,9 @@ interface AppliedCoupon {
 }
 
 const methods = [
-  { key: "card", label: "بطاقة ائتمان", icon: CreditCard },
-  { key: "wallet", label: "محفظة إلكترونية", icon: Wallet },
-  { key: "cod", label: "الدفع عند الاستلام", icon: Banknote },
+  { key: "card", label: "Credit Card", icon: CreditCard },
+  { key: "wallet", label: "Digital Wallet", icon: Wallet },
+  { key: "cod", label: "Cash on Delivery", icon: Banknote },
 ] as const;
 
 type Method = (typeof methods)[number]["key"];
@@ -104,7 +104,7 @@ export function PaymentForm() {
     async (rawCode: string, opts?: { silent?: boolean }) => {
       const code = rawCode.trim();
       if (!code) {
-        if (!opts?.silent) setCouponError("أدخلي كود الخصم");
+        if (!opts?.silent) setCouponError("Enter a discount code");
         return;
       }
       setCouponLoading(true);
@@ -128,11 +128,11 @@ export function PaymentForm() {
         } else {
           setAppliedCoupon(null);
           clearCouponCode();
-          if (!opts?.silent) setCouponError(data.error ?? "كود الخصم غير صالح");
+          if (!opts?.silent) setCouponError(data.error ?? "Invalid discount code");
         }
       } catch {
         if (!opts?.silent)
-          setCouponError("تعذّر الاتصال بالخادم، تحقّقي من الإنترنت.");
+          setCouponError("Unable to reach the server — please check your connection.");
       } finally {
         setCouponLoading(false);
       }
@@ -175,7 +175,7 @@ export function PaymentForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "تعذّر إتمام الطلب، حاولي مرة أخرى.");
+        setError(data.error ?? "Unable to complete the order, please try again.");
         return;
       }
       setOrder(data.order);
@@ -183,7 +183,7 @@ export function PaymentForm() {
       clearShippingInfo();
       clearCouponCode();
     } catch {
-      setError("تعذّر الاتصال بالخادم، تحقّقي من الإنترنت.");
+      setError("Unable to reach the server — please check your connection.");
     } finally {
       setPlacing(false);
     }
@@ -193,15 +193,15 @@ export function PaymentForm() {
     return (
       <div className="grid place-items-center px-5 py-20 text-center">
         <CheckCircle2 className="h-16 w-16 text-forest-500" />
-        <h2 className="mt-4 font-arabic text-xl font-bold text-ink">
-          تمّ تأكيد طلبك!
+        <h2 className="mt-4 font-sans text-xl font-bold text-ink">
+          Your Order is Confirmed!
         </h2>
         <p className="mt-2 max-w-xs text-sm text-ink-muted">
-          رقم طلبك <span className="font-bold text-ink">{order.id}</span>. شكرًا
-          لتسوّقك من أريانا، سنرسل تفاصيل الشحن إلى بريدك قريبًا.
+          Your order number is <span className="font-bold text-ink">{order.id}</span>. Thank you
+          for shopping with Ariana — we&apos;ll send your shipping details to your email shortly.
         </p>
         <Link href="/" className="btn-forest mt-6">
-          العودة للرئيسية
+          Back to Home
         </Link>
       </div>
     );
@@ -211,9 +211,9 @@ export function PaymentForm() {
     return (
       <div className="grid place-items-center px-5 py-20 text-center">
         <ShoppingBag className="h-14 w-14 text-cream-400" />
-        <p className="mt-4 text-ink-muted">سلّتك فارغة، أضِف بعض القطع أولًا.</p>
+        <p className="mt-4 text-ink-muted">Your cart is empty — add some pieces first.</p>
         <Link href="/shop" className="btn-forest mt-5">
-          تصفّح المتجر
+          Continue Shopping
         </Link>
       </div>
     );
@@ -224,10 +224,10 @@ export function PaymentForm() {
       <div className="grid place-items-center px-5 py-20 text-center">
         <ShoppingBag className="h-14 w-14 text-cream-400" />
         <p className="mt-4 text-ink-muted">
-          لم تختاري أي منتج للشراء. عودي إلى السلة واختاري منتجًا واحدًا على الأقل.
+          You haven&apos;t selected any item to purchase. Go back to your cart and select at least one.
         </p>
         <Link href="/cart" className="btn-forest mt-5">
-          العودة إلى السلة
+          Back to Cart
         </Link>
       </div>
     );
@@ -243,16 +243,16 @@ export function PaymentForm() {
         <section className="card flex items-start justify-between gap-3 p-4">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wide text-ink-muted">
-              الشحن إلى
+              Shipping To
             </p>
             <p className="mt-1 text-sm font-bold text-ink">{shippingInfo.name}</p>
             <p className="text-sm text-ink-soft">
               {shippingInfo.address}
-              {shippingInfo.city ? `، ${shippingInfo.city}` : ""}
+              {shippingInfo.city ? `, ${shippingInfo.city}` : ""}
               {shippingInfo.postcode ? ` ${shippingInfo.postcode}` : ""}
             </p>
             {shippingInfo.phone && (
-              <p dir="ltr" className="text-start text-sm text-ink-soft">
+              <p className="text-start text-sm text-ink-soft">
                 {shippingInfo.phone}
               </p>
             )}
@@ -261,13 +261,13 @@ export function PaymentForm() {
             href="/checkout"
             className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-clay-500"
           >
-            <Pencil className="h-3.5 w-3.5" /> تعديل
+            <Pencil className="h-3.5 w-3.5" /> Edit
           </Link>
         </section>
 
         {/* Payment method */}
         <section className="space-y-3">
-          <h2 className="section-title text-lg">طريقة الدفع</h2>
+          <h2 className="section-title text-lg">Payment Method</h2>
           <div className="space-y-2">
             {methods.map((m) => (
               <button
@@ -299,12 +299,11 @@ export function PaymentForm() {
             <div className="space-y-3 rounded-2xl border border-cream-300 bg-cream-50 p-4">
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-ink-soft">
-                  رقم البطاقة
+                  Card Number
                 </span>
                 <div className="flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3">
                   <CreditCard className="h-4 w-4 shrink-0 text-ink-muted" />
                   <input
-                    dir="ltr"
                     inputMode="numeric"
                     autoComplete="cc-number"
                     required
@@ -318,10 +317,9 @@ export function PaymentForm() {
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-ink-soft">
-                  الاسم على البطاقة
+                  Name on Card
                 </span>
                 <input
-                  dir="ltr"
                   autoComplete="cc-name"
                   required
                   placeholder="NOURA ALQAHTANI"
@@ -334,10 +332,9 @@ export function PaymentForm() {
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
                   <span className="mb-1 block text-xs font-semibold text-ink-soft">
-                    تاريخ الانتهاء
+                    Expiry Date
                   </span>
                   <input
-                    dir="ltr"
                     inputMode="numeric"
                     autoComplete="cc-exp"
                     required
@@ -352,7 +349,6 @@ export function PaymentForm() {
                     CVV
                   </span>
                   <input
-                    dir="ltr"
                     inputMode="numeric"
                     type="password"
                     autoComplete="cc-csc"
@@ -371,10 +367,9 @@ export function PaymentForm() {
             <div className="rounded-2xl border border-cream-300 bg-cream-50 p-4">
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-ink-soft">
-                  رقم الجوّال المرتبط بالمحفظة
+                  Mobile Number Linked to Wallet
                 </span>
                 <input
-                  dir="ltr"
                   type="tel"
                   required
                   placeholder="+61 4xx xxx xxx"
@@ -388,13 +383,13 @@ export function PaymentForm() {
 
           {method === "cod" && (
             <p className="rounded-2xl bg-cream-100 px-4 py-3 text-sm text-ink-soft">
-              ادفعي نقدًا عند استلام طلبك من المندوب.
+              Pay in cash when your order is delivered.
             </p>
           )}
 
           <p className="flex items-center gap-1.5 text-xs text-ink-muted">
             <Lock className="h-3.5 w-3.5 text-forest-500" />
-            معلومات الدفع مشفّرة وآمنة.
+            Your payment information is encrypted and secure.
           </p>
         </section>
 
@@ -402,7 +397,7 @@ export function PaymentForm() {
         <section className="card space-y-3 p-4">
           <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
             <Tag className="h-4 w-4 text-forest-600" />
-            كود الخصم
+            Discount Code
           </h2>
 
           {appliedCoupon ? (
@@ -420,7 +415,7 @@ export function PaymentForm() {
                 <button
                   type="button"
                   onClick={removeCoupon}
-                  aria-label="إزالة كود الخصم"
+                  aria-label="Remove discount code"
                   className="grid h-7 w-7 place-items-center rounded-lg bg-white/70 text-forest-700 transition hover:bg-white"
                 >
                   <X className="h-4 w-4" />
@@ -431,7 +426,6 @@ export function PaymentForm() {
             <>
               <div className="flex gap-2">
                 <input
-                  dir="ltr"
                   type="text"
                   placeholder="ARIANA15"
                   value={couponInput}
@@ -445,7 +439,7 @@ export function PaymentForm() {
                       applyCoupon(couponInput);
                     }
                   }}
-                  aria-label="كود الخصم"
+                  aria-label="Discount code"
                   aria-invalid={couponError ? true : undefined}
                   className={`${inputCls} flex-1 uppercase tracking-wider`}
                 />
@@ -458,7 +452,7 @@ export function PaymentForm() {
                   {couponLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    "تطبيق"
+                    "Apply"
                   )}
                 </button>
               </div>
@@ -473,26 +467,26 @@ export function PaymentForm() {
 
         <div className="card space-y-2 p-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-ink-muted">المجموع الفرعي</span>
+            <span className="text-ink-muted">Subtotal</span>
             <span className="font-semibold text-ink">{formatPrice(subtotal)}</span>
           </div>
           {appliedCoupon && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-ink-muted">خصم ({appliedCoupon.code})</span>
+              <span className="text-ink-muted">Discount ({appliedCoupon.code})</span>
               <span className="font-semibold text-forest-600">
                 -{formatPrice(discount)}
               </span>
             </div>
           )}
           <div className="flex items-center justify-between text-sm">
-            <span className="text-ink-muted">الشحن</span>
+            <span className="text-ink-muted">Shipping</span>
             <span className="font-semibold text-ink">
-              {shipping === 0 ? "مجّاني" : formatPrice(shipping)}
+              {shipping === 0 ? "Free" : formatPrice(shipping)}
             </span>
           </div>
           <div className="hr-gold my-1" />
           <div className="flex items-center justify-between">
-            <span className="font-arabic font-bold text-ink">الإجمالي</span>
+            <span className="font-sans font-bold text-ink">Total</span>
             <span className="price text-xl">{formatPrice(total)}</span>
           </div>
         </div>
@@ -508,7 +502,7 @@ export function PaymentForm() {
           disabled={placing}
           className="btn-forest w-full disabled:opacity-60"
         >
-          {placing ? "جارٍ تأكيد الطلب…" : `تأكيد الدفع · ${formatPrice(total)}`}
+          {placing ? "Confirming order…" : `Confirm Payment · ${formatPrice(total)}`}
         </button>
       </form>
     </>

@@ -24,14 +24,14 @@ export function CartView() {
     return (
       <div className="grid place-items-center px-5 py-20 text-center">
         <ShoppingBag className="h-14 w-14 text-cream-400" />
-        <h2 className="mt-4 font-arabic text-lg font-bold text-ink">
-          سلّتك فارغة
+        <h2 className="mt-4 font-sans text-lg font-bold text-ink">
+          Your Cart is Empty
         </h2>
         <p className="mt-1 text-sm text-ink-muted">
-          أضِف بعض القطع الفاخرة لتبدأ التسوّق.
+          Add some exquisite pieces to begin shopping.
         </p>
         <Link href="/shop" className="btn-forest mt-5">
-          تصفّح المتجر
+          Continue Shopping
         </Link>
       </div>
     );
@@ -48,7 +48,7 @@ export function CartView() {
               type="button"
               onClick={() => toggleSelected(product.id)}
               aria-pressed={checked}
-              aria-label={checked ? "إلغاء اختيار المنتج" : "اختيار المنتج للشراء"}
+              aria-label={checked ? "Deselect item" : "Select item for purchase"}
               className={`mt-1 grid h-6 w-6 shrink-0 place-items-center self-start rounded-lg border-2 transition ${
                 checked
                   ? "border-forest-600 bg-forest-600 text-cream-50"
@@ -71,13 +71,13 @@ export function CartView() {
               <div className="flex items-start justify-between gap-2">
                 <Link
                   href={`/product/${product.id}`}
-                  className="font-arabic text-[0.98rem] font-bold text-ink"
+                  className="font-sans text-[0.98rem] font-bold text-ink"
                 >
                   {product.name}
                 </Link>
                 <button
                   onClick={() => remove(product.id)}
-                  aria-label="حذف"
+                  aria-label="Remove"
                   className="text-ink-faint transition hover:text-clay-500"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -90,7 +90,7 @@ export function CartView() {
                 <div className="flex items-center gap-3 rounded-xl border border-cream-300 bg-cream-50 px-2 py-1">
                   <button
                     onClick={() => setQty(product.id, quantity - 1)}
-                    aria-label="نقص"
+                    aria-label="Decrease quantity"
                     className="text-ink-muted"
                   >
                     <Minus className="h-3.5 w-3.5" />
@@ -100,7 +100,7 @@ export function CartView() {
                   </span>
                   <button
                     onClick={() => setQty(product.id, quantity + 1)}
-                    aria-label="زيادة"
+                    aria-label="Increase quantity"
                     className="text-ink-muted"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -120,32 +120,32 @@ export function CartView() {
       <div className="mt-4 flex items-center gap-2 rounded-2xl border border-dashed border-gold-300 bg-cream-50 p-2 ps-3">
         <Tag className="h-4 w-4 text-gold-500" />
         <input
-          placeholder="كود الخصم"
-          aria-label="كود الخصم"
+          placeholder="Discount code"
+          aria-label="Discount code"
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-ink-faint"
         />
         <button className="rounded-xl bg-cream-200 px-4 py-2 text-sm font-bold text-ink">
-          تطبيق
+          Apply
         </button>
       </div>
 
       {/* Summary */}
       <div className="card mt-4 space-y-2 p-4">
         <Row
-          label={`المجموع الفرعي${selectedCount > 0 ? ` (${selectedCount})` : ""}`}
+          label={`Subtotal${selectedCount > 0 ? ` (${selectedCount})` : ""}`}
           value={formatPrice(selectedPriced?.subtotal ?? 0)}
         />
         <Row
-          label="الشحن"
+          label="Shipping"
           value={
             (selectedPriced?.shipping ?? 0) === 0
-              ? "مجّاني"
+              ? "Free"
               : formatPrice(selectedPriced?.shipping ?? 0)
           }
         />
         <div className="hr-gold my-1" />
         <div className="flex items-center justify-between">
-          <span className="font-arabic font-bold text-ink">الإجمالي</span>
+          <span className="font-sans font-bold text-ink">Total</span>
           <span className="price text-xl">
             {formatPrice(selectedPriced?.total ?? 0)}
           </span>
@@ -154,16 +154,16 @@ export function CartView() {
 
       {selectedCount === 0 && (
         <p className="mt-3 text-center text-xs font-semibold text-clay-500">
-          اختاري منتجًا واحدًا على الأقل للمتابعة
+          Select at least one item to continue
         </p>
       )}
       {selectedCount > 0 ? (
         <Link href="/checkout" className="btn-forest mt-4 w-full">
-          إتمام الشراء
+          Proceed to Checkout
         </Link>
       ) : (
         <span className="btn-forest mt-4 w-full cursor-not-allowed opacity-50">
-          إتمام الشراء
+          Proceed to Checkout
         </span>
       )}
     </div>

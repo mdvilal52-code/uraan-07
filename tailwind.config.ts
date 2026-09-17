@@ -38,7 +38,7 @@ const config: Config = {
           800: "#0E271E",
           900: "#0A1E17",
         },
-        // Terracotta / amber accent ("تسوق الآن")
+        // Terracotta / amber accent ("Shop Now" links)
         clay: {
           400: "#D68A4A",
           500: "#C46E2C",
@@ -53,7 +53,6 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-tajawal)", "system-ui", "sans-serif"],
-        arabic: ["var(--font-tajawal)", "system-ui", "sans-serif"],
         serif: ["var(--font-cormorant)", "Georgia", "serif"],
       },
       borderRadius: {

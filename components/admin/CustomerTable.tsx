@@ -11,10 +11,10 @@ export async function CustomerTable() {
         <table className="w-full min-w-[560px]">
           <thead>
             <tr className="border-b border-cream-200 text-xs font-bold text-ink-muted">
-              <th className="px-4 py-3 text-start">العميل</th>
-              <th className="px-4 py-3 text-start">الطلبات</th>
-              <th className="px-4 py-3 text-start">إجمالي الإنفاق</th>
-              <th className="px-4 py-3 text-start">تاريخ الانضمام</th>
+              <th className="px-4 py-3 text-start">Customer</th>
+              <th className="px-4 py-3 text-start">Orders</th>
+              <th className="px-4 py-3 text-start">Total Spent</th>
+              <th className="px-4 py-3 text-start">Joined</th>
               <th className="px-4 py-3 text-start"></th>
             </tr>
           </thead>
@@ -26,11 +26,11 @@ export async function CustomerTable() {
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-gradient font-arabic text-sm font-extrabold text-forest-800">
-                      {(c.name || c.email || "؟").charAt(0)}
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-gradient font-sans text-sm font-extrabold text-forest-800">
+                      {(c.name || c.email || "?").charAt(0)}
                     </span>
                     <div>
-                      <p className="font-arabic font-semibold text-ink">{c.name}</p>
+                      <p className="font-sans font-semibold text-ink">{c.name}</p>
                       <p className="text-[0.7rem] text-ink-faint">{c.email}</p>
                     </div>
                   </div>
@@ -43,7 +43,7 @@ export async function CustomerTable() {
                 <td className="px-4 py-3">
                   <a
                     href={`mailto:${c.email}`}
-                    aria-label="مراسلة"
+                    aria-label="Email"
                     className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
                   >
                     <Mail className="h-4 w-4" />

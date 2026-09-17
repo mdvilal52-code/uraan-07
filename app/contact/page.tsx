@@ -6,44 +6,41 @@ import { Footer } from "@/components/Footer";
 import { CONTACT } from "@/data/jewelleryData";
 
 export const metadata: Metadata = {
-  title: "تواصل معنا",
-  description: "تواصل مع فريق أريانا أو احجز موعدًا في المعرض.",
+  title: "Contact Us",
+  description: "Get in touch with the Ariana team or book an appointment at our showroom.",
 };
 
 const info = [
   {
     icon: Phone,
-    label: "الهاتف",
+    label: "Phone",
     value: CONTACT.phoneIntl,
     sub: CONTACT.phoneLocal,
     href: CONTACT.phoneHref,
-    ltr: true,
   },
   {
     icon: Mail,
-    label: "البريد",
+    label: "Email",
     value: CONTACT.email,
     href: `mailto:${CONTACT.email}`,
-    ltr: true,
   },
   {
     icon: MapPin,
-    label: "العنوان",
+    label: "Address",
     value: CONTACT.address,
     href: CONTACT.mapsUrl,
-    ltr: true,
   },
-  { icon: Clock, label: "أوقات العمل", value: CONTACT.hours },
+  { icon: Clock, label: "Opening Hours", value: CONTACT.hours },
 ];
 
 export default function ContactPage() {
   return (
     <AppShell>
       <header className="px-5 pb-2 pt-5" data-reveal>
-        <h1 className="font-arabic text-[1.7rem] font-extrabold text-ink">
-          تواصل معنا
+        <h1 className="font-sans text-[1.7rem] font-extrabold text-ink">
+          Contact Us
         </h1>
-        <p className="section-sub mt-1">يسعدنا تواصلك، فريقنا في خدمتك دائمًا.</p>
+        <p className="section-sub mt-1">We&apos;d love to hear from you — our team is always here to help.</p>
       </header>
 
       <section className="px-5 py-3">
@@ -73,14 +70,11 @@ export default function ContactPage() {
                 <span className="mt-1 text-[0.68rem] font-bold uppercase tracking-wide text-ink-muted">
                   {i.label}
                 </span>
-                <span
-                  dir={i.ltr ? "ltr" : undefined}
-                  className={`text-sm font-semibold text-ink ${i.ltr ? "text-start" : ""}`}
-                >
+                <span className="text-sm font-semibold text-ink">
                   {i.value}
                 </span>
                 {i.sub && (
-                  <span dir="ltr" className="text-start text-xs text-ink-muted">
+                  <span className="text-xs text-ink-muted">
                     {i.sub}
                   </span>
                 )}
@@ -91,7 +85,7 @@ export default function ContactPage() {
       </section>
 
       <section className="px-5 py-3" data-reveal>
-        <h2 className="section-title mb-3">أرسل لنا رسالة</h2>
+        <h2 className="section-title mb-3">Send Us a Message</h2>
         <ContactForm />
       </section>
 
