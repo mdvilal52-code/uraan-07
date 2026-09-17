@@ -43,11 +43,41 @@ export const categories: Category[] = [
     icon: "gem",
     image: "/images/gemstones.jpg",
   },
-  { slug: "necklaces", name: "Necklaces", latin: "Necklaces", icon: "necklace" },
-  { slug: "earrings", name: "Earrings", latin: "Earrings", icon: "earring" },
-  { slug: "rings", name: "Rings", latin: "Rings", icon: "ring" },
-  { slug: "bracelets", name: "Bracelets", latin: "Bracelets", icon: "bracelet" },
-  { slug: "pendants", name: "Pendants", latin: "Pendants", icon: "pendant" },
+  {
+    slug: "necklaces",
+    name: "Necklaces",
+    latin: "Necklaces",
+    icon: "necklace",
+    image: "/images/necklace.jpg",
+  },
+  {
+    slug: "earrings",
+    name: "Earrings",
+    latin: "Earrings",
+    icon: "earring",
+    image: "/images/earrings.jpg",
+  },
+  {
+    slug: "rings",
+    name: "Rings",
+    latin: "Rings",
+    icon: "ring",
+    image: "/images/ring.jpg",
+  },
+  {
+    slug: "bracelets",
+    name: "Bracelets",
+    latin: "Bracelets",
+    icon: "bracelet",
+    image: "/images/bracelet.jpg",
+  },
+  {
+    slug: "pendants",
+    name: "Pendants",
+    latin: "Pendants",
+    icon: "pendant",
+    image: "/images/pendant.jpg",
+  },
 ];
 
 export const categoryNameBySlug: Record<string, string> = {
@@ -58,10 +88,6 @@ export const categoryNameBySlug: Record<string, string> = {
   pendants: "Pendants",
   gems: "Gemstones",
 };
-
-/** Default gold purities offered on catalogue pieces. Admin can override
- *  per product; a product with no karats/weights set shows N/A on its page. */
-const DEFAULT_KARATS = ["18K", "22K", "24K"];
 
 export const products: Product[] = [
   // Necklaces
@@ -80,7 +106,6 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 128,
     tags: ["Diamond", "Bridal"],
-    karats: DEFAULT_KARATS,
     goldWeight: 16.3,
     totalWeight: 17.8,
   },
@@ -98,7 +123,6 @@ export const products: Product[] = [
     rating: 4.8,
     reviews: 94,
     tags: ["Heritage", "Gold"],
-    karats: DEFAULT_KARATS,
     goldWeight: 11.2,
     totalWeight: 12.5,
   },
@@ -117,7 +141,6 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 76,
     tags: ["Diamond"],
-    karats: DEFAULT_KARATS,
     goldWeight: 4.8,
     totalWeight: 5.2,
   },
@@ -134,7 +157,6 @@ export const products: Product[] = [
     rating: 4.7,
     reviews: 58,
     tags: ["Gold", "Heritage"],
-    karats: DEFAULT_KARATS,
     goldWeight: 6.1,
     totalWeight: 6.4,
   },
@@ -153,7 +175,6 @@ export const products: Product[] = [
     rating: 5.0,
     reviews: 210,
     tags: ["Diamond", "Engagement"],
-    karats: DEFAULT_KARATS,
     goldWeight: 5.4,
     totalWeight: 5.9,
   },
@@ -170,7 +191,6 @@ export const products: Product[] = [
     rating: 4.8,
     reviews: 63,
     tags: ["Emerald", "Gemstone"],
-    karats: DEFAULT_KARATS,
     goldWeight: 4.9,
     totalWeight: 6.1,
   },
@@ -189,7 +209,6 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 88,
     tags: ["Diamond"],
-    karats: DEFAULT_KARATS,
     goldWeight: 14.2,
     totalWeight: 15.6,
   },
@@ -207,7 +226,6 @@ export const products: Product[] = [
     rating: 4.7,
     reviews: 41,
     tags: ["Gold", "Emerald"],
-    karats: DEFAULT_KARATS,
     goldWeight: 18.5,
     totalWeight: 19.8,
   },
@@ -227,7 +245,6 @@ export const products: Product[] = [
     rating: 5.0,
     reviews: 156,
     tags: ["Diamond", "Gold", "Gift"],
-    karats: DEFAULT_KARATS,
     goldWeight: 6.8,
     totalWeight: 8.0,
   },
@@ -245,7 +262,6 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 73,
     tags: ["Diamond"],
-    karats: DEFAULT_KARATS,
     goldWeight: 3.9,
     totalWeight: 4.6,
   },
@@ -265,7 +281,6 @@ export const products: Product[] = [
     rating: 5.0,
     reviews: 64,
     tags: ["Emerald", "Gemstone", "Bridal"],
-    karats: DEFAULT_KARATS,
     goldWeight: 22.4,
     totalWeight: 26.1,
   },
@@ -283,7 +298,6 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 37,
     tags: ["Emerald", "Gemstone"],
-    karats: DEFAULT_KARATS,
     goldWeight: 5.6,
     totalWeight: 7.2,
   },

@@ -39,8 +39,9 @@ export interface Product {
   newArrival?: boolean;
   rating?: number;
   reviews?: number;
-  /** Available gold purities for this piece (e.g. ["18K","22K","24K"]).
-   *  Admin-controlled; empty/undefined → the product page shows N/A. */
+  /** Legacy per-product purity list. No longer surfaced anywhere — the
+   *  product page shows a fixed "21K + Arabic Gold" purity label for every
+   *  product. Kept optional on the type/DB only for backward compatibility. */
   karats?: string[];
   /** Net gold weight in grams (admin-controlled; undefined → N/A). */
   goldWeight?: number;

@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Save, ImagePlus, Loader2 } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { categories } from "@/data/jewelleryData";
+import { ProductImage } from "@/components/ProductImage";
 import type { Product } from "@/types";
 
 function Field({
@@ -29,6 +30,7 @@ export function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [imagePath, setImagePath] = useState(product?.image ?? "");
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,9 +47,9 @@ export function ProductForm({ product }: { product?: Product }) {
       image: fd.get("image") || product?.image,
       bestSeller: fd.get("bestSeller") === "on",
       newArrival: fd.get("newArrival") === "on",
-      // Admin-controlled gold specs. Sent as-is (comma string / raw value);
-      // the API normalizes them and stores null/[] when left blank → N/A.
-      karats: fd.get("karats") ?? "",
+      // Admin-controlled gold weights. Sent as-is (raw value); the API
+      // normalizes them and stores null when left blank → N/A. Purity is
+      // fixed storewide (21K + Arabic Gold) and isn't admin-configurable.
       goldWeight: fd.get("goldWeight") ?? "",
       totalWeight: fd.get("totalWeight") ?? "",
     };
@@ -142,25 +144,23 @@ export function ProductForm({ product }: { product?: Product }) {
               <input
                 name="image"
                 className={inputCls}
-                defaultValue={product?.image}
+                value={imagePath}
+                onChange={(e) => setImagePath(e.target.value)}
                 placeholder="/images/necklace.svg"
               />
             </Field>
           </div>
         </div>
 
-        {/* Gold specs — control the "Weight & Purity" box on the product page.
-            Leave any field blank to show N/A there. */}
+        {/* Gold weights — control the "Weight & Purity" box on the product
+            page. Leave a field blank to show N/A there. Purity itself is
+            fixed storewide (21K + Arabic Gold), not set per product. */}
         <div className="card space-y-4 p-5">
           <h3 className="text-sm font-bold text-ink">Weight &amp; Purity Details</h3>
-          <Field label="Available Karats (comma-separated, e.g.: 18K, 22K, 24K)">
-            <input
-              name="karats"
-              className={inputCls}
-              defaultValue={product?.karats?.join(", ")}
-              placeholder="18K, 22K, 24K"
-            />
-          </Field>
+          <p className="text-xs text-ink-muted">
+            Purity is fixed storewide as <strong>21K + Arabic Gold</strong> and
+            shown automatically — only the weights below are per product.
+          </p>
           <div className="grid grid-cols-2 gap-4">
             <Field label="Gold Weight (grams)">
               <input
@@ -191,14 +191,16 @@ export function ProductForm({ product }: { product?: Product }) {
       <div className="space-y-4">
         <div className="card p-5">
           <span className="mb-2 block text-xs font-bold text-ink-soft">
-            Product Image
+            Product Image Preview
           </span>
-          <div className="grid aspect-square place-items-center rounded-2xl border-2 border-dashed border-cream-300 bg-cream-100 text-ink-muted">
-            <div className="flex flex-col items-center gap-2">
-              <ImagePlus className="h-8 w-8" />
-              <span className="text-xs">Drag an image or click to upload</span>
-            </div>
-          </div>
+          <ProductImage
+            src={imagePath || undefined}
+            rounded="rounded-2xl"
+            label={imagePath ? "Preview" : "No image path set"}
+          />
+          <p className="mt-2 text-xs text-ink-faint">
+            Set the Image Path field to a file already in /public/images.
+          </p>
         </div>
 
         <div className="card space-y-3 p-5">

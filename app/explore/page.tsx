@@ -16,7 +16,7 @@ import { formatPrice } from "@/lib/currency";
 export const metadata: Metadata = {
   title: "Explore",
   description:
-    "Discover a world of the finest gemstones and gold jewellery — trending collections, gemstones, and upcoming exhibitions.",
+    "Discover a world of the finest gemstones and Arabic gold jewellery — trending collections, gemstones, and upcoming exhibitions.",
 };
 
 function SectionHeader({ title, href }: { title: string; href: string }) {
@@ -41,7 +41,7 @@ export default function ExplorePage() {
           Explore
         </h1>
         <p className="section-sub mt-1 max-w-xs">
-          Discover a world of the finest gemstones and gold jewellery
+          Discover a world of the finest gemstones and Arabic gold jewellery
         </p>
       </header>
 

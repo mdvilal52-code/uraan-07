@@ -142,9 +142,8 @@ export default async function ProductPage({
           </div>
         )}
 
-        {/* Gold weight & karat — admin-controlled, N/A when unset */}
+        {/* Gold weight — admin-controlled, N/A when unset. Purity is fixed. */}
         <ProductWeightInfo
-          karats={product.karats}
           goldWeight={product.goldWeight}
           totalWeight={product.totalWeight}
         />
