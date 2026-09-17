@@ -2,7 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    formats: ["image/avif", "image/webp"],
+    // AVIF intentionally omitted: next@14.2.35 is affected by a critical
+    // unauthenticated RCE in the AVIF decode path (libheif via sharp —
+    // GHSA-2xp9-vwfh-vxw4), only patched in next@15.5.24+/16.3.3+. Disabling
+    // AVIF optimization is the Next.js team's own interim mitigation until
+    // this app can take that (breaking, async cookies()/headers()) upgrade.
+    formats: ["image/webp"],
     remotePatterns: [],
     // Product art rarely changes — let optimized variants live in the CDN
     // cache for 31 days instead of the 60s default (fewer re-optimizations,

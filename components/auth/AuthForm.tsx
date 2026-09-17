@@ -7,6 +7,22 @@ import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
 import { LotusMark } from "@/components/icons/JewelIcons";
 import { useAuth } from "@/context/AuthContext";
 
+/** Resolve a post-auth `?next=` target, rejecting anything that isn't a
+ *  same-origin path (open-redirect guard — see call site for why a plain
+ *  string-prefix check isn't safe here). */
+function safeNextPath(raw: string | null): string {
+  if (!raw) return "/profile";
+  try {
+    const resolved = new URL(raw, window.location.origin);
+    if (resolved.origin === window.location.origin) {
+      return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+    }
+  } catch {
+    // fall through to the default below
+  }
+  return "/profile";
+}
+
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const { login, register } = useAuth();
@@ -34,11 +50,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       }
       // Honour a ?next=/path return target (e.g. guest tapped "Buy Now" and was
       // sent here). Read it at submit time so these statically-rendered pages
-      // don't need useSearchParams. Only allow same-site paths.
-      const next = new URLSearchParams(window.location.search).get("next");
-      const dest =
-        next && next.startsWith("/") && !next.startsWith("//") ? next : "/profile";
-      router.push(dest);
+      // don't need useSearchParams. Only allow same-site paths — resolved
+      // through URL (not a string prefix check) so a backslash-prefixed
+      // value like "/\evil.com" can't be parsed as a protocol-relative
+      // redirect to another origin (WHATWG URL treats "\" like "/" for
+      // http(s), so "/\evil.com" would otherwise resolve to //evil.com).
+      const rawNext = new URLSearchParams(window.location.search).get("next");
+      router.push(safeNextPath(rawNext));
     } catch {
       // login()/register() resolve to { error } rather than throwing, but guard
       // anyway so an unexpected exception can never leave the button spinning
