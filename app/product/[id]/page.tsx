@@ -88,87 +88,96 @@ export default async function ProductPage({
         </Link>
       </nav>
 
-      {/* Gallery with thumbnails */}
-      <ProductGallery images={galleryImages} name={product.name} />
-
-      {/* Info */}
-      <section className="px-5 pt-5" data-reveal>
-        <h1 className="font-sans text-2xl font-extrabold leading-tight text-ink">
-          {product.name}
-        </h1>
-
-        <div className="mt-2 flex items-center gap-2">
-          <span className="flex gap-0.5" aria-label={`${product.rating} out of 5`}>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={`h-4 w-4 ${
-                  i < Math.round(product.rating ?? 0)
-                    ? "text-gold-400"
-                    : "text-cream-300"
-                }`}
-                fill="currentColor"
-              />
-            ))}
-          </span>
-          <span className="text-xs text-ink-muted">
-            {product.rating?.toFixed(1)} ({product.reviews} review{product.reviews === 1 ? "" : "s"})
-          </span>
+      {/* Gallery + info as a two-column layout at lg:+ (gallery left, info
+          right; info stays in view while scrolling a long gallery). Below
+          lg: this wrapper has no display override (block by default), so
+          the two children stack exactly as before — no DOM reordering, no
+          change to mobile layout. */}
+      <div className="lg:flex lg:items-start lg:gap-6 lg:px-10 lg:pt-8">
+        <div className="lg:w-1/2">
+          {/* Gallery with thumbnails */}
+          <ProductGallery images={galleryImages} name={product.name} />
         </div>
 
-        <div className="mt-3 flex items-baseline gap-3">
-          <span className="price text-3xl">{formatPrice(product.price)}</span>
-          {product.compareAt && (
-            <span className="text-base text-ink-faint line-through">
-              {formatPrice(product.compareAt)}
-            </span>
-          )}
-        </div>
+          {/* Info */}
+          <section className="px-5 pt-5 lg:w-1/2 lg:sticky lg:top-24" data-reveal>
+            <h1 className="font-sans text-2xl font-extrabold leading-tight text-ink">
+              {product.name}
+            </h1>
 
-        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-          {product.description}
-        </p>
-
-        {product.tags && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {product.tags.map((t) => (
-              <span
-                key={t}
-                className="rounded-full bg-cream-200 px-3 py-1 text-xs font-semibold text-ink-soft"
-              >
-                {t}
+            <div className="mt-2 flex items-center gap-2">
+              <span className="flex gap-0.5" aria-label={`${product.rating} out of 5`}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      i < Math.round(product.rating ?? 0)
+                        ? "text-gold-400"
+                        : "text-cream-300"
+                    }`}
+                    fill="currentColor"
+                  />
+                ))}
               </span>
-            ))}
-          </div>
-        )}
-
-        {/* Karat + gold weight — admin-controlled, N/A/21K when unset.
-            Arabic Gold is always shown alongside and is fixed in the component. */}
-        <ProductWeightInfo
-          karats={product.karats}
-          goldWeight={product.goldWeight}
-          totalWeight={product.totalWeight}
-        />
-
-        {/* Buy + Add to Cart + Wishlist */}
-        <ProductActions productId={product.id} />
-
-        {/* Trust row */}
-        <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-cream-50 p-3 shadow-card-soft">
-          {[
-            { icon: RefreshCw, label: "Easy Returns" },
-            { icon: Truck, label: "Secure Shipping" },
-            { icon: ShieldCheck, label: "Certificate of Authenticity" },
-          ].map((f) => (
-            <div key={f.label} className="flex flex-col items-center gap-1 text-center">
-              <f.icon className="h-5 w-5 text-gold-500" />
-              <span className="text-[0.66rem] font-semibold text-ink-soft">
-                {f.label}
+              <span className="text-xs text-ink-muted">
+                {product.rating?.toFixed(1)} ({product.reviews} review{product.reviews === 1 ? "" : "s"})
               </span>
             </div>
-          ))}
-        </div>
-      </section>
+
+            <div className="mt-3 flex items-baseline gap-3">
+              <span className="price text-3xl">{formatPrice(product.price)}</span>
+              {product.compareAt && (
+                <span className="text-base text-ink-faint line-through">
+                  {formatPrice(product.compareAt)}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+              {product.description}
+            </p>
+
+            {product.tags && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {product.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full bg-cream-200 px-3 py-1 text-xs font-semibold text-ink-soft"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Karat + gold weight — admin-controlled, N/A/21K when unset.
+                Arabic Gold is always shown alongside and is fixed in the component. */}
+            <ProductWeightInfo
+              karats={product.karats}
+              goldWeight={product.goldWeight}
+              totalWeight={product.totalWeight}
+            />
+
+            {/* Buy + Add to Cart + Wishlist */}
+            <ProductActions productId={product.id} />
+
+            {/* Trust row */}
+            <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-cream-50 p-3 shadow-card-soft">
+              {[
+                { icon: RefreshCw, label: "Easy Returns" },
+                { icon: Truck, label: "Secure Shipping" },
+                { icon: ShieldCheck, label: "Certificate of Authenticity" },
+              ].map((f) => (
+                <div key={f.label} className="flex flex-col items-center gap-1 text-center">
+                  <f.icon className="h-5 w-5 text-gold-500" />
+                  <span className="text-[0.66rem] font-semibold text-ink-soft">
+                    {f.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+      </div>
 
       {/* Related */}
       {related.length > 0 && (
