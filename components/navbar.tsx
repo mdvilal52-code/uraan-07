@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Menu, Search, Heart, ShoppingBag, User } from "lucide-react";
 import { LotusMark } from "./icons/JewelIcons";
 import { MobileMenu } from "./MobileMenu";
@@ -15,6 +16,8 @@ export function Navbar() {
   const [cartOpen, setCartOpen] = useState(false);
   const { count } = useCart();
   const { count: wishCount } = useWishlist();
+  const pathname = usePathname();
+  const onSearchPage = pathname === "/search";
 
   return (
     <>
@@ -61,15 +64,20 @@ export function Navbar() {
 
           {/* Center: desktop search entry point — opens the full /search
               experience (which already autofocuses its own live-search
-              input) rather than duplicating its debounced-fetch logic here. */}
-          <Link
-            href="/search"
-            aria-label="Search"
-            className="hidden max-w-sm flex-1 items-center gap-2 whitespace-nowrap rounded-full border border-cream-300 bg-cream-50 px-4 py-2.5 text-sm text-ink-faint transition hover:border-gold-400 xl:flex"
-          >
-            <Search className="h-4 w-4 shrink-0" />
-            Search jewellery &amp; gemstones…
-          </Link>
+              input) rather than duplicating its debounced-fetch logic here.
+              Hidden on /search itself: that page has the same search bar
+              built in as its real, functional input, so showing this
+              decorative link there too would just be a duplicate. */}
+          {!onSearchPage && (
+            <Link
+              href="/search"
+              aria-label="Search"
+              className="hidden max-w-sm flex-1 items-center gap-2 whitespace-nowrap rounded-full border border-cream-300 bg-cream-50 px-4 py-2.5 text-sm text-ink-faint transition hover:border-gold-400 xl:flex"
+            >
+              <Search className="h-4 w-4 shrink-0" />
+              Search jewellery &amp; gemstones…
+            </Link>
+          )}
 
           {/* Right: actions */}
           <nav className="flex items-center gap-1.5 lg:gap-2" aria-label="Quick actions">

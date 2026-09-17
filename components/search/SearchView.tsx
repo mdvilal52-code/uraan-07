@@ -102,7 +102,7 @@ export function SearchView() {
               <p className="mb-3 font-sans text-lg font-bold text-ink">
                 Best Sellers
               </p>
-              <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-3 lg:gap-6">
+              <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4 lg:gap-6">
                 {featured.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
