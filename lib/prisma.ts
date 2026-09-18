@@ -233,6 +233,11 @@ const SCHEMA_STATEMENTS = [
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email")`,
+  // Heal older User tables that predate TOTP two-factor auth.
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorSecret" TEXT`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorEnabled" BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorBackupCodes" TEXT[] DEFAULT ARRAY[]::TEXT[]`,
+  `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "twoFactorLastStep" INTEGER`,
 
   `CREATE TABLE IF NOT EXISTS "Session" (
     "token" TEXT PRIMARY KEY,
@@ -245,6 +250,21 @@ const SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS "Session_userId_idx" ON "Session"("userId")`,
   `DO $$ BEGIN
     ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey"
+      FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  EXCEPTION WHEN OTHERS THEN NULL; END $$`,
+
+  // A short-lived challenge issued after a correct password when the account
+  // has 2FA enabled — proves "password was correct, awaiting a code," never
+  // grants access on its own. Kept separate from Session so a logged/leaked
+  // pending token can never be replayed as a real session token.
+  `CREATE TABLE IF NOT EXISTS "TwoFactorPending" (
+    "token" TEXT PRIMARY KEY,
+    "userId" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS "TwoFactorPending_userId_idx" ON "TwoFactorPending"("userId")`,
+  `DO $$ BEGIN
+    ALTER TABLE "TwoFactorPending" ADD CONSTRAINT "TwoFactorPending_userId_fkey"
       FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
   EXCEPTION WHEN OTHERS THEN NULL; END $$`,
 

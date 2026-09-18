@@ -2,6 +2,7 @@ import { scryptSync, randomBytes, randomUUID, timingSafeEqual } from "node:crypt
 import { prisma, ensureSchema, isBuildPhase, databaseReachable } from "@/lib/prisma";
 import { products as catalogProducts } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
+import { generateSecret, generateTotpUri, verifyTotp } from "@/lib/totp";
 import type {
   CartLine,
   CategorySlug,
@@ -736,6 +737,7 @@ interface AuthUser {
   name: string;
   email: string;
   role: string;
+  twoFactorEnabled: boolean;
 }
 
 function hashPassword(password: string, salt: string): string {
@@ -845,6 +847,15 @@ export function ensureAdminSeeded(): Promise<void> {
   return adminSeededCheck;
 }
 
+/** Constant-time password check, shared by login and any other flow that
+ *  needs to re-verify the current password (e.g. disabling 2FA). */
+function verifyPassword(user: { salt: string; hash: string }, password: string): boolean {
+  const candidate = Buffer.from(hashPassword(password, user.salt), "hex");
+  const stored = Buffer.from(user.hash, "hex");
+  if (candidate.length !== stored.length) return false;
+  return timingSafeEqual(candidate, stored);
+}
+
 export async function verifyUser(
   email: string,
   password: string,
@@ -855,10 +866,7 @@ export async function verifyUser(
     where: { email: (email ?? "").trim().toLowerCase() },
   });
   if (!user) return null;
-  const candidate = Buffer.from(hashPassword(password, user.salt), "hex");
-  const stored = Buffer.from(user.hash, "hex");
-  if (candidate.length !== stored.length) return null;
-  return timingSafeEqual(candidate, stored) ? user : null;
+  return verifyPassword(user, password) ? user : null;
 }
 
 export async function updateUserName(
@@ -935,7 +943,177 @@ export function publicUser(user: AuthUser) {
     name: user.name,
     email: user.email,
     role: user.role as "customer" | "admin",
+    twoFactorEnabled: user.twoFactorEnabled,
   };
+}
+
+/* ---------------- Two-factor auth (TOTP) ---------------- */
+
+/** Backup code shape: 10 hex chars as XXXXX-XXXXX — deliberately never
+ *  matches /^\d{6}$/, so a login code can be told apart from a backup code
+ *  by shape alone, with no extra flag from the client. */
+function generateBackupCode(): string {
+  const hex = randomBytes(5).toString("hex").toUpperCase();
+  return `${hex.slice(0, 5)}-${hex.slice(5)}`;
+}
+
+/** Each stored code is "<saltHex>:<scryptHex>" — its own random salt, not
+ *  the user's password salt (hashPassword takes the salt as a parameter). */
+function hashBackupCode(code: string): string {
+  const salt = randomBytes(16).toString("hex");
+  return `${salt}:${hashPassword(code, salt)}`;
+}
+
+function verifyBackupCode(stored: string, candidate: string): boolean {
+  const [salt, hash] = stored.split(":");
+  if (!salt || !hash) return false;
+  const candidateBuf = Buffer.from(hashPassword(candidate, salt), "hex");
+  const storedBuf = Buffer.from(hash, "hex");
+  if (candidateBuf.length !== storedBuf.length) return false;
+  return timingSafeEqual(candidateBuf, storedBuf);
+}
+
+/** Begin (or restart) 2FA setup: stores a fresh secret but leaves
+ *  twoFactorEnabled false, so a half-finished setup never gates login.
+ *  Refuses to run while 2FA is already enabled — disable first to
+ *  reconfigure, so a hijacked admin session can't silently swap the
+ *  secret out from under the legitimate owner. */
+export async function initiateTwoFactorSetup(
+  userId: string,
+  email: string,
+): Promise<{ ok: true; secret: string; uri: string } | { ok: false; error: string }> {
+  await ensureSchema();
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return { ok: false, error: "Account not found" };
+  if (user.twoFactorEnabled) {
+    return {
+      ok: false,
+      error: "Two-factor authentication is already enabled — disable it first to reconfigure.",
+    };
+  }
+  const secret = generateSecret();
+  await prisma.user.update({ where: { id: userId }, data: { twoFactorSecret: secret } });
+  return { ok: true, secret, uri: generateTotpUri(secret, email, "Ariana Admin") };
+}
+
+/** Confirms setup with a live code from the authenticator app, flips
+ *  twoFactorEnabled on, and mints one-time backup codes — returned in the
+ *  clear exactly once; only their hashes are ever persisted. */
+export async function confirmTwoFactorSetup(
+  userId: string,
+  code: string,
+): Promise<{ ok: true; backupCodes: string[] } | { ok: false; error: string }> {
+  await ensureSchema();
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.twoFactorSecret) {
+    return { ok: false, error: "Start setup before confirming a code" };
+  }
+  const step = verifyTotp(user.twoFactorSecret, code);
+  if (step === null) {
+    return { ok: false, error: "Incorrect code — please try again" };
+  }
+  const backupCodes = Array.from({ length: 8 }, () => generateBackupCode());
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      twoFactorEnabled: true,
+      twoFactorLastStep: step,
+      twoFactorBackupCodes: backupCodes.map(hashBackupCode),
+    },
+  });
+  return { ok: true, backupCodes };
+}
+
+/** Disabling 2FA re-verifies the current password (step-up auth — a bare
+ *  hijacked session cookie isn't enough) and, as defense in depth, revokes
+ *  every *other* session for the account so a stale/stolen cookie can't
+ *  outlive a deliberate "turn 2FA off" response. Never signs out the
+ *  caller's own session. */
+export async function disableTwoFactor(
+  userId: string,
+  password: string,
+  currentToken?: string | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  await ensureSchema();
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return { ok: false, error: "Account not found" };
+  if (!verifyPassword(user, password)) {
+    return { ok: false, error: "Incorrect password" };
+  }
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      twoFactorSecret: null,
+      twoFactorEnabled: false,
+      twoFactorBackupCodes: [],
+      twoFactorLastStep: null,
+    },
+  });
+  await prisma.session
+    .deleteMany({
+      where: { userId, ...(currentToken ? { token: { not: currentToken } } : {}) },
+    })
+    .catch((err) => console.error("[db] session revoke on 2FA disable failed:", err));
+  return { ok: true };
+}
+
+const TWOFACTOR_PENDING_MAX_AGE_MS = 1000 * 60 * 5; // 5 minutes
+
+/** Issued once a login's password check succeeds on a 2FA-enabled account.
+ *  Proves nothing but "password was correct" — a real Session is only
+ *  created once verifyTwoFactorLogin succeeds. Kept in its own table (not
+ *  extra Session columns) so this short-lived, low-trust token can never
+ *  be confused with or replayed as a real session token. */
+export async function createTwoFactorPending(userId: string): Promise<string> {
+  await ensureSchema();
+  await prisma.twoFactorPending.deleteMany({ where: { userId } });
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + TWOFACTOR_PENDING_MAX_AGE_MS);
+  await prisma.twoFactorPending.create({ data: { token, userId, expiresAt } });
+  return token;
+}
+
+/** Completes login for a 2FA-enabled account: accepts either a live TOTP
+ *  code or a one-time backup code (told apart by shape), enforces the
+ *  replay guard on TOTP, and consumes a backup code on use. Never reveals
+ *  which part (expired challenge vs. wrong code) failed. */
+export async function verifyTwoFactorLogin(
+  pendingToken: string | undefined | null,
+  code: string,
+): Promise<{ ok: true; user: AuthUser } | { ok: false; error: string }> {
+  if (!pendingToken) return { ok: false, error: "Session expired — please sign in again" };
+  await ensureSchema();
+  const pending = await prisma.twoFactorPending.findUnique({ where: { token: pendingToken } });
+  if (!pending || pending.expiresAt.getTime() < Date.now()) {
+    await prisma.twoFactorPending.deleteMany({ where: { token: pendingToken } }).catch(() => {});
+    return { ok: false, error: "Session expired — please sign in again" };
+  }
+  const user = await prisma.user.findUnique({ where: { id: pending.userId } });
+  if (!user?.twoFactorEnabled || !user.twoFactorSecret) {
+    return { ok: false, error: "Two-factor authentication is not enabled for this account" };
+  }
+
+  const trimmed = (code ?? "").trim();
+  if (/^\d{6}$/.test(trimmed)) {
+    const step = verifyTotp(user.twoFactorSecret, trimmed);
+    if (step === null || (user.twoFactorLastStep !== null && step <= user.twoFactorLastStep)) {
+      return { ok: false, error: "Incorrect code — please try again" };
+    }
+    await prisma.user.update({ where: { id: user.id }, data: { twoFactorLastStep: step } });
+  } else {
+    const matchIndex = user.twoFactorBackupCodes.findIndex((stored) =>
+      verifyBackupCode(stored, trimmed.toUpperCase()),
+    );
+    if (matchIndex === -1) {
+      return { ok: false, error: "Incorrect code — please try again" };
+    }
+    const remaining = user.twoFactorBackupCodes.slice();
+    remaining.splice(matchIndex, 1);
+    await prisma.user.update({ where: { id: user.id }, data: { twoFactorBackupCodes: remaining } });
+  }
+
+  await prisma.twoFactorPending.deleteMany({ where: { token: pendingToken } }).catch(() => {});
+  return { ok: true, user };
 }
 
 /* ---------------- Admin: user management ---------------- */
