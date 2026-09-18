@@ -8,8 +8,8 @@ export function Newsletter() {
   const [done, setDone] = useState(false);
 
   return (
-    <section className="px-5 py-5">
-      <div className="overflow-hidden rounded-3xl bg-forest-gradient p-6 text-center text-cream-50">
+    <section className="px-5 py-5 lg:px-10 lg:py-10">
+      <div className="overflow-hidden rounded-3xl bg-forest-gradient p-6 text-center text-cream-50 lg:mx-auto lg:max-w-2xl lg:p-10">
         <h2 className="font-sans text-xl font-bold text-cream-50">
           Join Our Newsletter
         </h2>

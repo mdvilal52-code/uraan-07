@@ -263,9 +263,35 @@ function weightOrNull(v: unknown): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/** Admin form has no client-side cap of its own — reject (rather than
+ *  silently truncate) product text fields beyond a sane length. */
+const PRODUCT_FIELD_LIMITS = {
+  name: 200,
+  latin: 200,
+  description: 2000,
+  image: 500,
+  category: 50,
+} as const;
+
+function validateProductFields(input: Partial<Product>): string | null {
+  for (const field of Object.keys(PRODUCT_FIELD_LIMITS) as Array<
+    keyof typeof PRODUCT_FIELD_LIMITS
+  >) {
+    const value = input[field];
+    const max = PRODUCT_FIELD_LIMITS[field];
+    if (typeof value === "string" && value.length > max) {
+      return `${field} must be ${max} characters or fewer`;
+    }
+  }
+  return null;
+}
+
 export async function createProduct(
   input: Partial<Product>,
-): Promise<Product> {
+): Promise<{ ok: true; product: Product } | { ok: false; error: string }> {
+  const validationError = validateProductFields(input);
+  if (validationError) return { ok: false, error: validationError };
+
   await ensureSchema();
   const row = await prisma.product.create({
     data: {
@@ -288,13 +314,19 @@ export async function createProduct(
       totalWeight: weightOrNull(input.totalWeight),
     },
   });
-  return toProduct(row);
+  return { ok: true, product: toProduct(row) };
 }
 
 export async function updateProduct(
   id: string,
   patch: Partial<Product>,
-): Promise<Product | undefined> {
+): Promise<
+  | { ok: true; product: Product }
+  | { ok: false; error: string; notFound?: boolean }
+> {
+  const validationError = validateProductFields(patch);
+  if (validationError) return { ok: false, error: validationError };
+
   const data: Record<string, unknown> = {};
   for (const f of [
     "name",
@@ -323,9 +355,9 @@ export async function updateProduct(
   try {
     await ensureSchema();
     const row = await prisma.product.update({ where: { id }, data });
-    return toProduct(row);
+    return { ok: true, product: toProduct(row) };
   } catch {
-    return undefined;
+    return { ok: false, error: "Not found", notFound: true };
   }
 }
 

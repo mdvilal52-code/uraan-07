@@ -6,7 +6,7 @@ import { formatPrice } from "@/lib/currency";
 
 export function FeaturedProduct() {
   return (
-    <section className="px-5 py-4">
+    <section className="px-5 py-4 lg:px-10">
       <div
         className="relative overflow-hidden rounded-3xl bg-forest-gradient p-5 text-cream-50 shadow-card"
         data-reveal

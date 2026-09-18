@@ -81,7 +81,7 @@ export function ShopContent() {
   return (
     <div>
       {/* Filter pills */}
-      <div className="sticky top-16 z-20 bg-cream-100/95 px-5 py-3 backdrop-blur-md">
+      <div className="sticky top-16 z-20 bg-cream-100/95 px-5 py-3 backdrop-blur-md lg:top-20 lg:px-10">
         <div className="flex items-center gap-2">
           <div className="no-scrollbar flex flex-1 gap-2 overflow-x-auto">
             {pills.map((p) => (
@@ -123,8 +123,8 @@ export function ShopContent() {
 
       {/* Category sections */}
       {products && (
-        <div className="space-y-7 px-5 pb-6 pt-2">
-          {groups.map((g) => (
+        <div className="space-y-7 px-5 pb-6 pt-2 lg:px-10">
+          {groups.map((g, groupIndex) => (
             <section key={g.slug}>
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="section-title">{g.title}</h2>
@@ -132,9 +132,13 @@ export function ShopContent() {
                   View All
                 </Link>
               </div>
-              <div className="grid grid-cols-2 gap-3.5">
-                {g.products.map((p) => (
-                  <ProductCard key={p.id} product={p} />
+              <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-3 lg:gap-6">
+                {g.products.map((p, i) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    priority={groupIndex === 0 && i < 4}
+                  />
                 ))}
               </div>
             </section>

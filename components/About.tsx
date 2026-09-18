@@ -8,8 +8,8 @@ const points = [
 
 export function About() {
   return (
-    <section className="px-5 py-4">
-      <div className="grid grid-cols-3 gap-2.5" data-reveal-stagger>
+    <section className="px-5 py-4 lg:px-10 lg:py-8">
+      <div className="grid grid-cols-3 gap-2.5 lg:gap-6" data-reveal-stagger>
         {points.map((p) => (
           <div
             key={p.title}

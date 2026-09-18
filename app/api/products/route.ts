@@ -25,10 +25,13 @@ export async function POST(req: NextRequest) {
   if (!body.name) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
-  const product = await createProduct(body);
+  const result = await createProduct(body);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
   // Product pages + home are ISR-cached — refresh them so the new product
   // is visible immediately rather than after the next revalidate window.
-  revalidatePath(`/product/${product.id}`);
+  revalidatePath(`/product/${result.product.id}`);
   revalidatePath("/");
-  return NextResponse.json({ product }, { status: 201 });
+  return NextResponse.json({ product: result.product }, { status: 201 });
 }

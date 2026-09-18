@@ -30,11 +30,15 @@ export async function PUT(
   if (gate instanceof NextResponse) return gate;
 
   const body = await req.json().catch(() => ({}));
-  const product = await updateProduct(params.id, body);
-  if (!product)
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const result = await updateProduct(params.id, body);
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: result.error },
+      { status: result.notFound ? 404 : 400 },
+    );
+  }
   revalidateProduct(params.id);
-  return NextResponse.json({ product });
+  return NextResponse.json({ product: result.product });
 }
 
 export async function DELETE(

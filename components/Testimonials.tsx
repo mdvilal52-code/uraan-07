@@ -7,13 +7,13 @@ export function Testimonials({
   title?: string;
 }) {
   return (
-    <section className="py-4">
-      <h2 className="section-title mb-3 px-5">{title}</h2>
-      <div className="no-scrollbar flex gap-3 overflow-x-auto px-5 pb-1" data-reveal>
+    <section className="py-4 lg:py-8">
+      <h2 className="section-title mb-3 px-5 lg:px-10">{title}</h2>
+      <div className="no-scrollbar flex gap-3 overflow-x-auto px-5 pb-1 lg:px-10 lg:gap-6" data-reveal>
         {testimonials.map((t) => (
           <figure
             key={t.id}
-            className="card w-[16rem] shrink-0 p-4"
+            className="card w-[16rem] shrink-0 p-4 lg:w-[20rem] lg:p-6"
           >
             <Quote className="h-6 w-6 text-gold-300" fill="currentColor" fillOpacity={0.2} />
             <blockquote className="mt-2 font-sans text-sm leading-relaxed text-ink-soft">

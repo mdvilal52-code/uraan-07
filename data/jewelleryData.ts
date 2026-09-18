@@ -89,6 +89,25 @@ export const categoryNameBySlug: Record<string, string> = {
   gems: "Gemstones",
 };
 
+/** Primary site nav — shared by the mobile drawer (MobileMenu) and the
+ *  desktop header nav, so the two can never drift apart. */
+export const primaryNavLinks = [
+  { label: "Home", href: "/" },
+  { label: "Explore", href: "/explore" },
+  { label: "Collections", href: "/collections" },
+  { label: "Shop", href: "/shop" },
+  { label: "About Us", href: "/about" },
+  { label: "Contact Us", href: "/contact" },
+];
+
+/** Account-area links — shared by the mobile drawer and the desktop header. */
+export const accountNavLinks = [
+  { label: "Profile", href: "/profile" },
+  { label: "Wishlist", href: "/wishlist" },
+  { label: "Cart", href: "/cart" },
+  { label: "Login", href: "/login" },
+];
+
 export const products: Product[] = [
   // Necklaces
   {

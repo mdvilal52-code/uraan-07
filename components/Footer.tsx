@@ -26,7 +26,7 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="bg-forest-700 px-5 pb-8 pt-10 text-cream-100">
+    <footer className="bg-forest-700 px-5 pb-8 pt-10 text-cream-100 lg:px-10 lg:pb-12 lg:pt-14">
       <div className="flex items-center gap-2">
         <LotusMark className="h-9 w-9" />
         <span className="flex flex-col leading-none">

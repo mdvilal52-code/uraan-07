@@ -42,7 +42,7 @@ export function SearchView() {
   }, [trimmed]);
 
   return (
-    <div className="px-5 pb-6">
+    <div className="px-5 pb-6 lg:px-10">
       <div className="flex items-center gap-2 rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3 shadow-card-soft">
         <SearchIcon className="h-5 w-5 text-ink-muted" />
         <input
@@ -102,7 +102,7 @@ export function SearchView() {
               <p className="mb-3 font-sans text-lg font-bold text-ink">
                 Best Sellers
               </p>
-              <div className="grid grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4 lg:gap-6">
                 {featured.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
@@ -120,7 +120,7 @@ export function SearchView() {
               : `${results.length} result${results.length === 1 ? "" : "s"} for "${trimmed}"`}
           </p>
           {!loading && results.length > 0 && (
-            <div className="grid grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-3 lg:gap-6">
               {results.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

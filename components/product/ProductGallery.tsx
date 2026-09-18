@@ -22,7 +22,7 @@ export function ProductGallery({
           alt={name}
           fill
           priority
-          sizes="(max-width: 480px) 100vw, 440px"
+          sizes="(max-width: 1023px) 100vw, 630px"
           className="object-cover transition-opacity duration-300"
         />
       </div>

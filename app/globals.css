@@ -36,9 +36,12 @@
 }
 
 @layer components {
-  /* The mobile-first app canvas, centered on larger screens */
+  /* Mobile-first app canvas (unchanged below 1024px). At lg:+ the shell
+     widens into a real desktop container instead of staying a centered
+     phone-width column — every desktop-only rule elsewhere in the app
+     builds on this wider canvas. */
   .app-shell {
-    @apply relative mx-auto w-full max-w-[var(--page-max)] bg-cream-100 min-h-screen shadow-[0_0_60px_-30px_rgba(36,27,18,0.5)];
+    @apply relative mx-auto w-full max-w-[var(--page-max)] lg:max-w-[1440px] bg-cream-100 min-h-screen shadow-[0_0_60px_-30px_rgba(36,27,18,0.5)];
   }
 
   .section-title {

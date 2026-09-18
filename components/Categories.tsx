@@ -5,27 +5,29 @@ import { categories } from "@/data/jewelleryData";
 
 export function Categories({ title }: { title?: string }) {
   return (
-    <section className="px-5 py-4">
+    <section className="px-5 py-4 lg:px-10 lg:py-8">
       {title && <h2 className="section-title mb-4">{title}</h2>}
       {/* Horizontal scroll keeps every circle at the same size no matter how
-          many categories exist, so nothing overflows on narrow phones. */}
+          many categories exist, so nothing overflows on narrow phones. At
+          lg:+ there's enough width to lay them out as a centered wrapping
+          row instead of a sideways-scrolling strip. */}
       <div
-        className="no-scrollbar flex gap-3 overflow-x-auto pb-1"
+        className="no-scrollbar flex gap-3 overflow-x-auto pb-1 lg:flex-wrap lg:justify-center lg:gap-8 lg:overflow-visible"
         data-reveal-stagger
       >
         {categories.map((c) => (
           <Link
             key={c.slug}
             href={`/shop?category=${c.slug}`}
-            className="press flex w-[4.2rem] shrink-0 flex-col items-center gap-2"
+            className="press flex w-[4.2rem] shrink-0 flex-col items-center gap-2 lg:w-24"
           >
-            <span className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-cream-50 text-gold-500 shadow-card-soft ring-inset-gold">
+            <span className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-cream-50 text-gold-500 shadow-card-soft ring-inset-gold lg:h-20 lg:w-20">
               {c.image ? (
                 <Image
                   src={c.image}
                   alt={c.name}
                   fill
-                  sizes="64px"
+                  sizes="(max-width: 1023px) 64px, 80px"
                   className="object-cover"
                 />
               ) : (
