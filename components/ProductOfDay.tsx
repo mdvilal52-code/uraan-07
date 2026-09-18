@@ -9,15 +9,15 @@ export function ProductOfDay() {
     <section className="px-5 pb-2 pt-4 lg:px-10">
       <div className="card flex items-stretch gap-3 p-3" data-reveal>
         <div className="flex flex-1 flex-col py-1 ps-1">
-          <span className="text-[0.72rem] font-bold uppercase tracking-wider text-gold-600">
+          <span className="text-[0.8rem] font-bold uppercase tracking-wider text-gold-600">
             Jewellery of the Day
           </span>
-          <h2 className="mt-0.5 font-sans text-[1.15rem] font-bold leading-snug text-ink">
+          <h2 className="mt-1 font-sans text-[1.3rem] font-bold leading-snug text-ink">
             {productOfDay.name}
           </h2>
-          <span className="price mt-1 text-lg">{formatPrice(productOfDay.price)}</span>
-          <p className="mt-1 text-[0.82rem] leading-relaxed text-ink-muted">
-            Beauty in every sparkle.
+          <span className="price mt-1 text-xl">{formatPrice(productOfDay.price)}</span>
+          <p className="mt-1.5 line-clamp-2 text-[0.92rem] leading-relaxed text-ink-muted">
+            {productOfDay.description}
           </p>
           <Link
             href={`/product/${productOfDay.id}`}
