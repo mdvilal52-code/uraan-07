@@ -14,12 +14,17 @@ export interface AuthUser {
   name: string;
   email: string;
   role: "customer" | "admin";
+  twoFactorEnabled: boolean;
 }
 
 interface AuthValue {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ error?: string }>;
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ error?: string; requires2FA?: boolean }>;
+  verifyTwoFactor: (code: string) => Promise<{ error?: string }>;
   register: (
     name: string,
     email: string,
@@ -76,6 +81,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return { error: data.error ?? "Unable to sign in" };
+      // Password was correct but the account has 2FA enabled — no session
+      // exists yet, so there's no `user` to set. The caller switches to a
+      // code-entry step and finishes via verifyTwoFactor.
+      if (data.requires2FA) return { requires2FA: true };
+      if (id === requestIdRef.current) {
+        setUser(data.user);
+        setLoading(false);
+      }
+      return {};
+    } catch {
+      return { error: "Unable to reach the server — please check your connection." };
+    }
+  }, []);
+
+  const verifyTwoFactor = useCallback(async (code: string) => {
+    const id = ++requestIdRef.current;
+    try {
+      const res = await fetch("/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: data.error ?? "Incorrect code" };
       if (id === requestIdRef.current) {
         setUser(data.user);
         setLoading(false);
@@ -147,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, register, logout, refresh, updateProfile }}
+      value={{ user, loading, login, verifyTwoFactor, register, logout, refresh, updateProfile }}
     >
       {children}
     </AuthContext.Provider>
