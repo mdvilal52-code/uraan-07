@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyUser, createSession, publicUser } from "@/lib/db";
-import { SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from "@/lib/session";
+import { verifyUser, createSession, createTwoFactorPending, publicUser } from "@/lib/db";
+import {
+  SESSION_COOKIE,
+  SESSION_COOKIE_OPTIONS,
+  TWOFACTOR_PENDING_COOKIE,
+  TWOFACTOR_PENDING_COOKIE_OPTIONS,
+} from "@/lib/session";
 import { checkRateLimit, clearRateLimit, clientIp } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +53,17 @@ export async function POST(req: NextRequest) {
     }
     // Successful auth resets the counter for this key.
     clearRateLimit(key);
+
+    if (user.twoFactorEnabled) {
+      // Password was correct — this isn't a failure, so 200, not 401. No
+      // real Session is created yet; the pending token proves nothing but
+      // "password was correct" until the code is verified too.
+      const pendingToken = await createTwoFactorPending(user.id);
+      const res = NextResponse.json({ requires2FA: true });
+      res.cookies.set(TWOFACTOR_PENDING_COOKIE, pendingToken, TWOFACTOR_PENDING_COOKIE_OPTIONS);
+      return res;
+    }
+
     const token = await createSession(user.id);
     const res = NextResponse.json({ user: publicUser(user) });
     res.cookies.set(SESSION_COOKIE, token, SESSION_COOKIE_OPTIONS);
