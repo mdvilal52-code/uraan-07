@@ -23,10 +23,20 @@ function safeNextPath(raw: string | null): string {
   return "/profile";
 }
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({
+  mode,
+  variant = "customer",
+}: {
+  mode: "login" | "register";
+  /** "admin" drops the customer shopping chrome (guest browsing, account
+   *  creation) for the admin-area login flow — same underlying auth logic,
+   *  just a framing that doesn't imply this is a storefront account. */
+  variant?: "customer" | "admin";
+}) {
   const router = useRouter();
   const { login, register } = useAuth();
   const isLogin = mode === "login";
+  const isAdmin = variant === "admin";
 
   const [show, setShow] = useState(false);
   const [name, setName] = useState("");
@@ -68,16 +78,25 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   }
 
   return (
-    <div className="px-5 py-6">
+    <div
+      className={
+        isAdmin
+          ? "grid min-h-screen place-items-center bg-cream-200 px-5"
+          : "px-5 py-6"
+      }
+    >
+      <div className={isAdmin ? "card w-full max-w-sm p-8" : undefined}>
       <div className="mb-6 flex flex-col items-center text-center">
         <LotusMark className="h-14 w-14" />
         <h1 className="mt-3 font-sans text-2xl font-extrabold text-ink">
-          {isLogin ? "Welcome Back" : "Create a New Account"}
+          {isAdmin ? "Admin Login" : isLogin ? "Welcome Back" : "Create a New Account"}
         </h1>
         <p className="mt-1 text-sm text-ink-muted">
-          {isLogin
-            ? "Sign in to continue shopping."
-            : "Join the Ariana family and enjoy exclusive benefits."}
+          {isAdmin
+            ? "Sign in to access the admin dashboard."
+            : isLogin
+              ? "Sign in to continue shopping."
+              : "Join the Ariana family and enjoy exclusive benefits."}
         </p>
       </div>
 
@@ -166,25 +185,30 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </button>
       </form>
 
-      <div className="my-5 flex items-center gap-3">
-        <span className="hr-gold flex-1" />
-        <span className="text-xs text-ink-muted">or</span>
-        <span className="hr-gold flex-1" />
+      {!isAdmin && (
+        <>
+          <div className="my-5 flex items-center gap-3">
+            <span className="hr-gold flex-1" />
+            <span className="text-xs text-ink-muted">or</span>
+            <span className="hr-gold flex-1" />
+          </div>
+
+          <Link href="/shop" className="btn-outline w-full">
+            Continue as Guest
+          </Link>
+
+          <p className="mt-6 text-center text-sm text-ink-muted">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <Link
+              href={isLogin ? "/register" : "/login"}
+              className="font-bold text-clay-500"
+            >
+              {isLogin ? "Create one" : "Login"}
+            </Link>
+          </p>
+        </>
+      )}
       </div>
-
-      <Link href="/shop" className="btn-outline w-full">
-        Continue as Guest
-      </Link>
-
-      <p className="mt-6 text-center text-sm text-ink-muted">
-        {isLogin ? "Don't have an account? " : "Already have an account? "}
-        <Link
-          href={isLogin ? "/register" : "/login"}
-          className="font-bold text-clay-500"
-        >
-          {isLogin ? "Create one" : "Login"}
-        </Link>
-      </p>
     </div>
   );
 }
