@@ -19,6 +19,7 @@ export type SessionUser = {
   name: string;
   email: string;
   role: "customer" | "admin";
+  twoFactorEnabled: boolean;
 };
 
 /** Resolve the signed-in user from the session cookie, or null. */
