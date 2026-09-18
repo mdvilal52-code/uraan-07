@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addNewsletter } from "@/lib/db";
+import { addNewsletter, listNewsletterSignups } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,14 @@ export const dynamic = "force-dynamic";
 // Unauthenticated signup — cap per IP so it can't be used to mass-subscribe
 // arbitrary addresses or flood the Newsletter table.
 const NEWSLETTER_LIMIT = { limit: 8, windowMs: 60 * 60 * 1000, lockoutMs: 30 * 60 * 1000 };
+
+// Listing subscriber emails is admin-only.
+export async function GET() {
+  const gate = await requireAdmin();
+  if (gate instanceof NextResponse) return gate;
+
+  return NextResponse.json({ signups: await listNewsletterSignups() });
+}
 
 export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`newsletter:${clientIp(req)}`, NEWSLETTER_LIMIT);

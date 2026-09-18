@@ -389,6 +389,9 @@ export async function priceCart(lines: CartLine[]): Promise<{
 }> {
   const ids = lines.map((l) => l.productId);
   const byId = new Map<string, Product>();
+  // Admin-configurable (Settings → Shipping); falls back to the historical
+  // $500 default on any DB error so pricing never breaks.
+  let freeShippingThreshold = DEFAULT_SETTINGS.freeShippingThreshold;
   try {
     await ensureSchema();
     await ensureProductsSeededMaybe();
@@ -396,6 +399,8 @@ export async function priceCart(lines: CartLine[]): Promise<{
       const rows = await prisma.product.findMany({ where: { id: { in: ids } } });
       rows.forEach((r) => byId.set(r.id, toProduct(r)));
     }
+    const settings = await prisma.storeSettings.findUnique({ where: { id: "default" } });
+    if (settings) freeShippingThreshold = settings.freeShippingThreshold;
   } catch (err) {
     console.error("[db] priceCart DB lookup failed:", err);
   }
@@ -419,7 +424,7 @@ export async function priceCart(lines: CartLine[]): Promise<{
   }
   const subtotal = priced.reduce((s, l) => s + l.lineTotal, 0);
   const count = priced.reduce((s, l) => s + l.quantity, 0);
-  const shipping = subtotal > 500 || subtotal === 0 ? 0 : 25;
+  const shipping = subtotal > freeShippingThreshold || subtotal === 0 ? 0 : 25;
   return { lines: priced, subtotal, shipping, total: subtotal + shipping, count };
 }
 
@@ -531,6 +536,75 @@ export async function createCoupon(input: {
   } catch (err) {
     console.error("[db] createCoupon failed:", err);
     return { ok: false, error: "This code is already in use" };
+  }
+}
+
+export async function updateCoupon(
+  code: string,
+  patch: {
+    description?: string;
+    discountType?: "percent" | "fixed";
+    value?: number;
+    minSubtotal?: number;
+    maxUses?: number | null;
+    expiresAt?: string | null;
+    active?: boolean;
+  },
+): Promise<{ ok: true; coupon: Coupon } | { ok: false; error: string; notFound?: boolean }> {
+  const normalizedCode = code.trim().toUpperCase();
+  let existing: NonNullable<PrismaCoupon> | null = null;
+  if (patch.value !== undefined || patch.discountType !== undefined) {
+    try {
+      await ensureSchema();
+      existing = await prisma.coupon.findUnique({ where: { code: normalizedCode } });
+    } catch (err) {
+      console.error("[db] updateCoupon lookup failed:", err);
+    }
+    if (!existing) return { ok: false, error: "Not found", notFound: true };
+  }
+
+  const data: Record<string, unknown> = {};
+  if (patch.description !== undefined) {
+    if (!patch.description.trim()) return { ok: false, error: "Description is required" };
+    data.description = patch.description.trim();
+  }
+  if (patch.discountType !== undefined) {
+    data.discountType = patch.discountType === "fixed" ? "fixed" : "percent";
+  }
+  if (patch.value !== undefined) {
+    const value = Number(patch.value);
+    if (!Number.isFinite(value) || value <= 0) {
+      return { ok: false, error: "Invalid discount value" };
+    }
+    // Effective type after this patch: an incoming discountType wins, else
+    // whatever the coupon already had (fetched above).
+    const effectiveType = (data.discountType as string) ?? existing?.discountType;
+    if (effectiveType === "percent" && value > 100) {
+      return { ok: false, error: "Discount percentage must not exceed 100%" };
+    }
+    data.value = Math.round(value);
+  }
+  if (patch.minSubtotal !== undefined) {
+    data.minSubtotal = Math.max(0, Math.round(Number(patch.minSubtotal) || 0));
+  }
+  if (patch.maxUses !== undefined) {
+    data.maxUses =
+      patch.maxUses == null || Number(patch.maxUses) <= 0
+        ? null
+        : Math.round(Number(patch.maxUses));
+  }
+  if (patch.expiresAt !== undefined) {
+    data.expiresAt = patch.expiresAt ? new Date(patch.expiresAt) : null;
+  }
+  if (patch.active !== undefined) data.active = Boolean(patch.active);
+
+  try {
+    await ensureSchema();
+    const row = await prisma.coupon.update({ where: { code: normalizedCode }, data });
+    return { ok: true, coupon: toCoupon(row) };
+  } catch (err) {
+    console.error("[db] updateCoupon failed:", err);
+    return { ok: false, error: "Not found", notFound: true };
   }
 }
 
@@ -1232,6 +1306,58 @@ export async function addContact(input: {
   return { id: msg.id };
 }
 
+export interface ContactMessageRow {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: string;
+}
+
+export async function listContactMessages(): Promise<ContactMessageRow[]> {
+  try {
+    await ensureSchema();
+    const rows = await prisma.contactMessage.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      message: r.message,
+      createdAt: r.createdAt.toISOString(),
+    }));
+  } catch (err) {
+    console.error("[db] listContactMessages failed:", err);
+    return [];
+  }
+}
+
+export async function deleteContactMessage(id: string): Promise<boolean> {
+  try {
+    await ensureSchema();
+    await prisma.contactMessage.delete({ where: { id } });
+    return true;
+  } catch (err) {
+    console.error("[db] deleteContactMessage failed:", err);
+    return false;
+  }
+}
+
+export interface NewsletterRow {
+  email: string;
+  createdAt: string;
+}
+
+export async function listNewsletterSignups(): Promise<NewsletterRow[]> {
+  try {
+    await ensureSchema();
+    const rows = await prisma.newsletter.findMany({ orderBy: { createdAt: "desc" } });
+    return rows.map((r) => ({ email: r.email, createdAt: r.createdAt.toISOString() }));
+  } catch (err) {
+    console.error("[db] listNewsletterSignups failed:", err);
+    return [];
+  }
+}
+
 /* ---------------- Analytics ---------------- */
 
 export async function analytics(): Promise<{
@@ -1445,6 +1571,42 @@ export async function createBanner(input: {
   } catch (err) {
     console.error("[db] createBanner failed:", err);
     return { ok: false, error: "Unable to create the banner" };
+  }
+}
+
+export async function updateBanner(
+  id: string,
+  patch: {
+    title?: string;
+    subtitle?: string;
+    buttonText?: string;
+    link?: string;
+    image?: string;
+    surface?: string;
+    status?: string;
+  },
+): Promise<
+  { ok: true; banner: BannerRow } | { ok: false; error: string; notFound?: boolean }
+> {
+  if (patch.title !== undefined && !patch.title.trim()) {
+    return { ok: false, error: "Title is required" };
+  }
+  const data: Record<string, unknown> = {};
+  if (patch.title !== undefined) data.title = patch.title.trim();
+  if (patch.subtitle !== undefined) data.subtitle = patch.subtitle.trim() || null;
+  if (patch.buttonText !== undefined) data.buttonText = patch.buttonText.trim() || null;
+  if (patch.link !== undefined) data.link = patch.link.trim() || null;
+  if (patch.image !== undefined) data.image = patch.image.trim() || null;
+  if (patch.surface !== undefined) data.surface = patch.surface || "gold";
+  if (patch.status !== undefined) data.status = patch.status || "active";
+
+  try {
+    await ensureSchema();
+    const row = await prisma.banner.update({ where: { id }, data });
+    return { ok: true, banner: toBanner(row) };
+  } catch (err) {
+    console.error("[db] updateBanner failed:", err);
+    return { ok: false, error: "Not found", notFound: true };
   }
 }
 

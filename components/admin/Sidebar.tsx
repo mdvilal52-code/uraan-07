@@ -15,6 +15,7 @@ import {
   UserCog,
   Settings,
   Store,
+  Mail,
 } from "lucide-react";
 import { LotusMark } from "@/components/icons/JewelIcons";
 import { BRAND } from "@/data/jewelleryData";
@@ -29,6 +30,7 @@ const links = [
   { href: "/admin/banners", label: "Banners", icon: ImageIcon },
   { href: "/admin/reviews", label: "Reviews", icon: Star },
   { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+  { href: "/admin/messages", label: "Messages", icon: Mail },
   { href: "/admin/users", label: "Users", icon: UserCog },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

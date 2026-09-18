@@ -86,11 +86,12 @@ export function SettingsForm() {
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      {/* Store Info + Shipping/Taxes currently only configure the values
-          shown here in the admin panel — checkout's shipping threshold is
-          still the fixed $500 rule in lib/db.ts priceCart(), and store
-          contact details shown to customers still come from
-          data/jewelleryData.ts. Wiring those up is separate follow-up work. */}
+      {/* Free Shipping Threshold below is live: lib/db.ts priceCart() reads
+          it from StoreSettings on every cart/checkout price. Tax Rate is
+          still not applied to any order total (no tax line exists in the
+          checkout UI yet), and store contact details shown to customers
+          still come from data/jewelleryData.ts, not these fields — both
+          remain separate follow-up work. */}
       <Card title="Store Information">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
