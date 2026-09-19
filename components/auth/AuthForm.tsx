@@ -244,7 +244,10 @@ export function AuthForm({
 
           {isLogin && (
             <div className="flex justify-end">
-              <Link href="#" className="text-xs font-semibold text-clay-500">
+              <Link
+                href={isAdmin ? "/admin/forgot-password" : "/forgot-password"}
+                className="text-xs font-semibold text-clay-500"
+              >
                 Forgot your password?
               </Link>
             </div>
