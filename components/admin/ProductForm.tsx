@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Save, Loader2 } from "lucide-react";
 import { categories } from "@/data/jewelleryData";
-import { ProductImage } from "@/components/ProductImage";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import type { Product } from "@/types";
+
+const GOLD_PURITIES = ["24K", "22K", "21K", "18K", "14K"] as const;
 
 function Field({
   label,
@@ -30,7 +32,9 @@ export function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [imagePath, setImagePath] = useState(product?.image ?? "");
+  const [pricingMode, setPricingMode] = useState<"fixed" | "gold_rate">(
+    product?.pricingMode ?? "fixed",
+  );
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,6 +49,9 @@ export function ProductForm({ product }: { product?: Product }) {
       compareAt: fd.get("compareAt") ? Number(fd.get("compareAt")) : undefined,
       category: fd.get("category"),
       image: fd.get("image") || product?.image,
+      imageLeft: fd.get("imageLeft") ?? "",
+      imageRight: fd.get("imageRight") ?? "",
+      imageBack: fd.get("imageBack") ?? "",
       bestSeller: fd.get("bestSeller") === "on",
       newArrival: fd.get("newArrival") === "on",
       // Admin-controlled karat(s) + gold weights. Sent as-is (raw value);
@@ -55,6 +62,8 @@ export function ProductForm({ product }: { product?: Product }) {
       karats: fd.get("karats") ?? "",
       goldWeight: fd.get("goldWeight") ?? "",
       totalWeight: fd.get("totalWeight") ?? "",
+      pricingMode: fd.get("pricingMode") === "gold_rate" ? "gold_rate" : "fixed",
+      pricingKarat: fd.get("pricingKarat") || undefined,
     };
 
     const res = await fetch(
@@ -108,8 +117,43 @@ export function ProductForm({ product }: { product?: Product }) {
         </div>
 
         <div className="card space-y-4 p-5">
+          <Field label="Pricing Type">
+            <select
+              name="pricingMode"
+              className={inputCls}
+              value={pricingMode}
+              onChange={(e) => setPricingMode(e.target.value as "fixed" | "gold_rate")}
+            >
+              <option value="fixed">Fixed Price</option>
+              <option value="gold_rate">Gold Rate Based</option>
+            </select>
+            <span className="mt-1 block text-[0.7rem] text-ink-faint">
+              {pricingMode === "gold_rate"
+                ? "Price is computed live from Gold Weight below × the current Admin → Gold Rate for the purity chosen underneath. The Price field becomes a fallback only, used if weight or rate is missing."
+                : "Price is exactly what you type below — it never changes on its own."}
+            </span>
+          </Field>
+          {pricingMode === "gold_rate" && (
+            <Field label="Pricing Karat">
+              <select
+                name="pricingKarat"
+                className={inputCls}
+                defaultValue={product?.pricingKarat ?? "21K"}
+              >
+                {GOLD_PURITIES.map((k) => (
+                  <option key={k} value={k}>
+                    {k}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-[0.7rem] text-ink-faint">
+                Which Admin → Gold Rate row prices this product. Set Gold
+                Weight below — required for a live price.
+              </span>
+            </Field>
+          )}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Price (AUD)">
+            <Field label={pricingMode === "gold_rate" ? "Fallback Price (AUD)" : "Price (AUD)"}>
               <input
                 name="price"
                 type="number"
@@ -129,29 +173,57 @@ export function ProductForm({ product }: { product?: Product }) {
               />
             </Field>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Category">
-              <select
-                name="category"
-                className={inputCls}
-                defaultValue={product?.category ?? "necklaces"}
-              >
-                {categories.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Image Path">
-              <input
-                name="image"
-                className={inputCls}
-                value={imagePath}
-                onChange={(e) => setImagePath(e.target.value)}
-                placeholder="/images/necklace.svg"
-              />
-            </Field>
+          <Field label="Category">
+            <select
+              name="category"
+              className={inputCls}
+              defaultValue={product?.category ?? "necklaces"}
+            >
+              {categories.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        {/* Exactly four dedicated views per product — never a generic
+            unlimited gallery. Front is required (it's what every product
+            card/listing shows); the other three are optional and only
+            appear in the product-detail gallery. */}
+        <div className="card space-y-4 p-5">
+          <h3 className="text-sm font-bold text-ink">Product Images</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ImageUploadField
+              label="Front View"
+              name="image"
+              slotLabel="front"
+              scope="products"
+              initialUrl={product?.image}
+              required
+            />
+            <ImageUploadField
+              label="Left Side View"
+              name="imageLeft"
+              slotLabel="left"
+              scope="products"
+              initialUrl={product?.imageLeft}
+            />
+            <ImageUploadField
+              label="Right Side View"
+              name="imageRight"
+              slotLabel="right"
+              scope="products"
+              initialUrl={product?.imageRight}
+            />
+            <ImageUploadField
+              label="Back View"
+              name="imageBack"
+              slotLabel="back"
+              scope="products"
+              initialUrl={product?.imageBack}
+            />
           </div>
         </div>
 
@@ -206,20 +278,6 @@ export function ProductForm({ product }: { product?: Product }) {
       </div>
 
       <div className="space-y-4">
-        <div className="card p-5">
-          <span className="mb-2 block text-xs font-bold text-ink-soft">
-            Product Image Preview
-          </span>
-          <ProductImage
-            src={imagePath || undefined}
-            rounded="rounded-2xl"
-            label={imagePath ? "Preview" : "No image path set"}
-          />
-          <p className="mt-2 text-xs text-ink-faint">
-            Set the Image Path field to a file already in /public/images.
-          </p>
-        </div>
-
         <div className="card space-y-3 p-5">
           <label className="flex items-center justify-between">
             <span className="text-sm font-semibold text-ink">Best Seller</span>

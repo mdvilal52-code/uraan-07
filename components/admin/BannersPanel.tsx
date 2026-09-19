@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Save, Trash2, Pencil, X, ImageIcon } from "lucide-react";
 import { ProductImage } from "@/components/ProductImage";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import type { GemSurface } from "@/types";
 
 interface BannerRow {
@@ -63,7 +64,10 @@ export function BannersPanel() {
       subtitle: fd.get("subtitle") || undefined,
       buttonText: fd.get("buttonText") || undefined,
       link: fd.get("link") || undefined,
-      image: fd.get("image") || undefined,
+      // Pass "" through as-is (not undefined) so clicking Remove on the
+      // image actually clears it on save instead of being silently ignored
+      // as "field not part of this patch."
+      image: fd.get("image") ?? "",
       surface: fd.get("surface") || "gold",
       status: fd.get("status") || "active",
     };
@@ -205,17 +209,13 @@ export function BannersPanel() {
               />
             </label>
           </div>
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold text-ink-soft">
-              Background Image Path
-            </span>
-            <input
-              name="image"
-              className={inputCls}
-              placeholder="/images/collection-royal.jpg"
-              defaultValue={editing?.image}
-            />
-          </label>
+          <ImageUploadField
+            label="Background Image"
+            name="image"
+            slotLabel="banner"
+            scope="banners"
+            initialUrl={editing?.image}
+          />
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Status</span>

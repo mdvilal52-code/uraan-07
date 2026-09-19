@@ -58,6 +58,7 @@ export function ShippingForm() {
 
   const subtotal = selectedPriced?.subtotal ?? 0;
   const shipping = selectedPriced?.shipping ?? 0;
+  const tax = selectedPriced?.tax ?? 0;
   const total = selectedPriced?.total ?? 0;
 
   function submit(e: React.FormEvent) {
@@ -162,6 +163,12 @@ export function ShippingForm() {
               {shipping === 0 ? "Free" : formatPrice(shipping)}
             </span>
           </div>
+          {tax > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-ink-muted">Tax</span>
+              <span className="font-semibold text-ink">{formatPrice(tax)}</span>
+            </div>
+          )}
           <div className="hr-gold my-1" />
           <div className="flex items-center justify-between">
             <span className="font-sans font-bold text-ink">Total</span>

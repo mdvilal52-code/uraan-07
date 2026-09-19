@@ -32,8 +32,13 @@ export interface Product {
   description: string;
   /** placeholder tint until a real photo is dropped in public/images */
   surface: GemSurface;
-  /** expected image path (drop real HD photo here) */
+  /** Front view — required; used everywhere a single thumbnail is shown. */
   image: string;
+  /** Left/right/back views — optional, shown only in the product-detail
+   *  image gallery. All four belong to this exact product. */
+  imageLeft?: string;
+  imageRight?: string;
+  imageBack?: string;
   tags?: string[];
   bestSeller?: boolean;
   newArrival?: boolean;
@@ -48,6 +53,21 @@ export interface Product {
   goldWeight?: number;
   /** Gross/total weight in grams (admin-controlled; undefined → N/A). */
   totalWeight?: number;
+  /** "fixed" (default — `price` above is authoritative) or "gold_rate"
+   *  (price is computed live from goldWeight × the current GoldRate for
+   *  pricingKarat; `price` becomes a fallback only). Undefined ≙ "fixed". */
+  pricingMode?: "fixed" | "gold_rate";
+  /** Which GoldRate purity prices this product when pricingMode is
+   *  "gold_rate". Defaults to "21K" when unset. */
+  pricingKarat?: string;
+}
+
+export interface GoldRate {
+  purity: string;
+  pricePerGram: number;
+  currency: string;
+  updatedAt: string;
+  updatedBy?: string;
 }
 
 export interface Collection {

@@ -19,7 +19,15 @@ model Product {
   compareAt   Int?
   description  String
   surface     String   @default("gold")
+  /// Front view — required, and the image used everywhere a single
+  /// thumbnail is needed (product cards, listings, admin table). The other
+  /// three views below are optional and only shown in the product-detail
+  /// gallery. All four belong to this exact product row — never shared or
+  /// copied across products.
   image       String
+  imageLeft   String?
+  imageRight  String?
+  imageBack   String?
   tags        String[] @default([])
   bestSeller  Boolean  @default(false)
   newArrival  Boolean  @default(false)
@@ -28,6 +36,16 @@ model Product {
   // Admin-controlled gold specs. Empty/null → the product page shows N/A.
   karats      String[] @default([])
   goldWeight  Float?
+  /// "fixed" (price is the number above, admin-typed — the default and
+  /// only mode until Gold Rate pricing was added) or "gold_rate" (price is
+  /// computed live as goldWeight × the current GoldRate.pricePerGram for
+  /// pricingKarat — see lib/db.ts effectivePrice()). The stored `price`
+  /// above is kept as a fallback for gold_rate products with no weight/rate.
+  pricingMode  String  @default("fixed")
+  /// Which GoldRate row prices this product when pricingMode is
+  /// "gold_rate". Defaults to "21K" (this store's Arabic Gold standard —
+  /// see ProductWeightInfo's karat fallback) when unset.
+  pricingKarat String?
   totalWeight Float?
   createdAt   DateTime @default(now())
 
@@ -173,8 +191,26 @@ model StoreSettings {
   phone                 String   @default("+61 3 9791 1331")
   currency              String   @default("AUD")
   freeShippingThreshold Int      @default(500)
-  taxRatePercent        Float    @default(5)
+  /// Applied as a real "Tax" line in cart/checkout/order totals (see
+  /// lib/db.ts priceCart). Defaults to 0 — was previously stored but
+  /// never applied anywhere, so the default stays 0 until an admin
+  /// deliberately opts in, rather than silently changing every order
+  /// total the moment this shipped.
+  taxRatePercent        Float    @default(0)
   notifyNewOrders       Boolean  @default(true)
   notifyLowStock        Boolean  @default(true)
   updatedAt             DateTime @updatedAt
+}
+
+/// Admin-configurable gold price per purity (Admin → Gold Rate). One row per
+/// karat; gold_rate-priced products (Product.pricingMode) compute their
+/// live price as goldWeight × this row's pricePerGram — see lib/db.ts
+/// effectivePrice(). Purity keys are a fixed set chosen in the admin UI
+/// (24K/22K/21K/18K/14K), not free text.
+model GoldRate {
+  purity       String   @id
+  pricePerGram Float    @default(0)
+  currency     String   @default("AUD")
+  updatedAt    DateTime @updatedAt
+  updatedBy    String?
 }

@@ -16,6 +16,7 @@ import {
   Settings,
   Store,
   Mail,
+  Coins,
 } from "lucide-react";
 import { LotusMark } from "@/components/icons/JewelIcons";
 import { BRAND } from "@/data/jewelleryData";
@@ -23,6 +24,7 @@ import { BRAND } from "@/data/jewelleryData";
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/products", label: "Products", icon: Package },
+  { href: "/admin/gold-rate", label: "Gold Rate", icon: Coins },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },

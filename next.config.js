@@ -8,7 +8,12 @@ const nextConfig = {
     // AVIF optimization is the Next.js team's own interim mitigation until
     // this app can take that (breaking, async cookies()/headers()) upgrade.
     formats: ["image/webp"],
-    remotePatterns: [],
+    // Uploaded product/banner photos live in Supabase Storage (see
+    // lib/storage.ts) — a wildcard subdomain pattern rather than one fixed
+    // project ref, so this doesn't silently break if the project changes.
+    // Nothing else is allowed: local /public/images stays the only other
+    // source.
+    remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
     // Product art rarely changes — let optimized variants live in the CDN
     // cache for 31 days instead of the 60s default (fewer re-optimizations,
     // faster repeat loads).
@@ -64,7 +69,9 @@ const nextConfig = {
                 process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"
               }`,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data:",
+              // https://*.supabase.co: uploaded product/banner photos —
+              // matches the next/image remotePatterns entry above.
+              "img-src 'self' data: https://*.supabase.co",
               "font-src 'self' data:",
               "connect-src 'self'",
               "object-src 'none'",

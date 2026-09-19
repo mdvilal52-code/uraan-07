@@ -109,6 +109,11 @@ export function ProductTable() {
                   </td>
                   <td className="px-4 py-3 font-bold text-ink">
                     {formatPrice(p.price)}
+                    {p.pricingMode === "gold_rate" && (
+                      <span className="ms-1.5 rounded-full bg-gold-100 px-1.5 py-0.5 align-middle text-[0.6rem] font-bold text-gold-700">
+                        Gold Rate
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {p.bestSeller ? (

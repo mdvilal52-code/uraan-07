@@ -47,6 +47,9 @@ function toProduct(p: NonNullable<PrismaProduct>): Product {
     description: p.description,
     surface: p.surface as GemSurface,
     image: p.image,
+    imageLeft: p.imageLeft ?? undefined,
+    imageRight: p.imageRight ?? undefined,
+    imageBack: p.imageBack ?? undefined,
     tags: p.tags,
     bestSeller: p.bestSeller,
     newArrival: p.newArrival,
@@ -55,7 +58,132 @@ function toProduct(p: NonNullable<PrismaProduct>): Product {
     karats: p.karats ?? [],
     goldWeight: p.goldWeight ?? undefined,
     totalWeight: p.totalWeight ?? undefined,
+    pricingMode: (p.pricingMode as Product["pricingMode"]) ?? "fixed",
+    pricingKarat: p.pricingKarat ?? undefined,
   };
+}
+
+/** Fixed, admin-chosen purity set for Gold Rate pricing (this store's
+ *  Arabic Gold convention defaults to 21K — see ProductWeightInfo). Not
+ *  free text: the admin UI only ever offers these five. */
+export const GOLD_PURITIES = ["24K", "22K", "21K", "18K", "14K"] as const;
+
+async function loadGoldRateMap(): Promise<Map<string, number>> {
+  try {
+    await ensureSchema();
+    const rows = await prisma.goldRate.findMany();
+    return new Map(rows.map((r) => [r.purity, r.pricePerGram]));
+  } catch (err) {
+    console.error("[db] loadGoldRateMap failed:", err);
+    return new Map();
+  }
+}
+
+/** Live price for a gold_rate-mode product: goldWeight × the current rate
+ *  for its pricingKarat (default 21K). Falls back to the stored `price`
+ *  when there's no weight or no configured (or zero) rate for that purity
+ *  — a missing/zero rate is treated as "not configured yet", never as a
+ *  real $0/gram price, so a data gap can't accidentally zero out a
+ *  product's price. */
+function computeGoldRatePrice(product: Product, rates: Map<string, number>): number {
+  const purity = product.pricingKarat || "21K";
+  const rate = rates.get(purity);
+  if (!rate || !product.goldWeight) return product.price;
+  return Math.max(0, Math.round(product.goldWeight * rate));
+}
+
+/** Overlay live Gold Rate pricing onto any gold_rate-mode products in the
+ *  list, leaving fixed-price products untouched. This is the single choke
+ *  point every product read goes through (listProducts/getProduct/
+ *  priceCart/create+updateProduct), so a rate change propagates everywhere
+ *  immediately with no caching/staleness to manage — nothing ever stores a
+ *  computed price. Skips the GoldRate lookup entirely when nothing needs it. */
+async function withEffectivePrices(list: Product[]): Promise<Product[]> {
+  if (!list.some((p) => p.pricingMode === "gold_rate")) return list;
+  const rates = await loadGoldRateMap();
+  return list.map((p) =>
+    p.pricingMode === "gold_rate" ? { ...p, price: computeGoldRatePrice(p, rates) } : p,
+  );
+}
+
+export interface GoldRateRow {
+  purity: string;
+  pricePerGram: number;
+  currency: string;
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+/** Always returns all GOLD_PURITIES rows (unset ones default to $0/"never
+ *  configured") so the admin form has a stable, complete shape. */
+export async function listGoldRates(): Promise<GoldRateRow[]> {
+  try {
+    await ensureSchema();
+    const rows = await prisma.goldRate.findMany();
+    const byPurity = new Map(rows.map((r) => [r.purity, r]));
+    return GOLD_PURITIES.map((purity) => {
+      const row = byPurity.get(purity);
+      return {
+        purity,
+        pricePerGram: row?.pricePerGram ?? 0,
+        currency: row?.currency ?? "AUD",
+        updatedAt: row?.updatedAt.toISOString() ?? new Date(0).toISOString(),
+        updatedBy: row?.updatedBy ?? undefined,
+      };
+    });
+  } catch (err) {
+    console.error("[db] listGoldRates failed:", err);
+    return GOLD_PURITIES.map((purity) => ({
+      purity,
+      pricePerGram: 0,
+      currency: "AUD",
+      updatedAt: new Date(0).toISOString(),
+    }));
+  }
+}
+
+/** How many products currently price themselves from the live gold rate —
+ *  shown in the admin Gold Rate page so a rate change's real-world reach
+ *  is visible before saving. */
+export async function countGoldRateProducts(): Promise<number> {
+  try {
+    await ensureSchema();
+    return await prisma.product.count({ where: { pricingMode: "gold_rate" } });
+  } catch (err) {
+    console.error("[db] countGoldRateProducts failed:", err);
+    return 0;
+  }
+}
+
+export async function updateGoldRates(
+  rates: { purity: string; pricePerGram: number }[],
+  updatedBy: string,
+): Promise<{ ok: true; rates: GoldRateRow[] } | { ok: false; error: string }> {
+  const valid = rates.filter((r) =>
+    (GOLD_PURITIES as readonly string[]).includes(r.purity),
+  );
+  for (const r of valid) {
+    const n = Number(r.pricePerGram);
+    if (!Number.isFinite(n) || n < 0) {
+      return { ok: false, error: `Invalid rate for ${r.purity}` };
+    }
+  }
+  try {
+    await ensureSchema();
+    await prisma.$transaction(
+      valid.map((r) =>
+        prisma.goldRate.upsert({
+          where: { purity: r.purity },
+          update: { pricePerGram: Number(r.pricePerGram), updatedBy },
+          create: { purity: r.purity, pricePerGram: Number(r.pricePerGram), updatedBy },
+        }),
+      ),
+    );
+    return { ok: true, rates: await listGoldRates() };
+  } catch (err) {
+    console.error("[db] updateGoldRates failed:", err);
+    return { ok: false, error: "Unable to save gold rates" };
+  }
 }
 
 function toOrder(o: PrismaOrder): Order {
@@ -227,7 +355,7 @@ export async function listProducts(opts?: ListOpts): Promise<Product[]> {
       ...(opts?.limit ? { take: opts.limit } : {}),
     });
     if (rows.length === 0) return filterCatalog(opts);
-    return rows.map(toProduct);
+    return withEffectivePrices(rows.map(toProduct));
   } catch (err) {
     console.error("[db] listProducts failed:", err);
     return filterCatalog(opts);
@@ -243,7 +371,7 @@ export async function getProduct(id: string): Promise<Product | undefined> {
     await ensureSchema();
     await ensureProductsSeededMaybe();
     const row = await prisma.product.findUnique({ where: { id } });
-    if (row) return toProduct(row);
+    if (row) return (await withEffectivePrices([toProduct(row)]))[0];
   } catch (err) {
     console.error("[db] getProduct failed:", err);
   }
@@ -271,6 +399,9 @@ const PRODUCT_FIELD_LIMITS = {
   latin: 200,
   description: 2000,
   image: 500,
+  imageLeft: 500,
+  imageRight: 500,
+  imageBack: 500,
   category: 50,
 } as const;
 
@@ -283,6 +414,19 @@ function validateProductFields(input: Partial<Product>): string | null {
     if (typeof value === "string" && value.length > max) {
       return `${field} must be ${max} characters or fewer`;
     }
+  }
+  if (
+    input.pricingMode !== undefined &&
+    input.pricingMode !== "fixed" &&
+    input.pricingMode !== "gold_rate"
+  ) {
+    return "Invalid pricing mode";
+  }
+  if (
+    input.pricingKarat &&
+    !(GOLD_PURITIES as readonly string[]).includes(input.pricingKarat)
+  ) {
+    return "Invalid pricing karat";
   }
   return null;
 }
@@ -305,6 +449,9 @@ export async function createProduct(
       description: input.description ?? "",
       surface: (input.surface as string) ?? "gold",
       image: input.image ?? "/images/necklace.svg",
+      imageLeft: input.imageLeft || null,
+      imageRight: input.imageRight || null,
+      imageBack: input.imageBack || null,
       tags: input.tags ?? [],
       bestSeller: Boolean(input.bestSeller),
       newArrival: Boolean(input.newArrival),
@@ -313,9 +460,11 @@ export async function createProduct(
       karats: normalizeKarats(input.karats),
       goldWeight: weightOrNull(input.goldWeight),
       totalWeight: weightOrNull(input.totalWeight),
+      pricingMode: input.pricingMode === "gold_rate" ? "gold_rate" : "fixed",
+      pricingKarat: input.pricingKarat || null,
     },
   });
-  return { ok: true, product: toProduct(row) };
+  return { ok: true, product: (await withEffectivePrices([toProduct(row)]))[0] };
 }
 
 export async function updateProduct(
@@ -339,6 +488,11 @@ export async function updateProduct(
   ] as const) {
     if (patch[f] !== undefined) data[f] = patch[f];
   }
+  // Optional views: an explicit "" clears that slot back to unset (Remove
+  // Image), distinct from undefined (field not part of this patch at all).
+  for (const f of ["imageLeft", "imageRight", "imageBack"] as const) {
+    if (patch[f] !== undefined) data[f] = patch[f] || null;
+  }
   if (patch.price !== undefined) data.price = Number(patch.price) || 0;
   if (patch.compareAt !== undefined)
     data.compareAt = patch.compareAt ? Number(patch.compareAt) : null;
@@ -352,11 +506,14 @@ export async function updateProduct(
     data.goldWeight = weightOrNull(patch.goldWeight);
   if (patch.totalWeight !== undefined)
     data.totalWeight = weightOrNull(patch.totalWeight);
+  if (patch.pricingMode !== undefined)
+    data.pricingMode = patch.pricingMode === "gold_rate" ? "gold_rate" : "fixed";
+  if (patch.pricingKarat !== undefined) data.pricingKarat = patch.pricingKarat || null;
 
   try {
     await ensureSchema();
     const row = await prisma.product.update({ where: { id }, data });
-    return { ok: true, product: toProduct(row) };
+    return { ok: true, product: (await withEffectivePrices([toProduct(row)]))[0] };
   } catch {
     return { ok: false, error: "Not found", notFound: true };
   }
@@ -384,14 +541,17 @@ export async function priceCart(lines: CartLine[]): Promise<{
   lines: PricedLine[];
   subtotal: number;
   shipping: number;
+  tax: number;
   total: number;
   count: number;
 }> {
   const ids = lines.map((l) => l.productId);
   const byId = new Map<string, Product>();
-  // Admin-configurable (Settings → Shipping); falls back to the historical
-  // $500 default on any DB error so pricing never breaks.
+  // Admin-configurable (Settings → Shipping/Tax); fall back to safe
+  // historical defaults ($500 threshold, 0% tax) on any DB error so
+  // pricing never breaks.
   let freeShippingThreshold = DEFAULT_SETTINGS.freeShippingThreshold;
+  let taxRatePercent = 0;
   try {
     await ensureSchema();
     await ensureProductsSeededMaybe();
@@ -400,7 +560,10 @@ export async function priceCart(lines: CartLine[]): Promise<{
       rows.forEach((r) => byId.set(r.id, toProduct(r)));
     }
     const settings = await prisma.storeSettings.findUnique({ where: { id: "default" } });
-    if (settings) freeShippingThreshold = settings.freeShippingThreshold;
+    if (settings) {
+      freeShippingThreshold = settings.freeShippingThreshold;
+      taxRatePercent = settings.taxRatePercent;
+    }
   } catch (err) {
     console.error("[db] priceCart DB lookup failed:", err);
   }
@@ -411,9 +574,16 @@ export async function priceCart(lines: CartLine[]): Promise<{
     }
   }
 
+  // Resolve live Gold Rate pricing for any gold_rate-mode products here —
+  // priceCart is the one authoritative choke point for cart/checkout/order
+  // totals, so it must price from the current rate, never a stored value.
+  const byIdPriced = new Map(
+    (await withEffectivePrices(Array.from(byId.values()))).map((p) => [p.id, p]),
+  );
+
   const priced: PricedLine[] = [];
   for (const l of lines) {
-    const product = byId.get(l.productId);
+    const product = byIdPriced.get(l.productId);
     if (!product) continue;
     const quantity = Math.max(1, Math.floor(l.quantity));
     priced.push({
@@ -425,7 +595,8 @@ export async function priceCart(lines: CartLine[]): Promise<{
   const subtotal = priced.reduce((s, l) => s + l.lineTotal, 0);
   const count = priced.reduce((s, l) => s + l.quantity, 0);
   const shipping = subtotal > freeShippingThreshold || subtotal === 0 ? 0 : 25;
-  return { lines: priced, subtotal, shipping, total: subtotal + shipping, count };
+  const tax = Math.round(subtotal * (taxRatePercent / 100));
+  return { lines: priced, subtotal, shipping, tax, total: subtotal + shipping + tax, count };
 }
 
 /* ---------------- Coupons ---------------- */
@@ -689,7 +860,7 @@ export async function createOrder(input: {
     couponCode = check.code;
   }
 
-  const total = Math.max(0, priced.subtotal - discount) + priced.shipping;
+  const total = Math.max(0, priced.subtotal - discount) + priced.shipping + priced.tax;
   const date = new Date().toISOString().slice(0, 10);
   try {
     await ensureSchema();

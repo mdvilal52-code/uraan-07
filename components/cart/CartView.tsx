@@ -143,6 +143,9 @@ export function CartView() {
               : formatPrice(selectedPriced?.shipping ?? 0)
           }
         />
+        {(selectedPriced?.tax ?? 0) > 0 && (
+          <Row label="Tax" value={formatPrice(selectedPriced?.tax ?? 0)} />
+        )}
         <div className="hr-gold my-1" />
         <div className="flex items-center justify-between">
           <span className="font-sans font-bold text-ink">Total</span>

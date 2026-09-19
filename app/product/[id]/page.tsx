@@ -66,11 +66,15 @@ export default async function ProductPage({
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
 
-  const relatedImages = related
-    .filter((p) => p.image)
-    .map((p) => p.image)
-    .slice(0, 3);
-  const galleryImages = [product.image, ...relatedImages];
+  // Exactly this product's own four views (front/left/right/back) — never
+  // padded out with other products' photos. Front is always present;
+  // the rest only appear when the admin has actually set them.
+  const galleryImages = [
+    product.image,
+    product.imageLeft,
+    product.imageRight,
+    product.imageBack,
+  ].filter((src): src is string => Boolean(src));
 
   return (
     <AppShell>

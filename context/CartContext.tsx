@@ -24,6 +24,7 @@ interface Priced {
   lines: PricedLine[];
   subtotal: number;
   shipping: number;
+  tax: number;
   total: number;
   count: number;
 }
@@ -48,16 +49,10 @@ const empty: Priced = {
   lines: [],
   subtotal: 0,
   shipping: 0,
+  tax: 0,
   total: 0,
   count: 0,
 };
-
-function priceLines(lines: PricedLine[]): Priced {
-  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
-  const count = lines.reduce((s, l) => s + l.quantity, 0);
-  const shipping = subtotal > 500 || subtotal === 0 ? 0 : 25;
-  return { lines, subtotal, shipping, total: subtotal + shipping, count };
-}
 
 function safeSetItem(key: string, value: string) {
   try {
@@ -124,6 +119,44 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       ignore = true;
     };
   }, [items, ready]);
+
+  const [selectedPriced, setSelectedPriced] = useState<Priced | null>(null);
+
+  // Totals for only the checked-off lines. Re-priced via the same backend
+  // endpoint (not re-derived locally) so shipping threshold, tax and
+  // gold-rate product pricing stay authoritative and in sync with the full
+  // cart price instead of duplicating that logic client-side. When nothing
+  // is deselected this is just the full cart price — no extra request.
+  useEffect(() => {
+    if (!ready) return;
+    const allSelected = items.every((i) => selected[i.productId] !== false);
+    if (allSelected) {
+      setSelectedPriced(priced);
+      return;
+    }
+    const selectedItems = items.filter((i) => selected[i.productId] !== false);
+    if (selectedItems.length === 0) {
+      setSelectedPriced(empty);
+      return;
+    }
+    let ignore = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/cart", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: selectedItems }),
+        });
+        const data = await res.json();
+        if (!ignore) setSelectedPriced(data);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, [items, selected, ready, priced]);
 
   const add = useCallback((productId: string, qty = 1) => {
     setItems((prev) => {
@@ -192,10 +225,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const count = items.reduce((s, i) => s + i.quantity, 0);
-
-  const selectedPriced = priced
-    ? priceLines(priced.lines.filter((l) => isSelected(l.product.id)))
-    : null;
 
   return (
     <CartContext.Provider
