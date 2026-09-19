@@ -34,6 +34,21 @@ export default function AboutPage() {
           luxurious pieces that blend authentic Arabic heritage with a
           contemporary touch, using the finest gemstones and purest gold.
         </p>
+
+        <div className="mt-4 flex items-center gap-3 rounded-2xl bg-gold-gradient px-4 py-4 shadow-gold">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cream-50/40 text-forest-800">
+            <Gem className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="font-sans text-sm font-extrabold text-forest-800">
+              Only Authentic Arabic Gold
+            </p>
+            <p className="text-xs leading-snug text-forest-700">
+              Every piece we sell is crafted exclusively with genuine Arabic
+              gold — no other gold origin, ever.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="px-5 py-4" data-reveal>
