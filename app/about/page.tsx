@@ -35,11 +35,14 @@ export default function AboutPage() {
           contemporary touch, using the finest gemstones and purest gold.
         </p>
 
-        <div className="mt-4 flex items-center gap-3 rounded-2xl bg-gold-gradient px-4 py-4 shadow-gold">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cream-50/40 text-forest-800">
-            <Gem className="h-5 w-5" />
-          </span>
-          <div>
+        <div className="mt-4 overflow-hidden rounded-2xl bg-gold-gradient shadow-gold lg:max-w-md">
+          <ProductImage
+            src="/images/arabic-gold-bar.jpg"
+            ratio="landscape"
+            rounded="rounded-none"
+            label="Certified Arabic Gold"
+          />
+          <div className="px-4 py-4">
             <p className="font-sans text-sm font-extrabold text-forest-800">
               Only Authentic Arabic Gold
             </p>
