@@ -56,12 +56,12 @@ export default function AboutPage() {
 
       <section className="px-5 py-4" data-reveal>
         <ProductImage
-          src="/images/editorial.jpg"
+          src="/images/arabic-gold-bar.jpg"
           surface="gold"
           icon="gem"
           ratio="wide"
           rounded="rounded-3xl"
-          label="The Ariana Workshop"
+          label="Certified Arabic Gold"
           sizes="(max-width: 640px) 100vw, 600px"
         />
       </section>
