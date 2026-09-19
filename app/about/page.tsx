@@ -34,16 +34,34 @@ export default function AboutPage() {
           luxurious pieces that blend authentic Arabic heritage with a
           contemporary touch, using the finest gemstones and purest gold.
         </p>
+
+        <div className="mt-4 overflow-hidden rounded-2xl bg-gold-gradient shadow-gold lg:max-w-md">
+          <ProductImage
+            src="/images/arabic-gold-bar.jpg"
+            ratio="landscape"
+            rounded="rounded-none"
+            label="Certified Arabic Gold"
+          />
+          <div className="px-4 py-4">
+            <p className="font-sans text-sm font-extrabold text-forest-800">
+              Only Authentic Arabic Gold
+            </p>
+            <p className="text-xs leading-snug text-forest-700">
+              Every piece we sell is crafted exclusively with genuine Arabic
+              gold — no other gold origin, ever.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="px-5 py-4" data-reveal>
         <ProductImage
-          src="/images/editorial.jpg"
+          src="/images/arabic-gold-bar.jpg"
           surface="gold"
           icon="gem"
           ratio="wide"
           rounded="rounded-3xl"
-          label="The Ariana Workshop"
+          label="Certified Arabic Gold"
           sizes="(max-width: 640px) 100vw, 600px"
         />
       </section>

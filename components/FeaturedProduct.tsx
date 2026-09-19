@@ -12,7 +12,7 @@ export function FeaturedProduct() {
         data-reveal
       >
         <div className="flex items-start justify-between">
-          <span className="rounded-full bg-forest-600/70 px-3 py-1 text-[0.68rem] font-bold text-gold-200">
+          <span className="rounded-full bg-forest-600/70 px-3 py-1 text-[0.68rem] font-bold text-gold-200 lg:text-sm">
             Featured
           </span>
           <button
@@ -25,10 +25,10 @@ export function FeaturedProduct() {
 
         <div className="mt-4 flex items-end gap-3">
           <div className="flex-1">
-            <h2 className="font-sans text-[1.55rem] font-extrabold leading-tight text-cream-50">
+            <h2 className="font-sans text-[1.55rem] font-extrabold leading-tight text-cream-50 lg:text-4xl">
               {featuredProduct.name}
             </h2>
-            <p className="mt-2 max-w-[13rem] text-[0.82rem] leading-relaxed text-cream-200/85">
+            <p className="mt-2 max-w-[13rem] text-[0.82rem] leading-relaxed text-cream-200/85 lg:max-w-sm lg:text-lg">
               {featuredProduct.description}
             </p>
           </div>
@@ -46,7 +46,7 @@ export function FeaturedProduct() {
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-3">
-          <span className="font-sans text-2xl font-extrabold text-gold-200">
+          <span className="font-sans text-2xl font-extrabold text-gold-200 lg:text-4xl">
             {formatPrice(featuredProduct.price)}
           </span>
           <AddToCartButton

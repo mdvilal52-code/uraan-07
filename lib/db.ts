@@ -1,4 +1,4 @@
-import { scryptSync, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { scryptSync, randomBytes, randomUUID, timingSafeEqual, createHash } from "node:crypto";
 import { prisma, ensureSchema, isBuildPhase, databaseReachable } from "@/lib/prisma";
 import { products as catalogProducts } from "@/data/jewelleryData";
 import { formatPrice } from "@/lib/currency";
@@ -1114,6 +1114,123 @@ export async function verifyTwoFactorLogin(
 
   await prisma.twoFactorPending.deleteMany({ where: { token: pendingToken } }).catch(() => {});
   return { ok: true, user };
+}
+
+/* ---------------- Password reset (customer + admin) ---------------- */
+
+/** Reset links expire quickly — long enough to fetch an email, short enough
+ *  to bound how long a leaked/forwarded link stays useful. */
+export const PASSWORD_RESET_TOKEN_TTL_MS = 1000 * 60 * 30; // 30 minutes
+
+/** Reset tokens are high-entropy (32 random bytes), unlike a human password,
+ *  so a fast unkeyed hash is the right tool here — hashPassword() above is
+ *  deliberately slow (scrypt) to resist guessing a *low*-entropy secret,
+ *  which would only waste CPU against a 256-bit token. Redemption looks
+ *  this up by unique index rather than comparing against every stored hash,
+ *  so there is no timing side-channel to guard against either. */
+function hashResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/**
+ * Issues a single-use password-reset token for `email`, scoped to `role` so
+ * the customer-facing and admin-facing forgot-password endpoints can never
+ * mint a token for the other kind of account. Always resolves — callers
+ * must show the same "check your email" response whether or not this
+ * returns a result (anti-enumeration); a null result just means there is
+ * nothing to email.
+ */
+export async function createPasswordResetToken(
+  email: string,
+  role: "customer" | "admin",
+): Promise<{ token: string; user: AuthUser } | null> {
+  await ensureSchema();
+  const normalized = (email ?? "").trim().toLowerCase();
+  if (!normalized) return null;
+
+  let user;
+  try {
+    user = await prisma.user.findUnique({ where: { email: normalized } });
+  } catch (err) {
+    console.error("[db] createPasswordResetToken lookup failed:", err);
+    return null;
+  }
+  if (!user || user.role !== role) return null;
+
+  const token = randomBytes(32).toString("hex");
+  try {
+    // Only the newest emailed link should ever work — drop any outstanding
+    // (unused) tokens for this account before minting the new one.
+    await prisma.passwordResetToken.deleteMany({
+      where: { userId: user.id, usedAt: null },
+    });
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashResetToken(token),
+        expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
+      },
+    });
+  } catch (err) {
+    console.error("[db] createPasswordResetToken insert failed:", err);
+    return null;
+  }
+  return { token, user };
+}
+
+/**
+ * Redeems a raw reset token: validates it (exists, unused, unexpired),
+ * updates the owning account's password, marks the token spent, and
+ * invalidates every existing session (and any in-flight 2FA challenge) for
+ * that account so a previously-obtained session cookie — or a login stuck
+ * mid-2FA — can't survive the password change. Works uniformly for
+ * customer and admin accounts: the role separation already happened when
+ * the token was issued, so redemption itself needs no role check, only
+ * `isAdmin` in the result so the caller can route to the right login page.
+ */
+export async function resetPasswordWithToken(
+  token: string,
+  newPassword: string,
+): Promise<{ ok: true; isAdmin: boolean } | { ok: false; error: string }> {
+  const invalid = { ok: false as const, error: "This reset link is invalid or has expired." };
+  if (!token || typeof token !== "string") return invalid;
+
+  await ensureSchema();
+  let record;
+  try {
+    record = await prisma.passwordResetToken.findUnique({
+      where: { tokenHash: hashResetToken(token) },
+      include: { user: true },
+    });
+  } catch (err) {
+    console.error("[db] resetPasswordWithToken lookup failed:", err);
+    return invalid;
+  }
+  if (!record || !record.user || record.usedAt || record.expiresAt.getTime() < Date.now()) {
+    return invalid;
+  }
+
+  const salt = randomBytes(16).toString("hex");
+  try {
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: record.userId },
+        data: { salt, hash: hashPassword(newPassword, salt) },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+      // A stolen session (or a login stuck awaiting a 2FA code tied to the
+      // old password) must not survive the account's password changing.
+      prisma.session.deleteMany({ where: { userId: record.userId } }),
+      prisma.twoFactorPending.deleteMany({ where: { userId: record.userId } }),
+    ]);
+  } catch (err) {
+    console.error("[db] resetPasswordWithToken update failed:", err);
+    return { ok: false, error: "Unable to reset the password right now — please try again." };
+  }
+  return { ok: true, isAdmin: record.user.role === "admin" };
 }
 
 /* ---------------- Admin: user management ---------------- */

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { getAdminUser } from "@/lib/auth";
@@ -18,6 +19,15 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // /admin/forgot-password must stay reachable while signed out — that's
+  // the whole point of a forgot-password flow. middleware.ts marks it via
+  // this header (a layout has no direct access to the incoming request);
+  // the page itself supplies its own full-screen chrome, same as the
+  // admin-styled /login variant.
+  if (headers().get("x-admin-public-route") === "1") {
+    return <>{children}</>;
+  }
+
   // Authoritative server-side gate: verifies the session against the
   // database and requires the admin role. Non-admins (and anonymous users
   // who slipped past middleware) are redirected to login.

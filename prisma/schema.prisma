@@ -99,6 +99,7 @@ model User {
 
   sessions  Session[]
   twoFactorPending TwoFactorPending[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Session {
@@ -123,6 +124,24 @@ model TwoFactorPending {
   expiresAt DateTime
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Single-use, short-lived password-reset challenge for a User (customer or
+/// admin — distinguished only by the owning User's role, same as everywhere
+/// else in this schema). Only a SHA-256 hash of the raw token is ever
+/// stored; the raw token exists solely in the emailed link. `usedAt` marks
+/// it permanently spent so it cannot be replayed even before `expiresAt`.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

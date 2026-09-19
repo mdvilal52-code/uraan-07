@@ -51,6 +51,8 @@ Built with **Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS �
 | GET/POST | `/api/orders` | list / place an order |
 | POST | `/api/auth/register` · `/api/auth/login` · `/api/auth/logout` | auth |
 | GET | `/api/auth/me` | current session user |
+| POST | `/api/auth/forgot-password` · `/api/auth/reset-password` | customer password reset |
+| POST | `/api/admin/auth/forgot-password` | admin password reset (reset itself shares `/api/auth/reset-password`) |
 | POST | `/api/newsletter` · `/api/contact` | capture |
 | GET | `/api/analytics` | dashboard metrics |
 
@@ -81,7 +83,7 @@ npm run gen:images # regenerate the SVG product art
 ### 🗄️ Database (PostgreSQL + Prisma)
 
 The schema lives in `prisma/schema.prisma` (Product, OrderItem, Order,
-Customer, User, Session, Newsletter, ContactMessage). Point `DATABASE_URL`
+Customer, User, Session, PasswordResetToken, Newsletter, ContactMessage). Point `DATABASE_URL`
 at any Postgres instance:
 
 ```
@@ -186,4 +188,6 @@ placeholder for `next/image` requires no layout changes.
 | `/shop`                  | Store with category filter          |
 | `/product/[id]`          | Product detail                      |
 | `/cart` · `/checkout`    | Cart & checkout                     |
+| `/forgot-password` · `/reset-password` | Customer password reset  |
 | `/admin`                 | Admin dashboard                     |
+| `/admin/forgot-password` | Admin password reset                |
