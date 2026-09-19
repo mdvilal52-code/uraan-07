@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Ticket, Copy, Check, Trash2, Loader2, X } from "lucide-react";
+import {
+  Plus,
+  Ticket,
+  Copy,
+  Check,
+  Trash2,
+  Pencil,
+  Power,
+  Loader2,
+  X,
+} from "lucide-react";
 import { formatPrice } from "@/lib/currency";
 import type { Coupon } from "@/types";
 
@@ -15,10 +25,17 @@ function isCouponActive(c: Coupon): boolean {
   return true;
 }
 
+function toDateInputValue(iso?: string): string {
+  if (!iso) return "";
+  return iso.slice(0, 10);
+}
+
 function CouponForm({
+  coupon,
   onDone,
   onCancel,
 }: {
+  coupon: Coupon | null;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -31,7 +48,7 @@ function CouponForm({
     setSaving(true);
     const fd = new FormData(e.currentTarget);
     const body = {
-      code: fd.get("code"),
+      ...(coupon ? {} : { code: fd.get("code") }),
       description: fd.get("description"),
       discountType: fd.get("discountType"),
       value: Number(fd.get("value")) || 0,
@@ -39,15 +56,18 @@ function CouponForm({
       maxUses: fd.get("maxUses") ? Number(fd.get("maxUses")) : null,
       expiresAt: fd.get("expiresAt") || null,
     };
-    const res = await fetch("/api/coupons", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const res = await fetch(
+      coupon ? `/api/coupons/${coupon.code}` : "/api/coupons",
+      {
+        method: coupon ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
     setSaving(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "Unable to create the coupon");
+      setError(d.error ?? "Unable to save the coupon");
       return;
     }
     onDone();
@@ -62,7 +82,9 @@ function CouponForm({
             name="code"
             required
             placeholder="SUMMER30"
-            className={`${inputCls} uppercase`}
+            defaultValue={coupon?.code}
+            disabled={Boolean(coupon)}
+            className={`${inputCls} uppercase ${coupon ? "opacity-60" : ""}`}
           />
         </label>
         <label className="block">
@@ -71,12 +93,17 @@ function CouponForm({
             name="description"
             required
             placeholder="30% off the summer collection"
+            defaultValue={coupon?.description}
             className={inputCls}
           />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-bold text-ink-soft">Discount Type</span>
-          <select name="discountType" defaultValue="percent" className={inputCls}>
+          <select
+            name="discountType"
+            defaultValue={coupon?.discountType ?? "percent"}
+            className={inputCls}
+          >
             <option value="percent">Percentage (%)</option>
             <option value="fixed">Fixed Amount (AUD)</option>
           </select>
@@ -89,6 +116,7 @@ function CouponForm({
             min={1}
             required
             placeholder="15"
+            defaultValue={coupon?.value}
             className={inputCls}
           />
         </label>
@@ -96,19 +124,38 @@ function CouponForm({
           <span className="mb-1 block text-xs font-bold text-ink-soft">
             Minimum Order (AUD)
           </span>
-          <input name="minSubtotal" type="number" min={0} placeholder="0" className={inputCls} />
+          <input
+            name="minSubtotal"
+            type="number"
+            min={0}
+            placeholder="0"
+            defaultValue={coupon?.minSubtotal}
+            className={inputCls}
+          />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-bold text-ink-soft">
             Maximum Uses
           </span>
-          <input name="maxUses" type="number" min={1} placeholder="Unlimited" className={inputCls} />
+          <input
+            name="maxUses"
+            type="number"
+            min={1}
+            placeholder="Unlimited"
+            defaultValue={coupon?.maxUses ?? undefined}
+            className={inputCls}
+          />
         </label>
         <label className="block sm:col-span-2">
           <span className="mb-1 block text-xs font-bold text-ink-soft">
             Expiry Date (optional)
           </span>
-          <input name="expiresAt" type="date" className={inputCls} />
+          <input
+            name="expiresAt"
+            type="date"
+            defaultValue={toDateInputValue(coupon?.expiresAt)}
+            className={inputCls}
+          />
         </label>
       </div>
 
@@ -120,7 +167,13 @@ function CouponForm({
 
       <div className="flex gap-2">
         <button type="submit" disabled={saving} className="btn-forest flex-1 disabled:opacity-60">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Coupon"}
+          {saving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : coupon ? (
+            "Update Coupon"
+          ) : (
+            "Create Coupon"
+          )}
         </button>
         <button type="button" onClick={onCancel} className="btn-outline flex-1">
           Cancel
@@ -135,6 +188,7 @@ export function CouponTable() {
   const [busy, setBusy] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<Coupon | null>(null);
   const [error, setError] = useState("");
 
   const load = () =>
@@ -147,6 +201,16 @@ export function CouponTable() {
     load();
   }, []);
 
+  function openEdit(c: Coupon) {
+    setEditing(c);
+    setShowForm(true);
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditing(null);
+  }
+
   async function remove(code: string) {
     if (!confirm("Delete this coupon?")) return;
     setError("");
@@ -157,7 +221,24 @@ export function CouponTable() {
       setBusy(null);
       return;
     }
+    if (editing?.code === code) closeForm();
     await load();
+    setBusy(null);
+  }
+
+  async function toggleActive(c: Coupon) {
+    setError("");
+    setBusy(c.code);
+    const res = await fetch(`/api/coupons/${c.code}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active: !c.active }),
+    });
+    if (!res.ok) {
+      setError("Unable to update this coupon — please try again.");
+    } else {
+      await load();
+    }
     setBusy(null);
   }
 
@@ -175,7 +256,10 @@ export function CouponTable() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-ink-muted">Manage discount coupons</p>
-        <button className="btn-forest" onClick={() => setShowForm((s) => !s)}>
+        <button
+          className="btn-forest"
+          onClick={() => (showForm ? closeForm() : setShowForm(true))}
+        >
           {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {showForm ? "Close" : "New Coupon"}
         </button>
@@ -183,11 +267,12 @@ export function CouponTable() {
 
       {showForm && (
         <CouponForm
+          coupon={editing}
           onDone={() => {
-            setShowForm(false);
+            closeForm();
             load();
           }}
-          onCancel={() => setShowForm(false)}
+          onCancel={closeForm}
         />
       )}
 
@@ -213,7 +298,7 @@ export function CouponTable() {
             return (
               <div
                 key={c.code}
-                className={`card flex items-center gap-3 p-4 ${busy === c.code ? "opacity-50" : ""}`}
+                className={`card flex items-center gap-3 p-4 ${busy === c.code ? "opacity-50" : ""} ${editing?.code === c.code ? "ring-2 ring-gold-400" : ""}`}
               >
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gold-gradient text-forest-800">
                   <Ticket className="h-6 w-6" />
@@ -230,7 +315,11 @@ export function CouponTable() {
                           : "bg-red-50 text-red-500"
                       }`}
                     >
-                      {active ? "Active" : "Expired"}
+                      {!c.active
+                        ? "Disabled"
+                        : active
+                          ? "Active"
+                          : "Expired"}
                     </span>
                   </div>
                   <p className="text-xs text-ink-muted">{c.description}</p>
@@ -246,6 +335,26 @@ export function CouponTable() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <button
+                    onClick={() => openEdit(c)}
+                    aria-label="Edit"
+                    className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => toggleActive(c)}
+                    disabled={busy === c.code}
+                    aria-label={c.active ? "Disable" : "Enable"}
+                    aria-pressed={c.active}
+                    className={`grid h-8 w-8 place-items-center rounded-lg transition ${
+                      c.active
+                        ? "bg-forest-50 text-forest-600 hover:bg-forest-100"
+                        : "bg-cream-100 text-ink-faint hover:bg-cream-200"
+                    }`}
+                  >
+                    <Power className="h-4 w-4" />
+                  </button>
+                  <button
                     onClick={() => copy(c.code)}
                     aria-label="Copy"
                     className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
@@ -258,6 +367,7 @@ export function CouponTable() {
                   </button>
                   <button
                     onClick={() => remove(c.code)}
+                    disabled={busy === c.code}
                     aria-label="Delete"
                     className="grid h-8 w-8 place-items-center rounded-lg bg-red-50 text-red-500 transition hover:bg-red-100"
                   >

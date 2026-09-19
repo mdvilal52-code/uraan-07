@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Save, Trash2, ImageIcon } from "lucide-react";
+import { Loader2, Save, Trash2, Pencil, X, ImageIcon } from "lucide-react";
 import { ProductImage } from "@/components/ProductImage";
+import { ImageUploadField } from "@/components/admin/ImageUploadField";
 import type { GemSurface } from "@/types";
 
 interface BannerRow {
@@ -20,15 +21,16 @@ interface BannerRow {
 const inputCls =
   "w-full rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3 text-sm text-ink outline-none transition focus:border-gold-400 placeholder:text-ink-faint";
 
-/** Promotional banners an admin can create for use elsewhere on the site.
- *  Note: nothing on the storefront reads this list yet (the homepage hero
- *  is still static) — this panel only covers content management, not live
- *  placement. */
+/** Promotional banners an admin can create/edit/delete. The storefront home
+ *  page hero (components/Hero.tsx) renders whichever banner here has
+ *  status "Active" and was created most recently, falling back to default
+ *  copy when none is active. */
 export function BannersPanel() {
   const [banners, setBanners] = useState<BannerRow[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState<BannerRow | null>(null);
 
   const load = () =>
     fetch("/api/banners")
@@ -44,7 +46,10 @@ export function BannersPanel() {
     if (!confirm("Delete this banner?")) return;
     setBusy(id);
     const res = await fetch(`/api/banners/${id}`, { method: "DELETE" });
-    if (res.ok) await load();
+    if (res.ok) {
+      if (editing?.id === id) setEditing(null);
+      await load();
+    }
     setBusy(null);
   }
 
@@ -59,15 +64,21 @@ export function BannersPanel() {
       subtitle: fd.get("subtitle") || undefined,
       buttonText: fd.get("buttonText") || undefined,
       link: fd.get("link") || undefined,
-      image: fd.get("image") || undefined,
+      // Pass "" through as-is (not undefined) so clicking Remove on the
+      // image actually clears it on save instead of being silently ignored
+      // as "field not part of this patch."
+      image: fd.get("image") ?? "",
       surface: fd.get("surface") || "gold",
       status: fd.get("status") || "active",
     };
-    const res = await fetch("/api/banners", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const res = await fetch(
+      editing ? `/api/banners/${editing.id}` : "/api/banners",
+      {
+        method: editing ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
     setSaving(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
@@ -75,6 +86,7 @@ export function BannersPanel() {
       return;
     }
     form.reset();
+    setEditing(null);
     await load();
   }
 
@@ -95,7 +107,7 @@ export function BannersPanel() {
           banners.map((b) => (
             <div
               key={b.id}
-              className={`card flex items-center gap-3 p-3 ${busy === b.id ? "opacity-50" : ""}`}
+              className={`card flex items-center gap-3 p-3 ${busy === b.id ? "opacity-50" : ""} ${editing?.id === b.id ? "ring-2 ring-gold-400" : ""}`}
             >
               <ProductImage
                 src={b.image}
@@ -115,6 +127,13 @@ export function BannersPanel() {
                 </span>
               </div>
               <button
+                onClick={() => setEditing((cur) => (cur?.id === b.id ? null : b))}
+                aria-label="Edit"
+                className="grid h-8 w-8 place-items-center rounded-lg bg-cream-100 text-ink-soft transition hover:bg-cream-200"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
                 onClick={() => remove(b.id)}
                 disabled={busy === b.id}
                 aria-label="Delete"
@@ -128,44 +147,83 @@ export function BannersPanel() {
       </div>
 
       <div>
-        <h3 className="mb-4 font-sans text-base font-bold text-ink">Add New Banner</h3>
-        <form onSubmit={submit} className="card space-y-4 p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="font-sans text-base font-bold text-ink">
+            {editing ? "Edit Banner" : "Add New Banner"}
+          </h3>
+          {editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(null)}
+              className="flex items-center gap-1 text-xs font-bold text-ink-muted hover:text-ink"
+            >
+              <X className="h-3.5 w-3.5" /> Cancel edit
+            </button>
+          )}
+        </div>
+        <form
+          key={editing?.id ?? "new"}
+          onSubmit={submit}
+          className="card space-y-4 p-5"
+        >
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">
               Banner Title
             </span>
-            <input name="title" className={inputCls} placeholder="Shine Forever" required />
+            <input
+              name="title"
+              className={inputCls}
+              placeholder="Shine Forever"
+              defaultValue={editing?.title}
+              required
+            />
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-ink-soft">Subtitle</span>
-            <input name="subtitle" className={inputCls} placeholder="Brilliance Without End" />
+            <input
+              name="subtitle"
+              className={inputCls}
+              placeholder="Brilliance Without End"
+              defaultValue={editing?.subtitle}
+            />
           </label>
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">
                 Button Text
               </span>
-              <input name="buttonText" className={inputCls} placeholder="Shop Now" />
+              <input
+                name="buttonText"
+                className={inputCls}
+                placeholder="Shop Now"
+                defaultValue={editing?.buttonText}
+              />
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Link</span>
-              <input name="link" className={inputCls} placeholder="/shop" />
+              <input
+                name="link"
+                className={inputCls}
+                placeholder="/shop"
+                defaultValue={editing?.link}
+              />
             </label>
           </div>
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold text-ink-soft">
-              Background Image Path
-            </span>
-            <input
-              name="image"
-              className={inputCls}
-              placeholder="/images/collection-royal.jpg"
-            />
-          </label>
+          <ImageUploadField
+            label="Background Image"
+            name="image"
+            slotLabel="banner"
+            scope="banners"
+            initialUrl={editing?.image}
+          />
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Status</span>
-              <select name="status" defaultValue="active" className={inputCls}>
+              <select
+                name="status"
+                defaultValue={editing?.status ?? "active"}
+                className={inputCls}
+              >
                 <option value="active">Active</option>
                 <option value="scheduled">Scheduled</option>
                 <option value="inactive">Inactive</option>
@@ -173,7 +231,11 @@ export function BannersPanel() {
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Surface</span>
-              <select name="surface" defaultValue="gold" className={inputCls}>
+              <select
+                name="surface"
+                defaultValue={editing?.surface ?? "gold"}
+                className={inputCls}
+              >
                 <option value="gold">Gold</option>
                 <option value="dark">Dark</option>
                 <option value="cream">Cream</option>
@@ -197,7 +259,7 @@ export function BannersPanel() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {saving ? "Saving…" : "Save Banner"}
+            {saving ? "Saving…" : editing ? "Update Banner" : "Save Banner"}
           </button>
         </form>
       </div>

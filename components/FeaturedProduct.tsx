@@ -12,7 +12,7 @@ export function FeaturedProduct() {
         data-reveal
       >
         <div className="flex items-start justify-between">
-          <span className="rounded-full bg-forest-600/70 px-3 py-1 text-[0.68rem] font-bold text-gold-200 lg:text-sm">
+          <span className="rounded-full bg-forest-600/70 px-3 py-1 text-[0.78rem] font-bold text-gold-200 lg:text-sm">
             Featured
           </span>
           <button
@@ -25,10 +25,10 @@ export function FeaturedProduct() {
 
         <div className="mt-4 flex items-end gap-3">
           <div className="flex-1">
-            <h2 className="font-sans text-[1.55rem] font-extrabold leading-tight text-cream-50 lg:text-4xl">
+            <h2 className="font-sans text-[1.6rem] font-extrabold leading-tight text-cream-50 lg:text-4xl">
               {featuredProduct.name}
             </h2>
-            <p className="mt-2 max-w-[13rem] text-[0.82rem] leading-relaxed text-cream-200/85 lg:max-w-sm lg:text-lg">
+            <p className="mt-2 line-clamp-3 max-w-[14rem] text-[0.92rem] leading-relaxed text-cream-200/85 lg:max-w-sm lg:text-lg">
               {featuredProduct.description}
             </p>
           </div>

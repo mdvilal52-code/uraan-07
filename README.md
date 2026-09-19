@@ -35,7 +35,23 @@ Built with **Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS �
   filter), Product detail, Cart, Wishlist, Checkout, Search, Auth, Profile,
   About, Contact.
 - **Admin dashboard**: analytics, products (live list / add / edit / delete),
-  orders, customers, categories, banners, reviews, coupons, users, settings.
+  orders, customers, categories, banners, reviews, coupons, users, settings,
+  messages (contact/newsletter), gold rate.
+- **Product images**: four dedicated views per product (front/left/right/
+  back), uploaded to Supabase Storage with server-side MIME + magic-byte +
+  size validation (`lib/storage.ts`, `POST /api/admin/upload`). Banners use
+  the same upload path. Front is required; left/right/back are optional and
+  shown in the product-detail gallery — never mixed with another product's
+  images.
+- **Gold Rate pricing**: an admin-configurable rate per purity
+  (Admin → Gold Rate). A product can be switched to "Gold Rate Based"
+  pricing, in which case its price is computed live (gold weight × the
+  current rate) everywhere — product cards, detail page, cart and
+  checkout — instead of using the admin-typed fixed price. Nothing is
+  cached or pre-computed, so a rate change is authoritative immediately.
+- **Tax**: an optional admin-set tax rate (Settings → Tax Rate, defaults to
+  0%) applied as a real line item in cart/checkout/order totals once set
+  above 0%.
 - **SEO** metadata, Open Graph, English locale, semantic HTML, ARIA labels.
 - **Performance**: `next/font` (Tajawal + Cormorant, Latin subset only),
   scroll-reveal animations with `prefers-reduced-motion` support, no layout
@@ -53,8 +69,10 @@ Built with **Next.js 14 (App Router) · React 18 · TypeScript · Tailwind CSS �
 | GET | `/api/auth/me` | current session user |
 | POST | `/api/auth/forgot-password` · `/api/auth/reset-password` | customer password reset |
 | POST | `/api/admin/auth/forgot-password` | admin password reset (reset itself shares `/api/auth/reset-password`) |
-| POST | `/api/newsletter` · `/api/contact` | capture |
+| POST | `/api/newsletter` · `/api/contact` | capture (GET is admin-only: list signups/messages) |
 | GET | `/api/analytics` | dashboard metrics |
+| GET/PUT | `/api/admin/gold-rate` | read / update the gold rate per purity (admin) |
+| POST | `/api/admin/upload` | upload a product/banner image to Supabase Storage (admin) |
 
 > All endpoints read/write PostgreSQL via Prisma (`lib/db.ts`). Data is
 > durable across restarts; run `npm run db:seed` to (re)load demo content.
@@ -93,6 +111,16 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB?schema=public"
 `lib/prisma.ts` exposes a singleton client; `lib/db.ts` is the async
 data-access layer every API route and server component calls. Prices are
 computed server-side from the DB, and orders store relational line items.
+
+### 🖼️ Image storage (Supabase Storage)
+
+Product and banner image uploads (Admin → Products / Banners) need
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` — see the comments in
+`.env.example` for where to find them (the same Supabase project your
+`DATABASE_URL` already points at works fine). Create a **public** bucket
+named `store-images` before uploading. Without these two variables set, the
+admin upload UI shows a clear "storage not configured" error instead of
+failing silently — nothing else in the app needs them.
 
 ## ☁️ Deploy
 

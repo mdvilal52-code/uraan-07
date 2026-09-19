@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { listBanners, createBanner } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-// Banner management is admin-only (no public storefront placement reads
-// from this yet, but the list can include scheduled/inactive drafts, so it
-// isn't public data).
+// Banner management is admin-only — the list can include scheduled/inactive
+// drafts, which isn't public data even though the active one is rendered
+// on the storefront home page (components/Hero.tsx fetches it separately).
 export async function GET() {
   const gate = await requireAdmin();
   if (gate instanceof NextResponse) return gate;
@@ -23,5 +24,6 @@ export async function POST(req: NextRequest) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
+  revalidatePath("/");
   return NextResponse.json({ banner: result.banner }, { status: 201 });
 }
